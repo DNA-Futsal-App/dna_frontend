@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-ink: #020202;
+  --color-night: #071112;
+  --color-panel: #0d1a1c;
+  --color-panel-soft: #122326;
+  --color-line: #20383c;
+  --color-ivory: #ecefdc;
+  --color-muted: #aab8b3;
+  --color-cyan: #62e3e8;
+  --color-ocean: #33a6bd;
+  --color-deep: #1e7396;
+  --color-amber: #e2ae56;
+  --color-coral: #f06a2a;
+  --color-coral-dark: #c25a2d;
+  --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Arial Narrow", "Roboto Condensed", "Segoe UI", sans-serif;
+  --shadow-glow: 0 0 0 1px rgb(98 227 232 / 0.18), 0 18px 60px rgb(0 0 0 / 0.35);
+}
+
+:root {
+  color-scheme: dark;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: #071112;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 85% -10%, rgb(51 166 189 / 0.16), transparent 34rem),
+    radial-gradient(circle at -10% 45%, rgb(240 106 42 / 0.08), transparent 28rem),
+    #071112;
+  color: #ecefdc;
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+::selection {
+  color: #020202;
+  background: #62e3e8;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(98 227 232 / 0.55);
+  outline-offset: 3px;
+}
+
+.display-title {
+  font-family: var(--font-display);
+  font-stretch: condensed;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.surface {
+  border: 1px solid rgb(98 227 232 / 0.1);
+  background: linear-gradient(145deg, rgb(18 35 38 / 0.92), rgb(9 22 24 / 0.96));
+  box-shadow: 0 16px 50px rgb(0 0 0 / 0.22);
+}
+
+.field {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid #294347;
+  border-radius: 0.9rem;
+  background: rgb(2 2 2 / 0.42);
+  padding: 0.78rem 0.9rem;
+  color: #ecefdc;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.field::placeholder {
+  color: #748781;
+}
+
+.field:hover {
+  border-color: #3c5d62;
+}
+
+.field:focus {
+  border-color: #62e3e8;
+  outline: none;
+  background: rgb(2 2 2 / 0.62);
+  box-shadow: 0 0 0 3px rgb(98 227 232 / 0.1);
+}
+
+.field:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  padding: 0.72rem 1.2rem;
+  font-weight: 800;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.btn-primary {
+  border: 1px solid #62e3e8;
+  background: #62e3e8;
+  color: #020202;
+  box-shadow: 0 10px 26px rgb(51 166 189 / 0.22);
+}
+
+.btn-primary:hover {
+  background: #82eef1;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  border: 1px solid #e2ae56;
+  background: rgb(226 174 86 / 0.08);
+  color: #f0c77f;
+}
+
+.btn-secondary:hover {
+  background: rgb(226 174 86 / 0.15);
+}
+
+.btn-ghost {
+  border: 1px solid #294347;
+  background: rgb(7 17 18 / 0.62);
+  color: #d6ded7;
+}
+
+.btn-ghost:hover {
+  border-color: #62e3e8;
+  color: #62e3e8;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #62e3e8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.skeleton {
+  overflow: hidden;
+  position: relative;
+  background: #15282b;
+}
+
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(98 227 232 / 0.08), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
