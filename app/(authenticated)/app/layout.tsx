@@ -1,10 +1,37 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { AppShell } from "@/components/app-shell";
+"use client";
 
-export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const hasSession = cookieStore.has("dna_access") || cookieStore.has("dna_refresh") || (process.env.DEMO_MODE === "true" && cookieStore.get("dna_demo")?.value === "1");
-  if (!hasSession) redirect("/entrar");
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/app-shell";
+import { hasValidClientSession } from "@/lib/client-session";
+
+export default function AuthenticatedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (!hasValidClientSession()) {
+      router.replace("/entrar");
+      return;
+    }
+
+    setAuthorized(true);
+  }, [router]);
+
+  if (!authorized) {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-night">
+        <div
+          className="size-8 animate-spin rounded-full border-2 border-cyan border-t-transparent"
+          aria-label="Verificando sessão"
+        />
+      </main>
+    );
+  }
+
   return <AppShell>{children}</AppShell>;
 }

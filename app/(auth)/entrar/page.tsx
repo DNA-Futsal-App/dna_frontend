@@ -6,6 +6,7 @@ import { FormEvent, Suspense, useState } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { clientApi } from "@/lib/client-api";
+import { saveClientSession } from "@/lib/client-session";
 
 export default function LoginPage() {
   return <Suspense><LoginForm /></Suspense>;
@@ -25,6 +26,12 @@ function LoginForm() {
     tokenType: "Bearer";
     accessToken: string;
     expiresIn: number;
+    refreshToken: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
   };
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -35,19 +42,26 @@ function LoginForm() {
     const form = new FormData(event.currentTarget);
 
     try {
-      const result = await clientApi<LoginResponse>("/api/v1/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          login: form.get("login"),
-          password: form.get("password"),
-        }),
-      });
+      const result = await clientApi<LoginResponse>(
+        "/api/v1/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            login: form.get("login"),
+            password: form.get("password"),
+          }),
+        },
+      );
 
-      sessionStorage.setItem("dna.accessToken", result.accessToken);
+      saveClientSession(result.accessToken, result.expiresIn);
 
       router.replace("/app");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível entrar.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível entrar.",
+      );
       setLoading(false);
     }
   }

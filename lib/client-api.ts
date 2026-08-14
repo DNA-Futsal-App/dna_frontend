@@ -1,6 +1,10 @@
 "use client";
 
 import type { ApiProblem } from "@/lib/types";
+import {
+  clearClientSession,
+  getClientAccessToken,
+} from "@/lib/client-session";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,10 +30,7 @@ function resolveApiUrl(url: string) {
 
 
 export async function clientApi<T>(url: string, init?: RequestInit): Promise<T> {
-  const accessToken =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("dna.accessToken")
-      : null;
+  const accessToken = getClientAccessToken();
 
   const response = await fetch(resolveApiUrl(url), {
     ...init,

@@ -11,7 +11,7 @@ import { useApiData } from "@/lib/use-api-data";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { data: profile, loading, error, reload } = useApiData<UserProfile>("/api/me");
+  const { data: profile, loading, error, reload } = useApiData<UserProfile>("/api/v1/me");
   const [categories, setCategories] = useState<CatalogItem[]>([]);
   const [divisions, setDivisions] = useState<CatalogItem[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -41,7 +41,7 @@ export default function ProfilePage() {
     setSaving(true); setMessage(""); setFormError("");
     const form = new FormData(event.currentTarget);
     try {
-      const updated = await clientApi<UserProfile>("/api/me", {
+      const updated = await clientApi<UserProfile>("/api/v1/me", {
         method: "PUT",
         body: JSON.stringify({
           name: form.get("name"), email: form.get("email"), phone: form.get("phone"),
