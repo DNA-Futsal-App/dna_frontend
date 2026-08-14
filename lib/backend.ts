@@ -3,7 +3,7 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import type { ApiProblem, AuthResponse } from "@/lib/types";
 
-const API_URL = (process.env.DNA_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
 const ACCESS_COOKIE = "dna_access";
 const REFRESH_COOKIE = "dna_refresh";
 const DEMO_COOKIE = "dna_demo";
