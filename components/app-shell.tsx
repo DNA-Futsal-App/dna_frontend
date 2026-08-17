@@ -19,7 +19,7 @@ import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
 
 const navigation = [
-  { href: "/app", label: "Início", icon: House, exact: true },
+  { href: "/app", label: "Meu time", icon: House, exact: true },
   { href: "/app/jogos", label: "Jogos", icon: CalendarDays },
   { href: "/app/tabela", label: "Tabela", icon: TableProperties },
   { href: "/app/artilharia", label: "Artilharia", icon: Medal },
