@@ -2,8 +2,11 @@ import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import type { ApiProblem, AuthResponse } from "@/lib/types";
+import {cookies} from "next/headers";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+const API_URL = (
+  process.env.DNA_API_URL ?? "http://localhost:8080"
+).replace(/\/$/, "");
 const ACCESS_COOKIE = "dna_access";
 const REFRESH_COOKIE = "dna_refresh";
 const DEMO_COOKIE = "dna_demo";
@@ -40,6 +43,16 @@ export function hasSessionCookie(request: NextRequest) {
     request.cookies.get(ACCESS_COOKIE)?.value ||
       request.cookies.get(REFRESH_COOKIE)?.value ||
       (demoEnabled() && request.cookies.get(DEMO_COOKIE)?.value === "1"),
+  );
+}
+
+export async function hasServerSessionCookie() {
+  const cookieStore = await cookies();
+
+  return Boolean(
+    cookieStore.get(ACCESS_COOKIE)?.value ||
+      cookieStore.get(REFRESH_COOKIE)?.value ||
+      (demoEnabled() && cookieStore.get(DEMO_COOKIE)?.value === "1")
   );
 }
 
@@ -137,26 +150,54 @@ export async function proxyAuthenticated(
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
 
   if (!accessToken && !refreshToken) {
-    return NextResponse.json(
-      { title: "Sessão necessária", status: 401, detail: "Entre novamente para continuar.", code: "SESSION_REQUIRED" },
-      { status: 401 },
-    );
+    return sessionRequiredResponse();
   }
 
   try {
     let auth: AuthResponse | null = null;
-    let response = accessToken
-      ? await authorizedCall(path, accessToken, init)
-      : new Response(null, { status: 401 });
+    let response: Response;
 
-    if (response.status === 401 && refreshToken) {
-      auth = await refreshSession(refreshToken);
-      if (auth) response = await authorizedCall(path, auth.accessToken, init);
+    if (accessToken) {
+      response = await authorizedCall(path, accessToken, init);
+
+      if (response.status === 401 && refreshToken) {
+        auth = await refreshSession(refreshToken);
+
+        if (auth) {
+          response = await authorizedCall(
+            path,
+            auth.accessToken,
+            init,
+          );
+        }
+      }
+    } else {
+      // Temos refresh token, mas não temos access token.
+      auth = refreshToken
+        ? await refreshSession(refreshToken)
+        : null;
+
+      if (!auth) {
+        return sessionRequiredResponse();
+      }
+
+      response = await authorizedCall(
+        path,
+        auth.accessToken,
+        init,
+      );
     }
 
     const nextResponse = await toNextResponse(response);
-    if (auth) setSessionCookies(nextResponse, auth);
-    if (response.status === 401 && !auth) clearSessionCookies(nextResponse);
+
+    if (auth) {
+      setSessionCookies(nextResponse, auth);
+    }
+
+    if (response.status === 401 && !auth) {
+      clearSessionCookies(nextResponse);
+    }
+
     return nextResponse;
   } catch {
     return unavailableResponse();
@@ -169,41 +210,92 @@ export async function authenticatedBatch(
 ) {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
+
   if (!accessToken && !refreshToken) {
-    return NextResponse.json(
-      { title: "Sessão necessária", status: 401, detail: "Entre novamente para continuar.", code: "SESSION_REQUIRED" },
-      { status: 401 },
-    );
+    return sessionRequiredResponse();
   }
 
   const execute = (token: string) =>
     Promise.all(
-      Object.entries(paths).map(async ([key, path]) => [key, await authorizedCall(path, token)] as const),
+      Object.entries(paths).map(
+        async ([key, path]) =>
+          [
+            key,
+            await authorizedCall(path, token),
+          ] as const,
+      ),
     );
 
   try {
     let auth: AuthResponse | null = null;
-    let responses = accessToken ? await execute(accessToken) : [];
-    if ((!responses.length || responses.some(([, response]) => response.status === 401)) && refreshToken) {
-      auth = await refreshSession(refreshToken);
-      if (auth) responses = await execute(auth.accessToken);
+    let responses: Awaited<ReturnType<typeof execute>>;
+
+    if (accessToken) {
+      responses = await execute(accessToken);
+
+      const hasUnauthorizedResponse = responses.some(
+        ([, response]) => response.status === 401,
+      );
+
+      if (hasUnauthorizedResponse && refreshToken) {
+        auth = await refreshSession(refreshToken);
+
+        if (auth) {
+          responses = await execute(auth.accessToken);
+        }
+      }
+    } else {
+      auth = refreshToken
+        ? await refreshSession(refreshToken)
+        : null;
+
+      if (!auth) {
+        return sessionRequiredResponse();
+      }
+
+      responses = await execute(auth.accessToken);
     }
 
-    const failed = responses.find(([, response]) => !response.ok);
+    const failed = responses.find(
+      ([, response]) => !response.ok,
+    );
+
     if (failed) {
       const nextResponse = await toNextResponse(failed[1]);
-      if (auth) setSessionCookies(nextResponse, auth);
-      if (failed[1].status === 401 && !auth) clearSessionCookies(nextResponse);
+
+      if (auth) {
+        setSessionCookies(nextResponse, auth);
+      }
+
+      if (failed[1].status === 401 && !auth) {
+        clearSessionCookies(nextResponse);
+      }
+
       return nextResponse;
     }
 
     const data = Object.fromEntries(
-      await Promise.all(responses.map(async ([key, response]) => [key, await response.json()])),
+      await Promise.all(
+        responses.map(
+          async ([key, response]) => [
+            key,
+            await response.json(),
+          ],
+        ),
+      ),
     );
+
     const nextResponse = NextResponse.json(data, {
-      headers: { "Cache-Control": "private, max-age=20, stale-while-revalidate=40" },
+      headers: {
+        "Cache-Control":
+          "private, max-age=20, stale-while-revalidate=40",
+      },
     });
-    if (auth) setSessionCookies(nextResponse, auth);
+
+    if (auth) {
+      setSessionCookies(nextResponse, auth);
+    }
+
     return nextResponse;
   } catch {
     return unavailableResponse();
@@ -224,5 +316,21 @@ export async function logoutFromBackend(request: NextRequest) {
   }
   const response = new NextResponse(null, { status: 204 });
   clearSessionCookies(response);
+  return response;
+}
+
+function sessionRequiredResponse() {
+  const response = NextResponse.json(
+    {
+      title: "Sessão necessária",
+      status: 401,
+      detail: "Entre novamente para continuar.",
+      code: "SESSION_REQUIRED",
+    },
+    { status: 401 }
+  );
+
+  clearSessionCookies(response);
+
   return response;
 }
