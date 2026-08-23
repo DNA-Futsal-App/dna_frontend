@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { clearClientSession } from "@/lib/client-session";
 import { useEffect } from "react";
 import {
   CalendarDays,
@@ -42,7 +41,6 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   async function logout() {
-    clearClientSession();
 
     try {
       await fetch("/api/auth/logout", {

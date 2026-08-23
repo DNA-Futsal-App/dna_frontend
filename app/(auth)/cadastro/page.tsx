@@ -34,7 +34,7 @@ export default function RegisterPage() {
     if (password !== form.get("passwordConfirmation")) return setError("As senhas precisam ser iguais.");
     setLoading(true);
     try {
-      await clientApi("/api/v1/auth/register", {
+      await clientApi("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
           name: form.get("name"), email: form.get("email"), phone: form.get("phone"), password,

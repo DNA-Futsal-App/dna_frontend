@@ -13,7 +13,8 @@ type ProfileContextValue = {
 const ProfileContext = createContext<ProfileContextValue>({ profile: null, preferenceLabel: "Escolha seu time" });
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const { data: profile } = useApiData<UserProfile>("/api/v1/me");
+  const { data: profile } =
+  useApiData<UserProfile>("/api/me");
   const [names, setNames] = useState<{ category?: string; division?: string; team?: string }>({});
 
   useEffect(() => {
