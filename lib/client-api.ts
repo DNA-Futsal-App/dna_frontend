@@ -1,12 +1,6 @@
 "use client";
 
 import type { ApiProblem } from "@/lib/types";
-import {
-  clearClientSession,
-  getClientAccessToken,
-} from "@/lib/client-session";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class ClientApiError extends Error {
   constructor(
@@ -15,30 +9,40 @@ export class ClientApiError extends Error {
     public problem?: ApiProblem,
   ) {
     super(message);
+
+    this.name = "ClientApiError";
   }
 }
 
-function resolveApiUrl(url: string) {
-  if (/^https?:\/\//.test(url)) return url;
-
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL não foi configurada.");
+export async function clientApi<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
+  if (!url.startsWith("/api/")) {
+    throw new Error(
+      `clientApi aceita apenas rotas do BFF iniciadas por /api/. Recebido: ${url}`,
+    );
   }
 
-  return `${API_BASE_URL.replace(/\/$/, "")}/${url.replace(/^\//, "")}`;
-}
+  const headers = new Headers(init?.headers);
 
+  headers.set(
+    "Accept",
+    "application/json, application/problem+json",
+  );
 
-export async function clientApi<T>(url: string, init?: RequestInit): Promise<T> {
-  const accessToken = getClientAccessToken();
+  if (
+    init?.body &&
+    !headers.has("Content-Type") &&
+    !(init.body instanceof FormData)
+  ) {
+    headers.set("Content-Type", "application/json");
+  }
 
-  const response = await fetch(resolveApiUrl(url), {
+  const response = await fetch(url, {
     ...init,
-    headers: {
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...init?.headers,
-    },
+    headers,
+    credentials: "same-origin",
   });
 
   const data =
@@ -52,14 +56,14 @@ export async function clientApi<T>(url: string, init?: RequestInit): Promise<T> 
     if (
       response.status === 401 &&
       typeof window !== "undefined" &&
-      !url.includes("/auth/")
+      !url.startsWith("/api/auth/")
     ) {
-      sessionStorage.removeItem("dna.accessToken");
-      window.dispatchEvent(new CustomEvent("dna:session-expired"));
+      window.location.replace("/entrar?expired=1");
     }
 
     throw new ClientApiError(
-      problem.detail ?? "Não foi possível concluir a solicitação.",
+      problem.detail ??
+        "Não foi possível concluir a solicitação.",
       response.status,
       problem,
     );
@@ -68,7 +72,10 @@ export async function clientApi<T>(url: string, init?: RequestInit): Promise<T> 
   return data as T;
 }
 
-export function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
+export function formatDate(
+  value: string,
+  options?: Intl.DateTimeFormatOptions,
+) {
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     ...options,
