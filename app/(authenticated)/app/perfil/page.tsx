@@ -8,15 +8,16 @@ import { PageIntro } from "@/components/page-intro";
 import { clientApi } from "@/lib/client-api";
 import type { CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
+import { CatalogCategory } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { data: profile, loading, error, reload } = useApiData<UserProfile>("/api/me");
-  const [categories, setCategories] = useState<CatalogItem[]>([]);
   const [divisions, setDivisions] = useState<CatalogItem[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [divisionId, setDivisionId] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [teamId, setTeamId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -26,15 +27,55 @@ export default function ProfilePage() {
   const selectedDivisionId = divisionId ?? profile?.divisionId ?? "";
   const selectedTeamId = teamId ?? profile?.teamId ?? "";
 
-  useEffect(() => { clientApi<CatalogItem[]>("/api/catalog/categories").then(setCategories).catch(() => undefined); }, []);
+  const selectedCategory =
+    categories.find(
+      (item) =>
+        item.id === selectedCategoryId,
+    );
+
+  const selectedEventId =
+    selectedCategory?.eventId ??
+    profile?.eventId ??
+    null;
+
   useEffect(() => {
-    if (!selectedCategoryId) return;
-    clientApi<CatalogItem[]>(`/api/catalog/divisions?categoryId=${encodeURIComponent(selectedCategoryId)}`).then(setDivisions).catch(() => setDivisions([]));
-  }, [selectedCategoryId]);
+    clientApi<CatalogItem[]>(
+      "/api/catalog/divisions",
+    )
+      .then(setDivisions)
+      .catch(() => setDivisions([]));
+  }, []);
+
   useEffect(() => {
-    if (!selectedCategoryId || !selectedDivisionId) return;
-    clientApi<Team[]>(`/api/catalog/teams?categoryId=${encodeURIComponent(selectedCategoryId)}&divisionId=${encodeURIComponent(selectedDivisionId)}`).then(setTeams).catch(() => setTeams([]));
-  }, [selectedCategoryId, selectedDivisionId]);
+    if (!selectedDivisionId) {
+      setCategories([]);
+      return;
+    }
+
+    clientApi<CatalogCategory[]>(
+      `/api/catalog/categories?divisionId=${encodeURIComponent(
+        selectedDivisionId,
+      )}`,
+    )
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, [selectedDivisionId]);
+
+
+  useEffect(() => {
+    if (!selectedEventId) {
+      setTeams([]);
+      return;
+    }
+
+    clientApi<Team[]>(
+      `/api/catalog/teams?eventId=${encodeURIComponent(
+        String(selectedEventId),
+      )}`,
+    )
+      .then(setTeams)
+      .catch(() => setTeams([]));
+  }, [selectedEventId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,7 +124,28 @@ export default function ProfilePage() {
         <form onSubmit={submit} className="surface rounded-[1.75rem] p-5 sm:p-7">
           <h2 className="display-title text-2xl font-black text-ivory">Dados pessoais</h2>
           <div className="mt-5 grid gap-4"><label className="grid gap-1.5 text-sm font-bold">Nome<input className="field" name="name" defaultValue={profile.name} minLength={2} maxLength={120} required /></label><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-1.5 text-sm font-bold">E-mail<input className="field" name="email" type="email" defaultValue={profile.email} required /></label><label className="grid gap-1.5 text-sm font-bold">Telefone<input className="field" name="phone" type="tel" defaultValue={profile.phone} required /></label></div><label className="grid gap-1.5 text-sm font-bold">Instagram do atleta<input className="field" name="childInstagram" defaultValue={profile.childInstagram ?? ""} placeholder="@usuario" pattern="^@?[A-Za-z0-9._]{1,30}$" /></label></div>
-          <div className="mt-6 border-t border-white/8 pt-6"><h2 className="display-title text-2xl font-black text-ivory">Preferência esportiva</h2><p className="mt-1 text-sm text-muted">Estes filtros definem o conteúdo inicial do app.</p><div className="mt-5 grid gap-4 sm:grid-cols-3"><label className="grid gap-1.5 text-sm font-bold">Categoria<select className="field" name="categoryId" value={selectedCategoryId} onChange={(event) => { setCategoryId(event.target.value); setDivisionId(""); setTeamId(""); setDivisions([]); setTeams([]); }}><option value="">Nenhuma</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="grid gap-1.5 text-sm font-bold">Divisão<select className="field" name="divisionId" value={selectedDivisionId} onChange={(event) => { setDivisionId(event.target.value); setTeamId(""); setTeams([]); }} disabled={!selectedCategoryId}><option value="">Nenhuma</option>{divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="grid gap-1.5 text-sm font-bold">Time<select className="field" name="teamId" value={selectedTeamId} onChange={(event) => setTeamId(event.target.value)} disabled={!selectedDivisionId}><option value="">Nenhum</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label></div></div>
+          <div className="mt-6 border-t border-white/8 pt-6"><h2 className="display-title text-2xl font-black text-ivory">Preferência esportiva</h2><p className="mt-1 text-sm text-muted">Estes filtros definem o conteúdo inicial do app.</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+
+              <label className="grid gap-1.5 text-sm font-bold">
+                Divisão
+                <select className="field" name="divisionId" value={selectedDivisionId} onChange={(event) => { setDivisionId(event.target.value); setTeamId(""); setTeams([]); }}>
+                  <option value="">Nenhuma</option>{divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold">
+                Categoria
+                <select className="field" name="categoryId" value={selectedCategoryId} onChange={(event) => { setCategoryId(event.target.value); setDivisionId(""); setTeamId(""); setDivisions([]); setTeams([]); }} disabled={!selectedDivisionId}>
+                  <option value="">Nenhuma</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold">
+                Time
+                <select className="field" name="teamId" value={selectedTeamId} onChange={(event) => setTeamId(event.target.value)} disabled={!selectedCategoryId}>
+                  <option value="">Nenhum</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
           <div className="mt-6 rounded-2xl border border-amber/20 bg-amber/6 p-4"><label className="grid gap-1.5 text-sm font-bold text-amber">Confirme sua senha atual<input className="field" name="currentPassword" type="password" autoComplete="current-password" maxLength={72} required placeholder="Necessária para salvar qualquer alteração" /></label></div>
           {message ? <p className="mt-4 flex items-center gap-2 rounded-xl bg-cyan/8 px-3.5 py-3 text-sm font-bold text-cyan" role="status"><CheckCircle2 className="size-4" />{message}</p> : null}
           {formError ? <p className="mt-4 rounded-xl border border-coral/25 bg-coral/8 px-3.5 py-3 text-sm text-[#ffb195]" role="alert">{formError}</p> : null}

@@ -1,5 +1,5 @@
 export type CatalogItem = {
-  id: string;
+  id: number;
   name: string;
   logoUrl?: string | null;
 };
@@ -75,6 +75,7 @@ export type UserProfile = {
   email: string;
   phone: string;
   childInstagram?: string | null;
+  eventId?: number | null;
   categoryId?: string | null;
   divisionId?: string | null;
   teamId?: string | null;
@@ -104,4 +105,10 @@ export type DashboardData = {
   standings: Standing[];
   topScorers: TopScorer[];
   news: NewsPage;
+};
+
+export type CatalogCategory = {
+  id: number;
+  name: string;
+  eventId: number;
 };

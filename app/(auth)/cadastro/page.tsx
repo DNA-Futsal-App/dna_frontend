@@ -6,25 +6,76 @@ import { FormEvent, useEffect, useState } from "react";
 import { Check, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { clientApi } from "@/lib/client-api";
-import type { CatalogItem, Team } from "@/lib/types";
+import type {
+  CatalogCategory,
+  CatalogItem,
+  Team,
+} from "@/lib/types";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState<CatalogItem[]>([]);
-  const [divisions, setDivisions] = useState<CatalogItem[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [categoryId, setCategoryId] = useState("");
-  const [divisionId, setDivisionId] = useState("");
+  const [divisions, setDivisions] =
+    useState<CatalogItem[]>([]);
+
+  const [categories, setCategories] =
+    useState<CatalogCategory[]>([]);
+
+  const [teams, setTeams] =
+    useState<Team[]>([]);
+
+  const [divisionId, setDivisionId] =
+    useState("");
+
+  const [categoryId, setCategoryId] =
+    useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { clientApi<CatalogItem[]>("/api/catalog/categories").then(setCategories).catch(() => setCategories([])); }, []);
+  const selectedCategory =
+    categories.find(
+      (item) => item.id === categoryId,
+    );
+
+  const eventId =
+    selectedCategory?.eventId ?? null;
+
   useEffect(() => {
-    if (categoryId) clientApi<CatalogItem[]>(`/api/catalog/divisions?categoryId=${encodeURIComponent(categoryId)}`).then(setDivisions).catch(() => setDivisions([]));
-  }, [categoryId]);
+    clientApi<CatalogItem[]>(
+      "/api/catalog/divisions",
+    )
+      .then(setDivisions)
+      .catch(() => setDivisions([]));
+  }, []);
+
   useEffect(() => {
-    if (categoryId && divisionId) clientApi<Team[]>(`/api/catalog/teams?categoryId=${encodeURIComponent(categoryId)}&divisionId=${encodeURIComponent(divisionId)}`).then(setTeams).catch(() => setTeams([]));
-  }, [categoryId, divisionId]);
+    if (!divisionId) {
+      setCategories([]);
+      return;
+    }
+
+    clientApi<CatalogCategory[]>(
+      `/api/catalog/categories?divisionId=${encodeURIComponent(
+        divisionId,
+      )}`,
+    )
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, [divisionId]);
+
+  useEffect(() => {
+    if (!eventId) {
+      setTeams([]);
+      return;
+    }
+
+    clientApi<Team[]>(
+      `/api/catalog/teams?eventId=${encodeURIComponent(
+        String(eventId),
+      )}`,
+    )
+      .then(setTeams)
+      .catch(() => setTeams([]));
+  }, [eventId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,11 +88,24 @@ export default function RegisterPage() {
       await clientApi("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({
-          name: form.get("name"), email: form.get("email"), phone: form.get("phone"), password,
-          childInstagram: form.get("childInstagram") || null,
-          categoryId: form.get("categoryId") || null,
-          divisionId: form.get("divisionId") || null,
-          teamId: form.get("teamId") || null,
+          name: form.get("name"),
+          email: form.get("email"),
+          phone: form.get("phone"),
+          password,
+
+          childInstagram:
+            form.get("childInstagram") || null,
+
+          eventId,
+
+          categoryId:
+            form.get("categoryId") || null,
+
+          divisionId:
+            form.get("divisionId") || null,
+
+          teamId:
+            form.get("teamId") || null,
         }),
       });
       router.push(`/verificar-email?login=${encodeURIComponent(String(form.get("email")))}`);
@@ -62,7 +126,63 @@ export default function RegisterPage() {
 
         <fieldset className="grid gap-4 border-t border-white/8 pt-5"><legend className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[.15em] text-amber">Preferências <span className="rounded-full bg-white/6 px-2 py-1 text-[9px] text-muted">Opcional</span></legend>
           <label className="grid gap-1.5 text-sm font-bold">Instagram do atleta<input className="field" name="childInstagram" placeholder="@usuario" pattern="^@?[A-Za-z0-9._]{1,30}$" /></label>
-          <div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-1.5 text-sm font-bold">Categoria<select className="field" name="categoryId" value={categoryId} onChange={(event) => { setCategoryId(event.target.value); setDivisionId(""); setDivisions([]); setTeams([]); }}><option value="">Escolha depois</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className="grid gap-1.5 text-sm font-bold">Divisão<select className="field" name="divisionId" value={divisionId} onChange={(event) => { setDivisionId(event.target.value); setTeams([]); }} disabled={!categoryId}><option value="">Escolha depois</option>{divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-bold">
+              Divisão
+
+              <select
+                className="field"
+                name="divisionId"
+                value={divisionId}
+                onChange={(event) => {
+                  setDivisionId(event.target.value);
+                  setCategoryId("");
+                  setCategories([]);
+                  setTeams([]);
+                }}
+              >
+                <option value="">
+                  Escolha depois
+                </option>
+
+                {divisions.map((item) => (
+                  <option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-bold">
+              Categoria
+
+              <select
+                className="field"
+                name="categoryId"
+                value={categoryId}
+                onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  setTeams([]);
+                }}
+                disabled={!divisionId}
+              >
+                <option value="">
+                  Escolha depois
+                </option>
+
+                {categories.map((item) => (
+                  <option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label className="grid gap-1.5 text-sm font-bold">Time<select className="field" name="teamId" disabled={!divisionId}><option value="">Escolha depois</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
         </fieldset>
         <p className="flex gap-2 text-xs leading-relaxed text-muted"><Check className="mt-0.5 size-4 shrink-0 text-cyan" />Enviaremos um link para confirmar seu e-mail antes do primeiro acesso.</p>

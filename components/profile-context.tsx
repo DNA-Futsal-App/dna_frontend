@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { clientApi } from "@/lib/client-api";
-import type { CatalogItem, Team, UserProfile } from "@/lib/types";
+import type { CatalogCategory, CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
+
 
 type ProfileContextValue = {
   profile: UserProfile | null;
@@ -14,27 +15,71 @@ const ProfileContext = createContext<ProfileContextValue>({ profile: null, prefe
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const { data: profile } =
-  useApiData<UserProfile>("/api/me");
+    useApiData<UserProfile>("/api/me");
   const [names, setNames] = useState<{ category?: string; division?: string; team?: string }>({});
 
   useEffect(() => {
     if (!profile) return;
     let active = true;
     async function resolvePreference() {
-      const resolved: { category?: string; division?: string; team?: string } = {};
-      if (profile?.categoryId) {
-        const categories = await clientApi<CatalogItem[]>("/api/catalog/categories");
-        resolved.category = categories.find((item) => item.id === profile.categoryId)?.name;
+      const resolved: {
+        category?: string;
+        division?: string;
+        team?: string;
+      } = {};
+
+      if (profile?.divisionId) {
+        const divisions =
+          await clientApi<CatalogItem[]>(
+            "/api/catalog/divisions",
+          );
+
+        resolved.division =
+          divisions.find(
+            (item) =>
+              item.id === profile.divisionId,
+          )?.name;
       }
-      if (profile?.categoryId && profile.divisionId) {
-        const divisions = await clientApi<CatalogItem[]>(`/api/catalog/divisions?categoryId=${encodeURIComponent(profile.categoryId)}`);
-        resolved.division = divisions.find((item) => item.id === profile.divisionId)?.name;
+
+      if (
+        profile?.divisionId &&
+        profile.categoryId
+      ) {
+        const categories =
+          await clientApi<CatalogCategory[]>(
+            `/api/catalog/categories?divisionId=${encodeURIComponent(
+              profile.divisionId,
+            )}`,
+          );
+
+        resolved.category =
+          categories.find(
+            (item) =>
+              item.id === profile.categoryId,
+          )?.name;
       }
-      if (profile?.categoryId && profile.divisionId && profile.teamId) {
-        const teams = await clientApi<Team[]>(`/api/catalog/teams?categoryId=${encodeURIComponent(profile.categoryId)}&divisionId=${encodeURIComponent(profile.divisionId)}`);
-        resolved.team = teams.find((item) => item.id === profile.teamId)?.name;
+
+      if (
+        profile?.eventId &&
+        profile.teamId
+      ) {
+        const teams =
+          await clientApi<Team[]>(
+            `/api/catalog/teams?eventId=${encodeURIComponent(
+              String(profile.eventId),
+            )}`,
+          );
+
+        resolved.team =
+          teams.find(
+            (item) =>
+              item.id === profile.teamId,
+          )?.name;
       }
-      if (active) setNames(resolved);
+
+      if (active) {
+        setNames(resolved);
+      }
     }
     void resolvePreference().catch(() => undefined);
     return () => { active = false; };

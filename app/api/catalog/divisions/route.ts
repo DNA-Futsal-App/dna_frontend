@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { demoEnabled, proxyPublic } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
-  const categoryId = request.nextUrl.searchParams.get("categoryId") ?? "";
+  const season =
+    request.nextUrl.searchParams.get("season") ??
+    String(new Date().getFullYear());
+
   if (demoEnabled()) {
     return NextResponse.json([
-      { id: "especial", name: "Divisão Especial" },
-      { id: "a1", name: "Série A1" },
-      { id: "a2", name: "Série A2" },
+      { id: "3", name: "A1" },
+      { id: "4", name: "A2" },
     ]);
   }
-  return proxyPublic(`/api/v1/public/catalog/divisions?categoryId=${encodeURIComponent(categoryId)}`);
+
+  return proxyPublic(
+    `/api/v1/public/catalog/divisions?season=${encodeURIComponent(
+      season,
+    )}`,
+  );
 }
