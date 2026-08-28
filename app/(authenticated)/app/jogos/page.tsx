@@ -15,7 +15,7 @@ function Matches() {
   const [tab, setTab] = useState<"upcoming" | "played">(initial);
   const { data, loading, error, reload } = useApiData<Match[]>(`/api/matches/${tab}`);
   return (
-    <div><PageIntro eyebrow="Temporada 2026" title="Jogos" description="O calendário do seu time, separado entre os próximos confrontos e tudo que já aconteceu." action={<div className="inline-flex rounded-full border border-white/10 bg-ink/35 p-1"><Tab active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Próximos</Tab><Tab active={tab === "played"} onClick={() => setTab("played")}>Encerrados</Tab></div>} />
+    <div><PageIntro eyebrow={`Temporada ${new Date().getFullYear()}`} title="Jogos" description="O calendário do seu time, separado entre os próximos confrontos e tudo que já aconteceu." action={<div className="inline-flex rounded-full border border-white/10 bg-ink/35 p-1"><Tab active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Próximos</Tab><Tab active={tab === "played"} onClick={() => setTab("played")}>Encerrados</Tab></div>} />
       {loading ? <LoadingCards count={4} /> : error ? <ErrorState message={error} onRetry={reload} /> : !data?.length ? <EmptyState title="Nenhum jogo por aqui" description={tab === "upcoming" ? "Assim que a próxima rodada for confirmada, ela aparecerá aqui." : "Os resultados serão exibidos após o fim das partidas."} /> : <div className="grid gap-3 lg:grid-cols-2">{data.map((match) => <MatchCard key={match.id} match={match} />)}</div>}
     </div>
   );

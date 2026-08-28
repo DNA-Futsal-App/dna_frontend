@@ -34,8 +34,25 @@ export default function DashboardPage() {
       ) : null}
 
       <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={TrendingUp} label="Posição" value={position ? `${position}º` : "—"} color="cyan" />
-        <Stat icon={Goal} label="Último jogo" value={latestMatch ? `${latestMatch.homeScore} × ${latestMatch.awayScore}` : "—"} color="amber" />
+        <Stat
+          icon={TrendingUp}
+          label="Posição"
+          value={
+            position != null
+              ? `${position}º`
+              : "—"
+          }
+          color="cyan"
+        />
+        <Stat icon={Goal} label="Último jogo" value={
+          latestMatch
+            ? `${latestMatch.homeScore ??
+            "—"
+            } × ${latestMatch.awayScore ??
+            "—"
+            }`
+            : "—"
+        } color="amber" />
         <Stat icon={CalendarClock} label="Próximos" value={String(data.upcoming.length)} color="coral" />
         <Stat icon={Newspaper} label="Notícias" value={String(data.news.totalElements)} color="ocean" />
       </section>

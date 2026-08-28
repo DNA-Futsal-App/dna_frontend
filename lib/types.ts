@@ -13,41 +13,68 @@ export type Team = {
 
 export type Match = {
   id: string;
+  eventId: number;
+
   competitionName?: string | null;
-  categoryId: string;
-  categoryName?: string | null;
-  divisionId: string;
-  divisionName?: string | null;
-  round?: string | null;
+  season: number;
+
+  category?: string | null;
+  division?: string | null;
+  phase?: string | null;
+
   homeTeam: Team;
   awayTeam: Team;
+
   homeScore?: number | null;
   awayScore?: number | null;
-  scheduledAt: string;
+
+  scheduledAt?: string | null;
+
   status: string;
+  walkover: boolean;
+
   venue?: string | null;
+  matchSheetUrl?: string | null;
 };
 
 export type Standing = {
-  position: number;
+  phase?: string | null;
+  group?: string | null;
+
+  position?: number | null;
+
   team: Team;
-  played: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  goalDifference: number;
-  points: number;
+
+  played?: number | null;
+  wins?: number | null;
+  draws?: number | null;
+  losses?: number | null;
+
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
+  goalDifference?: number | null;
+
+  points?: number | null;
+
+  average?: number | null;
+  goalsForAverage?: number | null;
+  goalsAgainstAverage?: number | null;
+  technicalIndex?: number | null;
 };
 
 export type TopScorer = {
   position: number;
-  athleteId?: string | null;
-  athleteName: string;
+
+  phase?: string | null;
+
+  athleteName?: string | null;
+  athleteImageUrl?: string | null;
+
   team: Team;
-  goals: number;
-  matches: number;
+
+  goals?: number | null;
+
+  personalDataSuppressed: boolean;
 };
 
 export type NewsArticle = {
@@ -74,11 +101,14 @@ export type UserProfile = {
   name: string;
   email: string;
   phone: string;
+
   childInstagram?: string | null;
+
   eventId?: number | null;
   categoryId?: string | null;
   divisionId?: string | null;
   teamId?: string | null;
+
   emailVerified: boolean;
   createdAt: string;
 };
