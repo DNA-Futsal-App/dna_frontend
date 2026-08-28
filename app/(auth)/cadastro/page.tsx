@@ -33,8 +33,8 @@ export default function RegisterPage() {
 
   const selectedCategory =
     categories.find(
-      (item) => item.id === categoryId,
-    );
+      (item) => String(String(item.id) === categoryId,
+      ));
 
   const eventId =
     selectedCategory?.eventId ?? null;
@@ -49,32 +49,58 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!divisionId) {
-      setCategories([]);
       return;
     }
+
+    let active = true;
 
     clientApi<CatalogCategory[]>(
       `/api/catalog/categories?divisionId=${encodeURIComponent(
         divisionId,
       )}`,
     )
-      .then(setCategories)
-      .catch(() => setCategories([]));
+      .then((result) => {
+        if (active) {
+          setCategories(result);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setCategories([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [divisionId]);
 
   useEffect(() => {
     if (!eventId) {
-      setTeams([]);
       return;
     }
+
+    let active = true;
 
     clientApi<Team[]>(
       `/api/catalog/teams?eventId=${encodeURIComponent(
         String(eventId),
       )}`,
     )
-      .then(setTeams)
-      .catch(() => setTeams([]));
+      .then((result) => {
+        if (active) {
+          setTeams(result);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setTeams([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [eventId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {

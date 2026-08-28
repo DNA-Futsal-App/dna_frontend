@@ -2,49 +2,46 @@ import { NextRequest, NextResponse } from "next/server";
 import { demoEnabled, proxyPublic } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
-  const params = request.nextUrl.searchParams;
+  const eventId =
+    request.nextUrl.searchParams.get("eventId");
 
-  const season =
-    params.get("season") ??
-    String(new Date().getFullYear());
-
-  const divisionId =
-    params.get("divisionId");
-
-  if (!divisionId) {
+  if (!eventId) {
     return NextResponse.json(
       {
-        title: "Divisão necessária",
+        title: "Evento necessário",
         status: 400,
         detail:
-          "Informe uma divisão antes de consultar as categorias.",
-        code: "DIVISION_REQUIRED",
+          "Informe um evento antes de consultar os times.",
+        code: "EVENT_REQUIRED",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 
   if (demoEnabled()) {
     return NextResponse.json([
       {
-        id: "7",
-        name: "Sub-11",
-        eventId: 917,
+        id: "10",
+        name: "Time A",
+        shortName: null,
+        logoUrl: null,
       },
       {
-        id: "8",
-        name: "Sub-13",
-        eventId: 918,
+        id: "20",
+        name: "Time B",
+        shortName: null,
+        logoUrl: null,
       },
     ]);
   }
 
   const query = new URLSearchParams({
-    season,
-    divisionId,
+    eventId,
   });
 
   return proxyPublic(
-    `/api/v1/public/catalog/categories?${query}`,
+    `/api/v1/public/catalog/teams?${query.toString()}`,
   );
 }

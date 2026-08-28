@@ -37,7 +37,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         resolved.division =
           divisions.find(
             (item) =>
-              item.id === profile.divisionId,
+              String(item.id) === profile.divisionId,
           )?.name;
       }
 
@@ -55,7 +55,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         resolved.category =
           categories.find(
             (item) =>
-              item.id === profile.categoryId,
+              String(item.id) === profile.categoryId,
           )?.name;
       }
 

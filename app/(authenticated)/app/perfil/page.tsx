@@ -30,7 +30,7 @@ export default function ProfilePage() {
   const selectedCategory =
     categories.find(
       (item) =>
-        item.id === selectedCategoryId,
+        String(item.id) === String(selectedCategoryId)
     );
 
   const selectedEventId =
@@ -48,33 +48,59 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!selectedDivisionId) {
-      setCategories([]);
       return;
     }
+
+    let active = true;
 
     clientApi<CatalogCategory[]>(
       `/api/catalog/categories?divisionId=${encodeURIComponent(
         selectedDivisionId,
       )}`,
     )
-      .then(setCategories)
-      .catch(() => setCategories([]));
+      .then((result) => {
+        if (active) {
+          setCategories(result);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setCategories([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [selectedDivisionId]);
 
 
   useEffect(() => {
     if (!selectedEventId) {
-      setTeams([]);
       return;
     }
+
+    let active = true;
 
     clientApi<Team[]>(
       `/api/catalog/teams?eventId=${encodeURIComponent(
         String(selectedEventId),
       )}`,
     )
-      .then(setTeams)
-      .catch(() => setTeams([]));
+      .then((result) => {
+        if (active) {
+          setTeams(result);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setTeams([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [selectedEventId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -129,18 +155,30 @@ export default function ProfilePage() {
 
               <label className="grid gap-1.5 text-sm font-bold">
                 Divisão
-                <select className="field" name="divisionId" value={selectedDivisionId} onChange={(event) => { setDivisionId(event.target.value); setTeamId(""); setTeams([]); }}>
+                <select className="field" name="divisionId" value={selectedDivisionId} onChange={(event) => {
+                  setDivisionId(event.target.value);
+
+                  setCategoryId("");
+                  setTeamId("");
+
+                  setCategories([]);
+                  setTeams([]);
+                }}>
                   <option value="">Nenhuma</option>{divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
               </label>
               <label className="grid gap-1.5 text-sm font-bold">
                 Categoria
-                <select className="field" name="categoryId" value={selectedCategoryId} onChange={(event) => { setCategoryId(event.target.value); setDivisionId(""); setTeamId(""); setDivisions([]); setTeams([]); }} disabled={!selectedDivisionId}>
+                <select className="field" name="categoryId" value={selectedCategoryId} onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  setTeamId("");
+                  setTeams([]);
+                }} disabled={!selectedDivisionId}>
                   <option value="">Nenhuma</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
               </label>
               <label className="grid gap-1.5 text-sm font-bold">
                 Time
-                <select className="field" name="teamId" value={selectedTeamId} onChange={(event) => setTeamId(event.target.value)} disabled={!selectedCategoryId}>
+                <select className="field" name="teamId" value={selectedTeamId} onChange={(event) => setTeamId(event.target.value)} disabled={!selectedEventId}>
                   <option value="">Nenhum</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
                 </select>
               </label>
