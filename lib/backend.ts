@@ -2,11 +2,12 @@ import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import type { ApiProblem, AuthResponse } from "@/lib/types";
-import {cookies} from "next/headers";
+import { cookies } from "next/headers";
 
-const API_URL = (
-  process.env.DNA_API_URL ?? "http://localhost:8080"
-).replace(/\/$/, "");
+const API_URL = (process.env.DNA_API_URL ?? "http://localhost:8080").replace(
+  /\/$/,
+  "",
+);
 const ACCESS_COOKIE = "dna_access";
 const REFRESH_COOKIE = "dna_refresh";
 const DEMO_COOKIE = "dna_demo";
@@ -29,7 +30,10 @@ export function isDemoRequest(request: NextRequest) {
 }
 
 export function setDemoCookie(response: NextResponse) {
-  response.cookies.set(DEMO_COOKIE, "1", { ...cookieBase, maxAge: 60 * 60 * 12 });
+  response.cookies.set(DEMO_COOKIE, "1", {
+    ...cookieBase,
+    maxAge: 60 * 60 * 12,
+  });
 }
 
 export function clearSessionCookies(response: NextResponse) {
@@ -41,8 +45,8 @@ export function clearSessionCookies(response: NextResponse) {
 export function hasSessionCookie(request: NextRequest) {
   return Boolean(
     request.cookies.get(ACCESS_COOKIE)?.value ||
-      request.cookies.get(REFRESH_COOKIE)?.value ||
-      (demoEnabled() && request.cookies.get(DEMO_COOKIE)?.value === "1"),
+    request.cookies.get(REFRESH_COOKIE)?.value ||
+    (demoEnabled() && request.cookies.get(DEMO_COOKIE)?.value === "1"),
   );
 }
 
@@ -51,8 +55,8 @@ export async function hasServerSessionCookie() {
 
   return Boolean(
     cookieStore.get(ACCESS_COOKIE)?.value ||
-      cookieStore.get(REFRESH_COOKIE)?.value ||
-      (demoEnabled() && cookieStore.get(DEMO_COOKIE)?.value === "1")
+    cookieStore.get(REFRESH_COOKIE)?.value ||
+    (demoEnabled() && cookieStore.get(DEMO_COOKIE)?.value === "1"),
   );
 }
 
@@ -70,7 +74,8 @@ function setSessionCookies(response: NextResponse, auth: AuthResponse) {
 
 async function callBackend(path: string, init: FetchInit = {}) {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (init.body && !headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json");
   headers.set("Accept", "application/json, application/problem+json");
 
   return fetch(`${API_URL}${path}`, {
@@ -82,7 +87,8 @@ async function callBackend(path: string, init: FetchInit = {}) {
 }
 
 async function toNextResponse(response: Response) {
-  const contentType = response.headers.get("content-type") ?? "application/json";
+  const contentType =
+    response.headers.get("content-type") ?? "application/json";
   const body = response.status === 204 ? null : await response.text();
   return new NextResponse(body, {
     status: response.status,
@@ -94,7 +100,8 @@ export function unavailableResponse() {
   const problem: ApiProblem = {
     title: "Serviço temporariamente indisponível",
     status: 503,
-    detail: "Não foi possível conectar ao servidor do DNA Futsal. Tente novamente em instantes.",
+    detail:
+      "Não foi possível conectar ao servidor do DNA Futsal. Tente novamente em instantes.",
     code: "BACKEND_UNAVAILABLE",
   };
   return NextResponse.json(problem, { status: 503 });
@@ -119,7 +126,10 @@ export async function createLoginResponse(response: Response) {
 export async function loginWithBackend(payload: unknown) {
   try {
     return await createLoginResponse(
-      await callBackend("/api/v1/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+      await callBackend("/api/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
     );
   } catch {
     return unavailableResponse();
@@ -135,7 +145,11 @@ async function refreshSession(refreshToken: string) {
   return (await response.json()) as AuthResponse;
 }
 
-async function authorizedCall(path: string, accessToken: string, init: FetchInit = {}) {
+async function authorizedCall(
+  path: string,
+  accessToken: string,
+  init: FetchInit = {},
+) {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
   return callBackend(path, { ...init, headers });
@@ -164,28 +178,18 @@ export async function proxyAuthenticated(
         auth = await refreshSession(refreshToken);
 
         if (auth) {
-          response = await authorizedCall(
-            path,
-            auth.accessToken,
-            init,
-          );
+          response = await authorizedCall(path, auth.accessToken, init);
         }
       }
     } else {
       // Temos refresh token, mas não temos access token.
-      auth = refreshToken
-        ? await refreshSession(refreshToken)
-        : null;
+      auth = refreshToken ? await refreshSession(refreshToken) : null;
 
       if (!auth) {
         return sessionRequiredResponse();
       }
 
-      response = await authorizedCall(
-        path,
-        auth.accessToken,
-        init,
-      );
+      response = await authorizedCall(path, auth.accessToken, init);
     }
 
     const nextResponse = await toNextResponse(response);
@@ -207,6 +211,7 @@ export async function proxyAuthenticated(
 export async function authenticatedBatch(
   request: NextRequest,
   paths: Record<string, string>,
+  fallbacks: Record<string, unknown> = {},
 ) {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -219,10 +224,7 @@ export async function authenticatedBatch(
     Promise.all(
       Object.entries(paths).map(
         async ([key, path]) =>
-          [
-            key,
-            await authorizedCall(path, token),
-          ] as const,
+          [key, await authorizedCall(path, token)] as const,
       ),
     );
 
@@ -245,9 +247,7 @@ export async function authenticatedBatch(
         }
       }
     } else {
-      auth = refreshToken
-        ? await refreshSession(refreshToken)
-        : null;
+      auth = refreshToken ? await refreshSession(refreshToken) : null;
 
       if (!auth) {
         return sessionRequiredResponse();
@@ -257,7 +257,12 @@ export async function authenticatedBatch(
     }
 
     const failed = responses.find(
-      ([, response]) => !response.ok,
+      ([key, response]) =>
+        !response.ok &&
+        !(
+          response.status >= 500 &&
+          Object.prototype.hasOwnProperty.call(fallbacks, key)
+        ),
     );
 
     if (failed) {
@@ -276,19 +281,16 @@ export async function authenticatedBatch(
 
     const data = Object.fromEntries(
       await Promise.all(
-        responses.map(
-          async ([key, response]) => [
-            key,
-            await response.json(),
-          ],
-        ),
+        responses.map(async ([key, response]) => [
+          key,
+          response.ok ? await response.json() : fallbacks[key],
+        ]),
       ),
     );
 
     const nextResponse = NextResponse.json(data, {
       headers: {
-        "Cache-Control":
-          "private, max-age=20, stale-while-revalidate=40",
+        "Cache-Control": "private, max-age=20, stale-while-revalidate=40",
       },
     });
 
@@ -327,7 +329,7 @@ function sessionRequiredResponse() {
       detail: "Entre novamente para continuar.",
       code: "SESSION_REQUIRED",
     },
-    { status: 401 }
+    { status: 401 },
   );
 
   clearSessionCookies(response);
