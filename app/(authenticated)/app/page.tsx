@@ -19,17 +19,40 @@ export default function DashboardPage() {
   if (error || !data) return <ErrorState message={error || "Dados não encontrados."} onRetry={reload} />;
   const nextMatch = data.upcoming[0];
   const latestMatch = data.played[0];
-  const position = data.standings.find((row) => row.team.id === profile?.teamId)?.position ?? data.standings[0]?.position;
+  const position =
+    profile?.teamId
+      ? data.standings.find(
+        (row) =>
+          row.team.id ===
+          profile.teamId,
+      )?.position ?? null
+      : null;
   const firstName = profile?.name.split(" ")[0];
 
   return (
     <div>
-      <div className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow">Seu resumo</p><h1 className="display-title mt-2 text-4xl font-black leading-none text-ivory sm:text-5xl">Olá{firstName ? `, ${firstName}` : ""}.</h1><p className="mt-2 text-sm text-muted sm:text-base">Aqui está o que importa para o seu time hoje.</p></div></div>
+      <div className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow">Seu resumo</p><h1 className="display-title mt-2 text-4xl font-black leading-none text-ivory sm:text-5xl">Olá{firstName ? `, ${firstName}` : ""}.</h1><p className="mt-2 text-sm text-muted sm:text-base">
+        {profile?.teamId
+          ? "Aqui está o que importa para o seu time hoje."
+          : "Aqui está o panorama da categoria que você acompanha."}
+      </p></div></div>
 
       {nextMatch ? (
         <section className="relative overflow-hidden rounded-[1.75rem] border border-cyan/20 bg-gradient-to-br from-deep/35 via-panel to-night p-5 shadow-glow sm:p-7">
           <div className="absolute -right-16 -top-20 size-64 rounded-full border-[26px] border-cyan/6" />
-          <div className="relative"><p className="eyebrow"><CalendarClock className="size-4" />Próximo desafio</p><div className="mt-5"><MatchCard match={nextMatch} /></div><Link href="/app/jogos" className="mt-4 inline-flex items-center gap-2 text-sm font-black text-cyan hover:text-white">Ver calendário completo <ArrowRight className="size-4" /></Link></div>
+          <div className="relative"><p className="eyebrow">
+            <CalendarClock className="size-4" />
+
+            {profile?.teamId
+              ? "Próximo desafio"
+              : "Próximo jogo"}
+          </p><div className="mt-5"><MatchCard match={nextMatch} />
+            </div>
+            <Link href="/app/jogos" className="mt-4 inline-flex items-center gap-2 text-sm font-black text-cyan hover:text-white">
+              Ver calendário completo
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </section>
       ) : null}
 

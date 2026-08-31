@@ -142,3 +142,9 @@ export type CatalogCategory = {
   name: string;
   eventId: number;
 };
+
+export type MatchCalendar = {
+  currentPhase?: string | null;
+  played: Match[];
+  upcoming: Match[];
+};
