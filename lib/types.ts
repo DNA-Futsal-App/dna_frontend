@@ -130,10 +130,7 @@ export type ApiProblem = {
 };
 
 export type DashboardData = {
-  played: Match[];
-  upcoming: Match[];
-  standings: Standing[];
-  topScorers: TopScorer[];
+  sports: SportsHome;
   news: NewsPage;
 };
 
@@ -180,3 +177,33 @@ export type MyTeam = {
 
   recentForm: TeamFormResult[];
 }; 
+
+export type SportsHomeMode =
+  | "TEAM"
+  | "CATEGORY";
+
+export type SportsHome = {
+  mode: SportsHomeMode;
+
+  eventId: number;
+  competitionName?: string | null;
+  season: number;
+  category?: string | null;
+  division?: string | null;
+
+  currentPhase?: string | null;
+  standingGroup?: string | null;
+
+  team?: Team | null;
+  teamStanding?: Standing | null;
+
+  latestMatch?: Match | null;
+  nextMatch?: Match | null;
+
+  teamCount: number;
+  upcomingCount: number;
+
+  standings: Standing[];
+  topScorers: TopScorer[];
+  recentMatches: Match[];
+};
