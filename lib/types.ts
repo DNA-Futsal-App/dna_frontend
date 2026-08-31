@@ -148,3 +148,35 @@ export type MatchCalendar = {
   played: Match[];
   upcoming: Match[];
 };
+
+export type TeamFormResult =
+  | "WIN"
+  | "DRAW"
+  | "LOSS"
+  | "UNKNOWN";
+
+export type MyTeam = {
+  configured: boolean;
+
+  team?: Team | null;
+
+  eventId: number;
+
+  competitionName?: string | null;
+  season: number;
+  category?: string | null;
+  division?: string | null;
+  currentPhase?: string | null;
+
+  standing?: Standing | null;
+
+  latestMatch?: Match | null;
+  nextMatch?: Match | null;
+
+  recentMatches: Match[];
+  upcomingMatches: Match[];
+
+  topScorers: TopScorer[];
+
+  recentForm: TeamFormResult[];
+}; 

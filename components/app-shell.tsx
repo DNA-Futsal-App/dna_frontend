@@ -11,6 +11,7 @@ import {
   Medal,
   Newspaper,
   Settings,
+  Shield,
   TableProperties,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
@@ -18,13 +19,44 @@ import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
 
 const navigation = [
-  { href: "/app", label: "Meu time", icon: House, exact: true },
-  { href: "/app/jogos", label: "Jogos", icon: CalendarDays },
-  { href: "/app/tabela", label: "Tabela", icon: TableProperties },
-  { href: "/app/artilharia", label: "Artilharia", icon: Medal },
-  { href: "/app/noticias", label: "Notícias", icon: Newspaper },
+  {
+    href: "/app",
+    label: "Início",
+    icon: House,
+    exact: true,
+    mobile: true,
+  },
+  {
+    href: "/app/meu-time",
+    label: "Meu time",
+    icon: Shield,
+    mobile: true,
+  },
+  {
+    href: "/app/jogos",
+    label: "Jogos",
+    icon: CalendarDays,
+    mobile: true,
+  },
+  {
+    href: "/app/tabela",
+    label: "Tabela",
+    icon: TableProperties,
+    mobile: true,
+  },
+  {
+    href: "/app/artilharia",
+    label: "Artilharia",
+    icon: Medal,
+    mobile: true,
+  },
+  {
+    href: "/app/noticias",
+    label: "Notícias",
+    icon: Newspaper,
+    mobile: false,
+  },
 ];
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   return <ProfileProvider><AppShellContent>{children}</AppShellContent></ProfileProvider>;
 }
@@ -83,7 +115,6 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
             <button type="button" className="group flex min-w-0 items-center gap-2 rounded-full border border-white/8 bg-panel/75 px-3.5 py-2 text-left transition hover:border-cyan/25">
               <span className="size-2 rounded-full bg-cyan shadow-[0_0_12px_rgba(98,227,232,.8)]" aria-hidden="true" />
               <span className="min-w-0"><small className="block text-[9px] font-black uppercase tracking-wider text-muted">Acompanhando</small><strong className="block truncate text-xs text-ivory sm:text-sm">{preferenceLabel}</strong></span>
-              <ChevronDown className="size-4 shrink-0 text-muted transition group-hover:text-cyan" aria-hidden="true" />
             </button>
             <Link href="/app/perfil" className="inline-flex size-10 items-center justify-center rounded-full border border-cyan/20 bg-gradient-to-br from-cyan/20 to-deep/30 text-xs font-black text-cyan" aria-label="Abrir meu perfil">{initials(profile?.name ?? "DNA")}</Link>
           </div>
@@ -92,15 +123,17 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-night/94 px-1 pb-[var(--safe-bottom)] backdrop-blur-xl lg:hidden" aria-label="Navegação principal">
-        {navigation.map((item) => {
-          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link key={item.href} href={item.href} className={`flex min-h-17 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? "text-cyan" : "text-muted"}`} aria-current={active ? "page" : undefined}>
-              <Icon className={`size-5 ${active ? "drop-shadow-[0_0_8px_rgba(98,227,232,.45)]" : ""}`} aria-hidden="true" />{item.label}
-            </Link>
-          );
-        })}
+        {navigation
+          .filter((item) => item.mobile)
+          .map((item) => {
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link key={item.href} href={item.href} className={`flex min-h-17 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? "text-cyan" : "text-muted"}`} aria-current={active ? "page" : undefined}>
+                <Icon className={`size-5 ${active ? "drop-shadow-[0_0_8px_rgba(98,227,232,.45)]" : ""}`} aria-hidden="true" />{item.label}
+              </Link>
+            );
+          })}
       </nav>
     </div>
   );
