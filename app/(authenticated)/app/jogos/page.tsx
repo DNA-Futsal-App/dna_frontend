@@ -18,7 +18,6 @@ import { MatchCard } from "@/components/match-card";
 import { PageIntro } from "@/components/page-intro";
 
 import type {
-  Match,
   MatchCalendar,
 } from "@/lib/types";
 
@@ -43,7 +42,9 @@ function Matches() {
 
   const [tab, setTab] =
     useState<
-      "upcoming" | "played"
+      "upcoming" |
+      "played" |
+      "pending"
     >(initialTab);
 
   const [selectedPhase, setSelectedPhase] =
@@ -95,7 +96,9 @@ function Matches() {
       const source =
         tab === "played"
           ? data.played
-          : data.upcoming;
+          : tab === "pending"
+            ? data.pendingResults
+            : data.upcoming;
 
       if (!selectedPhase) {
         return source;
@@ -175,6 +178,17 @@ function Matches() {
           {" "}
           {data.currentPhase}
         </div>
+      ) : null}
+
+      {data.pendingResults.length ? (
+        <Tab
+          active={tab === "pending"}
+          onClick={() =>
+            setTab("pending")
+          }
+        >
+          Aguardando resultado
+        </Tab>
       ) : null}
 
       {phases.length > 1 ? (
@@ -263,8 +277,8 @@ function Tab({
       type="button"
       onClick={onClick}
       className={`min-h-10 rounded-full px-4 text-xs font-black transition ${active
-          ? "bg-cyan text-ink"
-          : "text-muted hover:text-ivory"
+        ? "bg-cyan text-ink"
+        : "text-muted hover:text-ivory"
         }`}
     >
       {children}
@@ -286,8 +300,8 @@ function PhaseButton({
       type="button"
       onClick={onClick}
       className={`rounded-full border px-3 py-2 text-xs font-bold transition ${active
-          ? "border-cyan/30 bg-cyan/10 text-cyan"
-          : "border-white/10 bg-panel text-muted hover:text-ivory"
+        ? "border-cyan/30 bg-cyan/10 text-cyan"
+        : "border-white/10 bg-panel text-muted hover:text-ivory"
         }`}
     >
       {children}

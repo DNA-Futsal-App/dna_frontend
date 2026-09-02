@@ -28,9 +28,10 @@ export type Match = {
   homeScore?: number | null;
   awayScore?: number | null;
 
+  scheduledDate?: string | null;
   scheduledAt?: string | null;
 
-  status: string;
+  status: MatchStatus;
   walkover: boolean;
 
   venue?: string | null;
@@ -142,8 +143,12 @@ export type CatalogCategory = {
 
 export type MatchCalendar = {
   currentPhase?: string | null;
+
+  scheduleState: SportsScheduleState;
+
   played: Match[];
   upcoming: Match[];
+  pendingResults: Match[];
 };
 
 export type TeamFormResult =
@@ -165,6 +170,12 @@ export type MyTeam = {
   division?: string | null;
   currentPhase?: string | null;
 
+  state: MyTeamState;
+
+  scheduleState: SportsScheduleState;
+
+  pendingResults: Match[];
+
   standing?: Standing | null;
 
   latestMatch?: Match | null;
@@ -176,7 +187,7 @@ export type MyTeam = {
   topScorers: TopScorer[];
 
   recentForm: TeamFormResult[];
-}; 
+};
 
 export type SportsHomeMode =
   | "TEAM"
@@ -190,6 +201,7 @@ export type SportsHome = {
   season: number;
   category?: string | null;
   division?: string | null;
+  scheduleState: SportsScheduleState;
 
   currentPhase?: string | null;
   standingGroup?: string | null;
@@ -207,3 +219,18 @@ export type SportsHome = {
   topScorers: TopScorer[];
   recentMatches: Match[];
 };
+
+export type MatchStatus =
+  | "SCHEDULED"
+  | "FINISHED"
+  | "RESULT_PENDING";
+
+export type SportsScheduleState =
+  | "ACTIVE"
+  | "AWAITING_SCHEDULE"
+  | "NO_GAMES";
+
+export type MyTeamState =
+  | "READY"
+  | "NOT_CONFIGURED"
+  | "TEAM_UNAVAILABLE";

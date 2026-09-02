@@ -27,43 +27,79 @@ export function MatchCard({
 
   const day = scheduledAt
     ? formatDate(
-        scheduledAt,
-        {
-          day: "2-digit",
-          month: "short",
-        },
-      ).replace(".", "")
+      scheduledAt,
+      {
+        day: "2-digit",
+        month: "short",
+      },
+    ).replace(".", "")
     : null;
 
   const time = scheduledAt
     ? new Date(
-        scheduledAt,
-      ).toLocaleTimeString(
-        "pt-BR",
-        {
-          timeZone:
-            "America/Sao_Paulo",
-          hour: "2-digit",
-          minute: "2-digit",
-        },
-      )
+      scheduledAt,
+    ).toLocaleTimeString(
+      "pt-BR",
+      {
+        timeZone:
+          "America/Sao_Paulo",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    )
     : null;
+  const scheduledDate =
+    match.scheduledDate
+      ? new Date(
+        `${match.scheduledDate}T12:00:00`,
+      )
+      : null;
 
-  const statusLabel = match.walkover
-    ? "W.O."
-    : finished
-      ? "Encerrado"
-      : day && time
-        ? `${day} • ${time}`
-        : "A definir";
+  const dateOnlyLabel =
+    scheduledDate
+      ? scheduledDate
+        .toLocaleDateString(
+          "pt-BR",
+          {
+            day: "2-digit",
+            month: "short",
+          },
+        )
+        .replace(".", "")
+      : null;
+
+  const statusLabel =
+    match.walkover
+      ? "W.O."
+      : match.status ===
+        "FINISHED"
+        ? "Encerrado"
+        : match.status ===
+          "RESULT_PENDING"
+          ? "Aguardando resultado"
+          : day && time
+            ? `${day} • ${time}`
+            : dateOnlyLabel
+              ? `${dateOnlyLabel} • Horário a definir`
+              : "A definir";
+  const scoreLabel =
+    match.homeScore != null &&
+      match.awayScore != null &&
+      match.status === "FINISHED"
+      ? `${match.homeScore} × ${match.awayScore}`
+      : match.walkover
+        ? "W.O."
+        : match.status ===
+          "RESULT_PENDING"
+          ? "—"
+          : "×";
 
   return (
     <article
-      className={`surface rounded-2xl ${
-        compact
-          ? "p-4"
-          : "p-4 sm:p-5"
-      }`}
+      className={`surface rounded-2xl ${compact
+        ? "p-4"
+        : "p-4 sm:p-5"
+        }`}
     >
       <div className="flex items-center justify-between gap-3 text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted">
         <span className="truncate">
@@ -90,13 +126,7 @@ export function MatchCard({
         />
 
         <div className="flex min-w-14 items-center justify-center rounded-xl border border-white/10 bg-ink/50 px-2 py-2 font-mono text-lg font-black text-ivory">
-          {finished
-            ? `${
-                match.homeScore ?? 0
-              } × ${
-                match.awayScore ?? 0
-              }`
-            : "×"}
+          {scoreLabel}
         </div>
 
         <TeamSide
@@ -115,7 +145,9 @@ export function MatchCard({
 
             {day && time
               ? `${day}, ${time}`
-              : "Data e horário a definir"}
+              : dateOnlyLabel
+                ? `${dateOnlyLabel}, horário a definir`
+                : "Data e horário a definir"}
           </span>
 
           {match.venue ? (
@@ -143,11 +175,10 @@ function TeamSide({
 }) {
   return (
     <div
-      className={`flex min-w-0 items-center gap-2 ${
-        align === "right"
-          ? "flex-row-reverse text-right"
-          : "text-left"
-      }`}
+      className={`flex min-w-0 items-center gap-2 ${align === "right"
+        ? "flex-row-reverse text-right"
+        : "text-left"
+        }`}
     >
       <TeamMark team={team} />
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {proxyAuthenticated } from "@/lib/backend";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ slug: string }> }) {

@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   CalendarDays,
-  ChevronDown,
   House,
   LogOut,
   Medal,
@@ -27,15 +26,15 @@ const navigation = [
     mobile: true,
   },
   {
-    href: "/app/meu-time",
-    label: "Meu time",
-    icon: Shield,
-    mobile: true,
-  },
-  {
     href: "/app/jogos",
     label: "Jogos",
     icon: CalendarDays,
+    mobile: true,
+  },
+   {
+    href: "/app/meu-time",
+    label: "Meu time",
+    icon: Shield,
     mobile: true,
   },
   {

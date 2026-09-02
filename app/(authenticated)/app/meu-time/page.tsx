@@ -59,6 +59,41 @@ export default function MyTeamPage() {
   }
 
   if (
+    data.state ===
+    "TEAM_UNAVAILABLE"
+  ) {
+    return (
+      <div>
+        <PageIntro
+          eyebrow="Atualização necessária"
+          title="Meu Time"
+          description="O time salvo no seu perfil não está disponível na competição atual."
+        />
+
+        <section className="surface rounded-[1.75rem] px-5 py-10 text-center">
+          <Shield className="mx-auto size-10 text-amber" />
+
+          <h2 className="mt-4 text-xl font-black text-ivory">
+            Atualize o time acompanhado
+          </h2>
+
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
+            Isso pode acontecer quando começa uma nova temporada ou quando a composição da competição muda.
+          </p>
+
+          <Link
+            href="/app/perfil"
+            className="btn-primary mt-6 inline-flex"
+          >
+            <Settings className="size-4" />
+            Atualizar perfil
+          </Link>
+        </section>
+      </div>
+    );
+  }
+
+  if (
     !data.configured ||
     !data.team
   ) {
@@ -137,8 +172,8 @@ export default function MyTeamPage() {
           value={
             standing?.points != null
               ? String(
-                  standing.points,
-                )
+                standing.points,
+              )
               : "—"
           }
         />
@@ -149,8 +184,8 @@ export default function MyTeamPage() {
           value={
             standing?.played != null
               ? String(
-                  standing.played,
-                )
+                standing.played,
+              )
               : "—"
           }
         />
@@ -160,15 +195,13 @@ export default function MyTeamPage() {
           label="Saldo"
           value={
             standing?.goalDifference !=
-            null
-              ? `${
-                  standing.goalDifference >
-                  0
-                    ? "+"
-                    : ""
-                }${
-                  standing.goalDifference
-                }`
+              null
+              ? `${standing.goalDifference >
+                0
+                ? "+"
+                : ""
+              }${standing.goalDifference
+              }`
               : "—"
           }
         />
