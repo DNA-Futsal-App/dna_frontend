@@ -7,6 +7,23 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "admfutsal.com.br",
+        port: "",
+        pathname: "/assets/images/foto/atleta/**",
+      },
+      {
+        protocol: "https",
+        hostname: "admfutsal.com.br",
+        port: "",
+        pathname: "/assets/images/foto/atleta/**",
+      },
+    ],
+  },
+
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

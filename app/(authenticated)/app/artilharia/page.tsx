@@ -69,6 +69,7 @@ export default function TopScorersPage() {
 
               <div className="relative mt-5 flex items-center gap-4">
                 <TeamMark
+                  imageUrl={leader.athleteImageUrl ?? null}
                   team={leader.team}
                   size="lg"
                 />

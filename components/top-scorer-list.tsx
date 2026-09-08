@@ -41,6 +41,7 @@ export function TopScorerList({
             </span>
 
             <TeamMark
+              imageUrl={scorer.athleteImageUrl ?? null}
               team={scorer.team}
               size="sm"
             />
