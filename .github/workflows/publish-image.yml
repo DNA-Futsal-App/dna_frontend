@@ -20,7 +20,6 @@ env:
   IMAGE_NAME: dna-futsal-app/dna_frontend
 
 jobs:
-
   validate:
     name: Validate frontend
     runs-on: ubuntu-latest
@@ -43,7 +42,6 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
-
 
   publish:
     name: Build and publish image
@@ -101,6 +99,24 @@ jobs:
       vars.AUTO_DEPLOY_ENABLED == 'true'
 
     steps:
+      - name: Validate deployment secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+
+        run: |
+          set -Eeuo pipefail
+
+          : "${VPS_HOST:?VPS_HOST is missing}"
+          : "${VPS_PORT:?VPS_PORT is missing}"
+          : "${VPS_USER:?VPS_USER is missing}"
+          : "${VPS_SSH_PRIVATE_KEY:?VPS_SSH_PRIVATE_KEY is missing}"
+          : "${VPS_SSH_KNOWN_HOSTS:?VPS_SSH_KNOWN_HOSTS is missing}"
+
+          echo "All deployment secrets are configured."
 
       - name: Configure SSH
         env:
@@ -112,14 +128,10 @@ jobs:
 
           install -m 700 -d ~/.ssh
 
-          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" \
-            > ~/.ssh/id_ed25519
-
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" \
-            > ~/.ssh/known_hosts
-
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
       - name: Deploy immutable image to VPS
