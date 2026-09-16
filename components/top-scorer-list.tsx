@@ -1,5 +1,6 @@
 import { Trophy } from "lucide-react";
 
+import { AthleteAvatar } from "@/components/athlete-avatar";
 import { TeamMark } from "@/components/team-mark";
 import type { TopScorer } from "@/lib/types";
 
@@ -40,9 +41,9 @@ export function TopScorerList({
               {scorer.position}
             </span>
 
-            <TeamMark
+            <AthleteAvatar
               imageUrl={scorer.athleteImageUrl ?? null}
-              team={scorer.team}
+              personalDataSuppressed={scorer.personalDataSuppressed}
               size="sm"
             />
 
@@ -51,12 +52,13 @@ export function TopScorerList({
                 {athleteName}
               </strong>
 
-              <small className="block truncate text-xs text-muted">
-                {scorer.team.name}
+              <small className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+                <TeamMark team={scorer.team} size="xs" />
+                <span className="truncate">{scorer.team.name}
 
                 {scorer.phase
                   ? ` • ${scorer.phase}`
-                  : ""}
+                  : ""}</span>
               </small>
             </span>
 

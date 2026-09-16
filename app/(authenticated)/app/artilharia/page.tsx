@@ -12,6 +12,7 @@ import {
 } from "@/components/feedback";
 
 import { PageIntro } from "@/components/page-intro";
+import { AthleteAvatar } from "@/components/athlete-avatar";
 import { TeamMark } from "@/components/team-mark";
 import { TopScorerList } from "@/components/top-scorer-list";
 
@@ -68,9 +69,9 @@ export default function TopScorersPage() {
               </p>
 
               <div className="relative mt-5 flex items-center gap-4">
-                <TeamMark
+                <AthleteAvatar
                   imageUrl={leader.athleteImageUrl ?? null}
-                  team={leader.team}
+                  personalDataSuppressed={leader.personalDataSuppressed}
                   size="lg"
                 />
 
@@ -79,12 +80,13 @@ export default function TopScorersPage() {
                     {leaderName}
                   </h2>
 
-                  <p className="text-sm text-muted">
-                    {leader.team.name}
+                  <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted">
+                    <TeamMark team={leader.team} size="xs" />
+                    <span className="truncate">{leader.team.name}
 
                     {leader.phase
                       ? ` • ${leader.phase}`
-                      : ""}
+                      : ""}</span>
                   </p>
                 </div>
 

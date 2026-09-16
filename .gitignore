@@ -6,3 +6,5 @@
 /.vercel
 *.log
 .DS_Store
+/.team-logo-review/
+dna_frontend-escudos.patch
