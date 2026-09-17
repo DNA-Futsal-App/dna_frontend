@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
+  ClipboardCheck,
   House,
   LogOut,
   Medal,
@@ -85,6 +86,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { profile, preferenceLabel } = useProfile();
   const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
+  const [awardAdminEnabled, setAwardAdminEnabled] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +97,22 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       })
       .catch(() => {
         if (active) setCoachVotingEnabled(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    clientApi("/api/admin/awards/editions")
+      .then(() => {
+        if (active) setAwardAdminEnabled(true);
+      })
+      .catch(() => {
+        if (active) setAwardAdminEnabled(false);
       });
 
     return () => {
@@ -149,6 +167,15 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="mt-auto border-t border-white/8 pt-4">
+          {awardAdminEnabled ? (
+            <Link
+              href="/app/admin/premio-dna"
+              className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-bold transition ${pathname.startsWith("/app/admin/premio-dna") ? "bg-amber/10 text-amber" : "text-muted hover:bg-white/5 hover:text-ivory"}`}
+            >
+              <ClipboardCheck className="size-5" aria-hidden="true" />
+              Admin prêmio
+            </Link>
+          ) : null}
           <Link href="/app/perfil" className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-bold transition ${pathname.startsWith("/app/perfil") ? "bg-cyan/10 text-cyan" : "text-muted hover:bg-white/5 hover:text-ivory"}`}><Settings className="size-5" aria-hidden="true" />Meu perfil</Link>
           <button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-bold text-muted transition hover:bg-coral/8 hover:text-coral"><LogOut className="size-5" aria-hidden="true" />Sair</button>
         </div>
@@ -162,7 +189,18 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
               <span className="size-2 rounded-full bg-cyan shadow-[0_0_12px_rgba(98,227,232,.8)]" aria-hidden="true" />
               <span className="min-w-0"><small className="block text-[9px] font-black uppercase tracking-wider text-muted">Acompanhando</small><strong className="block truncate text-xs text-ivory sm:text-sm">{preferenceLabel}</strong></span>
             </button>
-            <Link href="/app/perfil" className="inline-flex size-10 items-center justify-center rounded-full border border-cyan/20 bg-gradient-to-br from-cyan/20 to-deep/30 text-xs font-black text-cyan" aria-label="Abrir meu perfil">{initials(profile?.name ?? "DNA")}</Link>
+            <div className="flex items-center gap-2">
+              {awardAdminEnabled ? (
+                <Link
+                  href="/app/admin/premio-dna"
+                  className="inline-flex size-10 items-center justify-center rounded-full border border-amber/20 bg-amber/8 text-amber lg:hidden"
+                  aria-label="Administrar Prêmio DNA Futsal"
+                >
+                  <ClipboardCheck className="size-5" />
+                </Link>
+              ) : null}
+              <Link href="/app/perfil" className="inline-flex size-10 items-center justify-center rounded-full border border-cyan/20 bg-gradient-to-br from-cyan/20 to-deep/30 text-xs font-black text-cyan" aria-label="Abrir meu perfil">{initials(profile?.name ?? "DNA")}</Link>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>

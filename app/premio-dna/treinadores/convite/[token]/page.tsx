@@ -18,12 +18,11 @@ export default function CoachInviteTokenPage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
   const [error, setError] = useState("");
+  const token = params.token;
+  const displayError = error || (!token ? "O link de convite está incompleto." : "");
 
   useEffect(() => {
-    const token = params.token;
-
     if (!token) {
-      setError("O link de convite está incompleto.");
       return;
     }
 
@@ -49,15 +48,17 @@ export default function CoachInviteTokenPage() {
             : "Não foi possível validar o convite.",
         ),
       );
-  }, [params.token, router]);
+  }, [token, router]);
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-night px-4 text-ivory">
       <div className="max-w-md text-center">
-        {error ? (
+        {displayError ? (
           <>
             <h1 className="display-title text-3xl">Convite indisponível</h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{error}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              {displayError}
+            </p>
           </>
         ) : (
           <>
