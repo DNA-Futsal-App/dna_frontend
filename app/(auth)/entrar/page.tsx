@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { clientApi } from "@/lib/client-api";
+import type { CoachInviteInfo } from "@/lib/awards-types";
 
 export default function LoginPage() {
   return (
@@ -19,11 +20,32 @@ function LoginForm() {
   const params = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [inviteChecked, setInviteChecked] = useState(false);
+  const [pendingCoachInvite, setPendingCoachInvite] = useState(false);
   const [error, setError] = useState(
     params.get("expired")
       ? "Sua sessão expirou. Entre novamente para continuar."
       : "",
   );
+
+  useEffect(() => {
+    let active = true;
+
+    clientApi<CoachInviteInfo>("/api/awards/coach-invite/current")
+      .then((invite) => {
+        if (active) setPendingCoachInvite(invite.available);
+      })
+      .catch(() => {
+        if (active) setPendingCoachInvite(false);
+      })
+      .finally(() => {
+        if (active) setInviteChecked(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,15 +54,33 @@ function LoginForm() {
 
     const form = new FormData(event.currentTarget);
 
-    await clientApi("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({
-        login: form.get("login"),
-        password: form.get("password"),
-      }),
-    });
+    try {
+      await clientApi("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          login: form.get("login"),
+          password: form.get("password"),
+        }),
+      });
 
-    window.location.replace("/app");
+      if (pendingCoachInvite) {
+        await clientApi("/api/awards/coach-invite/claim", {
+          method: "POST",
+        });
+
+        window.location.replace("/app/votacao-treinador");
+        return;
+      }
+
+      window.location.replace("/app");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível entrar na sua conta.",
+      );
+      setLoading(false);
+    }
   }
 
   return (
@@ -102,7 +142,7 @@ function LoginForm() {
             {error}
           </p>
         ) : null}
-        <button className="btn-primary mt-1 w-full" disabled={loading}>
+        <button className="btn-primary mt-1 w-full" disabled={loading || !inviteChecked}>
           {loading ? (
             <LoaderCircle className="size-5 animate-spin" />
           ) : (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   House,
@@ -12,12 +12,24 @@ import {
   Settings,
   Shield,
   TableProperties,
+  Trophy,
+  type LucideIcon,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
+import { clientApi } from "@/lib/client-api";
+import type { CoachVotingContext } from "@/lib/awards-types";
 
-const navigation = [
+type NavigationItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+  mobile: boolean;
+};
+
+const navigation: NavigationItem[] = [
   {
     href: "/app",
     label: "Início",
@@ -56,6 +68,14 @@ const navigation = [
     mobile: false,
   },
 ];
+
+const coachVotingNavigation: NavigationItem = {
+  href: "/app/votacao-treinador",
+  label: "Votação",
+  icon: Trophy,
+  mobile: true,
+};
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   return <ProfileProvider><AppShellContent>{children}</AppShellContent></ProfileProvider>;
 }
@@ -64,6 +84,33 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, preferenceLabel } = useProfile();
+  const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    clientApi<CoachVotingContext>("/api/awards/coach-voting/context")
+      .then(() => {
+        if (active) setCoachVotingEnabled(true);
+      })
+      .catch(() => {
+        if (active) setCoachVotingEnabled(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const navigationItems = useMemo(
+    () =>
+      coachVotingEnabled
+        ? [...navigation, coachVotingNavigation]
+        : navigation,
+    [coachVotingEnabled],
+  );
+
+  const mobileNavigation = navigationItems.filter((item) => item.mobile);
 
   useEffect(() => {
     const handleExpired = () => router.replace("/entrar?expired=1");
@@ -91,7 +138,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
           <span><strong className="display-title block text-xl leading-none text-ivory">DNA Futsal</strong><small className="mt-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-cyan">A base joga aqui</small></span>
         </Link>
         <nav className="mt-10 grid gap-1" aria-label="Navegação principal">
-          {navigation.map((item) => {
+          {navigationItems.map((item) => {
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
@@ -121,9 +168,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         <main className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-night/94 px-1 pb-[var(--safe-bottom)] backdrop-blur-xl lg:hidden" aria-label="Navegação principal">
-        {navigation
-          .filter((item) => item.mobile)
+      <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileNavigation.length >= 6 ? "grid-cols-6" : "grid-cols-5"} border-t border-white/10 bg-night/94 px-1 pb-[var(--safe-bottom)] backdrop-blur-xl lg:hidden`} aria-label="Navegação principal">
+        {mobileNavigation
           .map((item) => {
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             const Icon = item.icon;

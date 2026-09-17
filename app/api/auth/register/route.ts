@@ -1,9 +1,25 @@
 import { NextRequest } from "next/server";
 import { proxyPublic } from "@/lib/backend";
+import {
+  coachInviteToken,
+  clearCoachInviteCookie,
+} from "@/lib/coach-invite-cookie";
 
 export async function POST(request: NextRequest) {
-  return proxyPublic("/api/v1/auth/register", {
+  const payload = (await request.json()) as Record<string, unknown>;
+  const inviteToken = coachInviteToken(request);
+
+  const response = await proxyPublic("/api/v1/auth/register", {
     method: "POST",
-    body: JSON.stringify(await request.json()),
+    body: JSON.stringify({
+      ...payload,
+      coachInviteToken: inviteToken ?? null,
+    }),
   });
+
+  if (response.ok && inviteToken) {
+    clearCoachInviteCookie(response);
+  }
+
+  return response;
 }
