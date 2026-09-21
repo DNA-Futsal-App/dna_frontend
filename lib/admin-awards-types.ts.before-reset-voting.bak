@@ -117,13 +117,6 @@ export type SyncAwardCoachesResult = {
   coaches: AdminAwardCandidate[];
 };
 
-export type ResetAwardVotingResult = {
-  editionId: string;
-  ballotsDeleted: number;
-  votesDeleted: number;
-  edition: AdminAwardEdition;
-};
-
 
 export type AdminAwardAuditIssue = {
   ballotId?: string | null;

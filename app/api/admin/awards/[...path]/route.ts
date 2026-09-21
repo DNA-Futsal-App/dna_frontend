@@ -37,14 +37,21 @@ async function forward(
       ? undefined
       : await request.text();
 
-  return proxyAuthenticated(
-    request,
-    `/api/v1/admin/awards/${suffix}${query}`,
-    {
-      method,
-      body: body || undefined,
-    },
-  );
+  const timeoutMs =
+  method === "POST" &&
+  suffix.endsWith("/coaches/sync")
+    ? 120_000
+    : undefined;
+
+return proxyAuthenticated(
+  request,
+  `/api/v1/admin/awards/${suffix}${query}`,
+  {
+    method,
+    body: body || undefined,
+    timeoutMs,
+  },
+);
 }
 
 export function GET(
