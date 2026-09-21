@@ -1,6 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import type {
+  AdminAwardCandidate,
+  AdminAwardCoach,
+  AdminAwardEdition,
+  AdminAwardOverview,
+  CoachAdminAccessState,
+  CreateCoachInviteResult,
+  ImportAwardTeamResult,
+  SyncAwardCoachesResult,
+} from "@/lib/admin-awards-types";
+import {
+  ClientApiError,
+  clientApi,
+  formatDate,
+} from "@/lib/client-api";
+import type {
+  CatalogCategory,
+  CatalogItem,
+  Team,
+} from "@/lib/types";
 import {
   BarChart3,
   Check,
@@ -16,27 +35,8 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import {
-  ClientApiError,
-  clientApi,
-  formatDate,
-} from "@/lib/client-api";
-import type {
-  CatalogCategory,
-  CatalogItem,
-  Team,
-} from "@/lib/types";
-import type {
-  AdminAwardCandidate,
-  AdminAwardCoach,
-  AdminAwardEdition,
-  AdminAwardOverview,
-  CoachAdminAccessState,
-  CreateCoachInviteResult,
-  ImportAwardTeamResult,
-  SyncAwardCoachesResult,
-} from "@/lib/admin-awards-types";
 
 type Tab = "overview" | "coaches" | "control";
 
@@ -296,6 +296,7 @@ export default function AwardAdminPage() {
 
       {tab === "coaches" ? (
         <CoachesSection
+          key={selectedEdition.id}
           edition={selectedEdition}
           coaches={coaches}
           onChanged={async () => {
@@ -744,10 +745,6 @@ function CoachesSection({
     categories.find((item) => String(item.id) === categoryId) ?? null;
 
   useEffect(() => {
-    setDivisionId("");
-    setCategoryId("");
-    setCategories([]);
-
     clientApi<CatalogItem[]>(
       `/api/catalog/divisions?season=${edition.season}`,
     )
@@ -756,11 +753,7 @@ function CoachesSection({
   }, [edition.id, edition.season]);
 
   useEffect(() => {
-    if (!divisionId) {
-      setCategories([]);
-      setCategoryId("");
-      return;
-    }
+    if (!divisionId) return;
 
     clientApi<CatalogCategory[]>(
       `/api/catalog/categories?season=${edition.season}&divisionId=${encodeURIComponent(
@@ -917,6 +910,7 @@ function CoachesSection({
                 onChange={(event) => {
                   setDivisionId(event.target.value);
                   setCategoryId("");
+                  setCategories([]);
                 }}
                 required
               >

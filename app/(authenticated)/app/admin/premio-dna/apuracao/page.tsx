@@ -133,8 +133,6 @@ export default function AwardResultsAdminPage() {
     return () => {
       active = false;
     };
-    // loadEditionData is intentionally local to this screen.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const contextLabels = useMemo(() => {
