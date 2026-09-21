@@ -107,6 +107,16 @@ export type ImportAwardTeamResult = {
   candidates: AdminAwardCandidate[];
 };
 
+export type SyncAwardCoachesResult = {
+  editionId: string;
+  eventId: number;
+  divisionId: number;
+  categoryId: number;
+  teamsScanned: number;
+  coachesFound: number;
+  coaches: AdminAwardCandidate[];
+};
+
 
 export type AdminAwardAuditIssue = {
   ballotId?: string | null;

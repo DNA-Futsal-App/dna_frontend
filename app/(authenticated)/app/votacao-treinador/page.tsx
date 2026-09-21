@@ -76,6 +76,8 @@ export default function CoachVotingPage() {
     category: CoachVotingCategory,
     teamId: string,
   ) {
+    setError("");
+
     updateSelection(category.id, {
       teamId,
       candidateId: "",
@@ -99,6 +101,10 @@ export default function CoachVotingPage() {
           ...current,
           [category.id]: {
             ...current[category.id],
+            candidateId:
+              category.targetType === "COACH"
+                ? candidates[0]?.id ?? ""
+                : current[category.id]?.candidateId ?? "",
             candidates,
             loading: false,
           },
@@ -234,7 +240,8 @@ export default function CoachVotingPage() {
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">
           Você está votando como <strong className="text-ivory">{context.coachName}</strong>,
           representando <strong className="text-ivory">{context.representedTeamName}</strong>.
-          Escolha primeiro o time e depois o atleta ou técnico correspondente.
+          Para Goleiro, Fixo, Ala e Pivô, escolha o time e depois qualquer atleta
+          daquele elenco. A posição é definida pelo seu voto. Para Técnico, escolha apenas a equipe.
         </p>
       </header>
 
@@ -263,7 +270,11 @@ export default function CoachVotingPage() {
                 ) : null}
               </div>
 
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div
+                className={`mt-5 grid gap-4 ${
+                  category.targetType === "COACH" ? "" : "sm:grid-cols-2"
+                }`}
+              >
                 <label className="grid gap-1.5 text-sm font-bold">
                   Time
                   <select
@@ -274,47 +285,53 @@ export default function CoachVotingPage() {
                     }
                   >
                     <option value="">Selecione um time</option>
-                    {context.teams.map((team) => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
+                    {context.teams
+                      .filter(
+                        (team) =>
+                          category.targetType !== "COACH" ||
+                          team.id !== context.representedTeamId,
+                      )
+                      .map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
                   </select>
                 </label>
 
-                <label className="grid gap-1.5 text-sm font-bold">
-                  {category.targetType === "COACH" ? "Técnico" : "Atleta"}
-                  <select
-                    className="field"
-                    value={selection?.candidateId ?? ""}
-                    onChange={(event) =>
-                      updateSelection(category.id, {
-                        candidateId: event.target.value,
-                      })
-                    }
-                    disabled={!selection?.teamId || selection.loading}
-                  >
-                    <option value="">
-                      {selection?.loading
-                        ? "Carregando..."
-                        : category.targetType === "COACH"
-                          ? "Selecione o técnico"
+                {category.targetType !== "COACH" ? (
+                  <label className="grid gap-1.5 text-sm font-bold">
+                    Atleta
+                    <select
+                      className="field"
+                      value={selection?.candidateId ?? ""}
+                      onChange={(event) =>
+                        updateSelection(category.id, {
+                          candidateId: event.target.value,
+                        })
+                      }
+                      disabled={!selection?.teamId || selection.loading}
+                    >
+                      <option value="">
+                        {selection?.loading
+                          ? "Carregando..."
                           : "Selecione o atleta"}
-                    </option>
-                    {(selection?.candidates ?? []).map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        {candidate.name}
                       </option>
-                    ))}
-                  </select>
-                </label>
+                      {(selection?.candidates ?? []).map((candidate) => (
+                        <option key={candidate.id} value={candidate.id}>
+                          {candidate.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </div>
 
               {category.targetType === "COACH" ? (
                 <p className="mt-3 flex gap-2 text-xs text-muted">
                   <ShieldCheck className="size-4 shrink-0 text-cyan" />
-                  Seu próprio nome é removido das opções e também é bloqueado
-                  pelo servidor.
+                  O voto de Técnico é registrado diretamente para a equipe
+                  escolhida. Sua própria equipe não aparece nesta lista.
                 </p>
               ) : null}
             </section>
@@ -382,10 +399,16 @@ export default function CoachVotingPage() {
                     {category.label}
                   </span>
                   <span className="text-right text-sm font-black text-ivory">
-                    {candidate.name}
-                    <small className="block font-medium text-muted">
-                      {candidate.teamName}
-                    </small>
+                    {category.targetType === "COACH" ? (
+                      candidate.teamName
+                    ) : (
+                      <>
+                        {candidate.name}
+                        <small className="block font-medium text-muted">
+                          {candidate.teamName}
+                        </small>
+                      </>
+                    )}
                   </span>
                 </div>
               ))}

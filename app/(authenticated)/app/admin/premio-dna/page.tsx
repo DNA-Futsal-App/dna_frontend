@@ -35,14 +35,10 @@ import type {
   CoachAdminAccessState,
   CreateCoachInviteResult,
   ImportAwardTeamResult,
+  SyncAwardCoachesResult,
 } from "@/lib/admin-awards-types";
 
-type Tab =
-  | "overview"
-  | "import"
-  | "positions"
-  | "coaches"
-  | "control";
+type Tab = "overview" | "coaches" | "control";
 
 const positions = [
   { value: "GOLEIRO", label: "Goleiro" },
@@ -68,7 +64,6 @@ export default function AwardAdminPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
   const [editionId, setEditionId] = useState("");
   const [overview, setOverview] = useState<AdminAwardOverview | null>(null);
-  const [candidates, setCandidates] = useState<AdminAwardCandidate[]>([]);
   const [coaches, setCoaches] = useState<AdminAwardCoach[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
@@ -89,21 +84,16 @@ export default function AwardAdminPage() {
     if (!quiet) setRefreshing(true);
 
     try {
-      const [nextOverview, nextCandidates, nextCoaches] =
-        await Promise.all([
-          clientApi<AdminAwardOverview>(
-            `/api/admin/awards/editions/${targetEditionId}/overview`,
-          ),
-          clientApi<AdminAwardCandidate[]>(
-            `/api/admin/awards/editions/${targetEditionId}/candidates`,
-          ),
-          clientApi<AdminAwardCoach[]>(
-            `/api/admin/awards/editions/${targetEditionId}/coaches`,
-          ),
-        ]);
+      const [nextOverview, nextCoaches] = await Promise.all([
+        clientApi<AdminAwardOverview>(
+          `/api/admin/awards/editions/${targetEditionId}/overview`,
+        ),
+        clientApi<AdminAwardCoach[]>(
+          `/api/admin/awards/editions/${targetEditionId}/coaches`,
+        ),
+      ]);
 
       setOverview(nextOverview);
-      setCandidates(nextCandidates);
       setCoaches(nextCoaches);
     } catch (err) {
       setError(
@@ -206,8 +196,6 @@ export default function AwardAdminPage() {
 
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: "overview", label: "Visão geral" },
-    { id: "import", label: "Importar elenco" },
-    { id: "positions", label: "Posições" },
     { id: "coaches", label: "Treinadores" },
     { id: "control", label: "Votação" },
   ];
@@ -306,31 +294,6 @@ export default function AwardAdminPage() {
         <OverviewSection overview={overview} />
       ) : null}
 
-      {tab === "import" ? (
-        <ImportSection
-          edition={selectedEdition}
-          onImported={async (result) => {
-            flash(
-              `${result.teamName}: ${result.created} criados, ${result.updated} atualizados.`,
-            );
-            await loadEditionData(editionId);
-          }}
-          setError={setError}
-        />
-      ) : null}
-
-      {tab === "positions" ? (
-        <PositionsSection
-          edition={selectedEdition}
-          candidates={candidates}
-          onChanged={async () => {
-            await loadEditionData(editionId);
-          }}
-          setError={setError}
-          flash={flash}
-        />
-      ) : null}
-
       {tab === "coaches" ? (
         <CoachesSection
           edition={selectedEdition}
@@ -377,10 +340,8 @@ function OverviewSection({
   }
 
   const cards = [
-    { label: "Times", value: overview.teams },
-    { label: "Atletas", value: overview.athletes },
+    { label: "Times com técnico", value: overview.teams },
     { label: "Técnicos", value: overview.coaches },
-    { label: "Posições pendentes", value: overview.positionsPending },
     { label: "Treinadores cadastrados", value: overview.votersRegistered },
     { label: "Votos registrados", value: overview.ballotsSubmitted },
     { label: "Votos pendentes", value: overview.ballotsPending },
@@ -773,6 +734,78 @@ function CoachesSection({
     url: string;
     expiresAt: string;
   } | null>(null);
+  const [divisions, setDivisions] = useState<CatalogItem[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [divisionId, setDivisionId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [syncing, setSyncing] = useState(false);
+
+  const selectedCategory =
+    categories.find((item) => String(item.id) === categoryId) ?? null;
+
+  useEffect(() => {
+    setDivisionId("");
+    setCategoryId("");
+    setCategories([]);
+
+    clientApi<CatalogItem[]>(
+      `/api/catalog/divisions?season=${edition.season}`,
+    )
+      .then(setDivisions)
+      .catch(() => setDivisions([]));
+  }, [edition.id, edition.season]);
+
+  useEffect(() => {
+    if (!divisionId) {
+      setCategories([]);
+      setCategoryId("");
+      return;
+    }
+
+    clientApi<CatalogCategory[]>(
+      `/api/catalog/categories?season=${edition.season}&divisionId=${encodeURIComponent(
+        divisionId,
+      )}`,
+    )
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, [divisionId, edition.season]);
+
+  async function syncCoaches(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedCategory || !divisionId || edition.status !== "DRAFT") return;
+
+    setSyncing(true);
+    setError("");
+
+    try {
+      const result = await clientApi<SyncAwardCoachesResult>(
+        `/api/admin/awards/editions/${edition.id}/coaches/sync`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            eventId: selectedCategory.eventId,
+            divisionId: Number(divisionId),
+            categoryId: Number(selectedCategory.id),
+          }),
+        },
+      );
+
+      flash(
+        `${result.coachesFound} treinador(es) sincronizado(s) em ${result.teamsScanned} time(s).`,
+      );
+      await onChanged();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível sincronizar os treinadores.",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function generate(coach: AdminAwardCoach) {
     setBusyId(coach.candidateId);
@@ -854,6 +887,81 @@ function CoachesSection({
 
   return (
     <div className="grid gap-5">
+      <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <Users className="mt-1 size-6 text-cyan" />
+          <div>
+            <h2 className="text-xl font-black">Sincronizar treinadores</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Escolha a divisão e a categoria. O sistema percorre todos os times
+              desse campeonato e traz somente os técnicos principais para a lista
+              de convites. Atletas não precisam ser importados pelo administrador.
+            </p>
+          </div>
+        </div>
+
+        {edition.status !== "DRAFT" ? (
+          <p className="mt-5 rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-sm text-muted">
+            A sincronização de treinadores fica bloqueada depois que a votação é aberta.
+          </p>
+        ) : (
+          <form
+            onSubmit={syncCoaches}
+            className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+          >
+            <label className="grid gap-1.5 text-sm font-bold">
+              Divisão
+              <select
+                className="field"
+                value={divisionId}
+                onChange={(event) => {
+                  setDivisionId(event.target.value);
+                  setCategoryId("");
+                }}
+                required
+              >
+                <option value="">Selecione</option>
+                {divisions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-1.5 text-sm font-bold">
+              Categoria
+              <select
+                className="field"
+                value={categoryId}
+                onChange={(event) => setCategoryId(event.target.value)}
+                disabled={!divisionId}
+                required
+              >
+                <option value="">Selecione</option>
+                {categories.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              className="btn-primary"
+              disabled={syncing || !selectedCategory}
+            >
+              {syncing ? (
+                <LoaderCircle className="size-5 animate-spin" />
+              ) : (
+                <RefreshCw className="size-5" />
+              )}
+              {syncing ? "Sincronizando..." : "Sincronizar técnicos"}
+            </button>
+          </form>
+        )}
+      </section>
+
       {generated ? (
         <section className="rounded-3xl border border-cyan/20 bg-cyan/6 p-5">
           <div className="flex items-center gap-2 text-cyan">
@@ -978,7 +1086,7 @@ function CoachesSection({
 
           {!coaches.length ? (
             <p className="py-8 text-center text-sm text-muted">
-              Nenhum técnico importado ainda.
+              Nenhum técnico sincronizado ainda.
             </p>
           ) : null}
         </div>
@@ -1013,7 +1121,7 @@ function VotingControlSection({
     if (!opensAt || !closesAt) return;
 
     const confirmed = window.confirm(
-      "Abrir a edição congela o snapshot de candidatos e posições. Continuar?",
+      "Abrir a edição habilita a votação usando os times e elencos atuais do catálogo esportivo. Continuar?",
     );
 
     if (!confirmed) return;
@@ -1135,8 +1243,9 @@ function VotingControlSection({
               <h2 className="text-xl font-black">Abrir votação</h2>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              O backend só abre a edição se não houver atletas sem posição e se
-              todas as categorias obrigatórias tiverem candidatos.
+              O backend abre a edição quando as categorias de voto estão configuradas
+              e os treinadores da divisão/categoria já foram sincronizados. Os atletas
+              são carregados automaticamente durante a votação.
             </p>
 
             <form onSubmit={open} className="mt-5 grid gap-4">
@@ -1177,8 +1286,8 @@ function VotingControlSection({
               <h2 className="text-xl font-black">Votação em andamento</h2>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Candidatos e posições estão congelados. Você ainda pode acompanhar
-              convites, cadastros e votos.
+              Os times e atletas são consultados do catálogo esportivo durante a
+              votação. Você ainda pode acompanhar convites, cadastros e votos.
             </p>
             <button
               type="button"
