@@ -9,3 +9,4 @@
 /.team-logo-review/
 dna_frontend-escudos.patch
 *.patch
+*.ps1

@@ -8,7 +8,6 @@ import type {
   CoachAdminAccessState,
   CreateCoachInviteResult,
   ImportAwardTeamResult,
-  ResetAwardVotingResult,
   SyncAwardCoachesResult,
 } from "@/lib/admin-awards-types";
 import {
@@ -1105,7 +1104,6 @@ function VotingControlSection({
 }) {
   const [opening, setOpening] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1179,42 +1177,6 @@ function VotingControlSection({
     }
   }
 
-
-  async function resetVoting() {
-    const ballotsSubmitted = overview?.ballotsSubmitted ?? 0;
-
-    const confirmed = window.confirm(
-      `Atenção: resetar a votação apagará permanentemente ${ballotsSubmitted} cedulas(s) e todos os votos associados desta edição. Os treinadores cadastrados poderão votar novamente. Deseja continuar?`,
-    );
-
-    if (!confirmed) return;
-
-    setResetting(true);
-    setError("");
-
-    try {
-      const result = await clientApi<ResetAwardVotingResult>(
-        `/api/admin/awards/editions/${edition.id}/reset-voting`,
-        {
-          method: "POST",
-        },
-      );
-
-      flash(
-        `Votação resetada: ${result.ballotsDeleted} cédula(s) e ${result.votesDeleted} voto(s) removidos.`,
-      );
-
-      await onChanged(result.edition);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível resetar a votação.",
-      );
-    } finally {
-      setResetting(false);
-    }
-  }
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
@@ -1334,23 +1296,6 @@ function VotingControlSection({
               )}
               Encerrar votação agora
             </button>
-            <button
-              type="button"
-              className="btn-ghost mt-3 w-full border-coral/30 text-coral hover:bg-coral/10"
-              onClick={() => void resetVoting()}
-              disabled={
-                resetting ||
-                closing ||
-                (overview?.ballotsSubmitted ?? 0) === 0
-              }
-            >
-              {resetting ? (
-                <LoaderCircle className="size-5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-5" />
-              )}
-              {resetting ? "Resetando..." : "Resetar votação"}
-            </button>
           </>
         ) : (
           <>
@@ -1362,19 +1307,6 @@ function VotingControlSection({
               A edição está fechada para novos votos. Os dados permanecem
               disponíveis para consulta e auditoria.
             </p>
-                      <button
-              type="button"
-              className="btn-ghost mt-6 w-full border-coral/30 text-coral hover:bg-coral/10"
-              onClick={() => void resetVoting()}
-              disabled={resetting}
-            >
-              {resetting ? (
-                <LoaderCircle className="size-5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-5" />
-              )}
-              {resetting ? "Reiniciando..." : "Reiniciar votação"}
-            </button>
           </>
         )}
       </section>

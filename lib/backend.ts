@@ -12,7 +12,10 @@ const ACCESS_COOKIE = "dna_access";
 const REFRESH_COOKIE = "dna_refresh";
 const DEMO_COOKIE = "dna_demo";
 
-type FetchInit = Omit<RequestInit, "headers"> & { headers?: HeadersInit };
+type FetchInit = Omit<RequestInit, "headers"> & {
+  headers?: HeadersInit;
+  timeoutMs?: number;
+};
 
 const cookieBase = {
   httpOnly: true,
@@ -73,16 +76,27 @@ function setSessionCookies(response: NextResponse, auth: AuthResponse) {
 }
 
 async function callBackend(path: string, init: FetchInit = {}) {
-  const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type"))
+  const {
+    timeoutMs = 12_000,
+    ...requestInit
+  } = init;
+
+  const headers = new Headers(requestInit.headers);
+
+  if (requestInit.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
-  headers.set("Accept", "application/json, application/problem+json");
+  }
+
+  headers.set(
+    "Accept",
+    "application/json, application/problem+json",
+  );
 
   return fetch(`${API_URL}${path}`, {
-    ...init,
+    ...requestInit,
     headers,
     cache: "no-store",
-    signal: AbortSignal.timeout(12_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 }
 

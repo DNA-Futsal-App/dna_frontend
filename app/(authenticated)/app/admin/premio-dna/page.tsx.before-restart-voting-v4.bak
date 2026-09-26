@@ -1184,7 +1184,7 @@ function VotingControlSection({
     const ballotsSubmitted = overview?.ballotsSubmitted ?? 0;
 
     const confirmed = window.confirm(
-      `Atenção: resetar a votação apagará permanentemente ${ballotsSubmitted} cedulas(s) e todos os votos associados desta edição. Os treinadores cadastrados poderão votar novamente. Deseja continuar?`,
+      `ATENÃ‡ÃƒO: resetar a votaÃ§Ã£o apagarÃ¡ permanentemente ${ballotsSubmitted} cÃ©dula(s) e todos os votos associados desta ediÃ§Ã£o. Os treinadores cadastrados poderÃ£o votar novamente. Deseja continuar?`,
     );
 
     if (!confirmed) return;
@@ -1201,15 +1201,15 @@ function VotingControlSection({
       );
 
       flash(
-        `Votação resetada: ${result.ballotsDeleted} cédula(s) e ${result.votesDeleted} voto(s) removidos.`,
+        `VotaÃ§Ã£o resetada: ${result.ballotsDeleted} cÃ©dula(s) e ${result.votesDeleted} voto(s) removidos.`,
       );
 
-      await onChanged(result.edition);
+      await onChanged(edition);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Não foi possível resetar a votação.",
+          : "NÃ£o foi possÃ­vel resetar a votaÃ§Ã£o.",
       );
     } finally {
       setResetting(false);
@@ -1349,7 +1349,7 @@ function VotingControlSection({
               ) : (
                 <RefreshCw className="size-5" />
               )}
-              {resetting ? "Resetando..." : "Resetar votação"}
+              {resetting ? "Resetando..." : "Resetar votaÃ§Ã£o"}
             </button>
           </>
         ) : (
@@ -1362,19 +1362,6 @@ function VotingControlSection({
               A edição está fechada para novos votos. Os dados permanecem
               disponíveis para consulta e auditoria.
             </p>
-                      <button
-              type="button"
-              className="btn-ghost mt-6 w-full border-coral/30 text-coral hover:bg-coral/10"
-              onClick={() => void resetVoting()}
-              disabled={resetting}
-            >
-              {resetting ? (
-                <LoaderCircle className="size-5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-5" />
-              )}
-              {resetting ? "Reiniciando..." : "Reiniciar votação"}
-            </button>
           </>
         )}
       </section>
