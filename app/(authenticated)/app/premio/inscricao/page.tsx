@@ -95,22 +95,16 @@ export default function AwardRegistrationPage() {
       .catch(() => setDivisions([]));
   }, []);
 
-  useEffect(() => {
-    if (!profile || locked) return;
-    setDivisionId((current) => current || profile.divisionId || "");
-    setCategoryId((current) => current || profile.categoryId || "");
-    setTeamId((current) => current || profile.teamId || "");
-  }, [profile, locked]);
+  const selectedDivisionId = divisionId || profile?.divisionId || "";
+  const selectedCategoryId = categoryId || profile?.categoryId || "";
+  const selectedTeamId = teamId || profile?.teamId || "";
 
   useEffect(() => {
-    if (!divisionId) {
-      setCategories([]);
-      return;
-    }
+    if (!selectedDivisionId) return;
 
     let active = true;
     clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(divisionId)}`,
+      `/api/catalog/categories?divisionId=${encodeURIComponent(selectedDivisionId)}`,
     )
       .then((result) => active && setCategories(result))
       .catch(() => active && setCategories([]));
@@ -118,18 +112,15 @@ export default function AwardRegistrationPage() {
     return () => {
       active = false;
     };
-  }, [divisionId]);
+  }, [selectedDivisionId]);
 
   const sportsCategory = categories.find(
-    (item) => String(item.id) === categoryId,
+    (item) => String(item.id) === selectedCategoryId,
   );
   const eventId = sportsCategory?.eventId ?? null;
 
   useEffect(() => {
-    if (!eventId) {
-      setTeams([]);
-      return;
-    }
+    if (!eventId) return;
 
     let active = true;
     clientApi<Team[]>(
@@ -185,7 +176,7 @@ export default function AwardRegistrationPage() {
   function validate() {
     if (!athleteName.trim()) throw new Error("Informe o nome do atleta.");
     if (!isValidCpf(cpf)) throw new Error("Informe um CPF válido do representante.");
-    if (!divisionId || !categoryId || !teamId) {
+    if (!selectedDivisionId || !selectedCategoryId || !selectedTeamId) {
       throw new Error("Selecione divisão, categoria e time do atleta.");
     }
     if (!profile?.childInstagram) {
@@ -219,9 +210,9 @@ export default function AwardRegistrationPage() {
         body: JSON.stringify({
           athleteName: athleteName.trim(),
           representativeCpf: digitsOnly(cpf),
-          divisionId: Number(divisionId),
-          categoryId: Number(categoryId),
-          teamId,
+          divisionId: Number(selectedDivisionId),
+          categoryId: Number(selectedCategoryId),
+          teamId: selectedTeamId,
           entries: entries.map((entry) => ({
             contestCategory: entry.contestCategory,
             sourceType: entry.sourceType,
@@ -500,10 +491,6 @@ export default function AwardRegistrationPage() {
           {entries.length < 4 && !locked ? (
             <button type="button" onClick={() => setEntries((current) => [...current, makeEntry(nextEntry.current++)])} className="btn-ghost mt-4 w-full border-dashed"><Plus className="size-4" />Adicionar mais uma categoria</button>
           ) : null}
-        </section>
-
-        <section className="rounded-2xl border border-amber/20 bg-amber/5 p-4 text-sm leading-relaxed text-muted">
-          A validação do navegador é apenas a primeira barreira. O backend valida novamente com FFprobe, recusa arquivos que não sejam vídeo ou ultrapassem um minuto e converte tudo para MP4/H.264 em no máximo 720p antes do armazenamento definitivo.
         </section>
 
         {error ? <p className="rounded-xl border border-coral/25 bg-coral/8 px-4 py-3 text-sm text-[#ffb195]" role="alert">{error}</p> : null}
