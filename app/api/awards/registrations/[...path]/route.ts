@@ -10,7 +10,7 @@ type RouteContext = {
 async function forward(
   request: NextRequest,
   context: RouteContext,
-  method: "GET" | "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "DELETE",
 ) {
   const { path } = await context.params;
 
@@ -31,7 +31,7 @@ async function forward(
     .join("/");
 
   const body =
-    method === "GET"
+    method === "GET" || method === "DELETE"
       ? undefined
       : await request.text();
 
@@ -41,9 +41,6 @@ async function forward(
     {
       method,
       body: body || undefined,
-      timeoutMs: suffix.endsWith("/complete-upload")
-        ? 300_000
-        : undefined,
     },
   );
 }
@@ -67,4 +64,11 @@ export function PUT(
   context: RouteContext,
 ) {
   return forward(request, context, "PUT");
+}
+
+export function DELETE(
+  request: NextRequest,
+  context: RouteContext,
+){
+  return forward(request, context, "DELETE");
 }

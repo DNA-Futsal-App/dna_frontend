@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { publishAwardNotice, watchAwardProcessing } from "@/lib/award-processing";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -98,6 +100,7 @@ export default function AwardRegistrationPage() {
   const selectedDivisionId = divisionId || profile?.divisionId || "";
   const selectedCategoryId = categoryId || profile?.categoryId || "";
   const selectedTeamId = teamId || profile?.teamId || "";
+  const router = useRouter();
 
   useEffect(() => {
     if (!selectedDivisionId) return;
@@ -232,81 +235,227 @@ export default function AwardRegistrationPage() {
     localEntry: MediaEntry,
     backendEntry: AwardRegistrationEntryResponse,
   ) {
-    if (!localEntry.file) throw new Error("Selecione novamente o vídeo.");
+    if (!localEntry.file) {
+      throw new Error(
+        "Selecione novamente o vídeo.",
+      );
+    }
 
-    patchEntry(localEntry.localId, {
-      processing: true,
-      uploadProgress: 0,
-      fileError: "",
-    });
+    patchEntry(
+      localEntry.localId,
+      {
+        processing: true,
+        uploadProgress: 0,
+        fileError: "",
+      },
+    );
 
     try {
-      const ticket = await clientApi<AwardUploadTicketResponse>(
-        `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/upload-ticket`,
+      const ticket =
+        await clientApi<AwardUploadTicketResponse>(
+          `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/upload-ticket`,
+          {
+            method: "POST",
+
+            body:
+              JSON.stringify({
+                sizeBytes:
+                  localEntry.file.size,
+
+                contentType:
+                  localEntry.file.type ||
+                  "application/octet-stream",
+              }),
+          },
+        );
+
+      await uploadToOracle(
+        ticket.uploadUrl,
+        localEntry.file,
+        (progress) =>
+          patchEntry(
+            localEntry.localId,
+            {
+              uploadProgress:
+                progress,
+            },
+          ),
+      );
+      await clientApi(
+        `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/complete-upload`,
         {
           method: "POST",
-          body: JSON.stringify({
-            sizeBytes: localEntry.file.size,
-            contentType: localEntry.file.type || "application/octet-stream",
-          }),
         },
       );
 
-      await uploadToOracle(ticket.uploadUrl, localEntry.file, (progress) =>
-        patchEntry(localEntry.localId, { uploadProgress: progress }),
-      );
+      return backendEntry.id;
 
-      await clientApi(
-        `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/complete-upload`,
-        { method: "POST" },
-      );
-
-      patchEntry(localEntry.localId, {
-        processing: false,
-        uploadProgress: 100,
-      });
     } catch (err) {
-      patchEntry(localEntry.localId, {
-        processing: false,
-        fileError:
-          err instanceof Error ? err.message : "Falha ao processar o vídeo.",
-      });
+
+      patchEntry(
+        localEntry.localId,
+        {
+          processing: false,
+
+          fileError:
+            err instanceof Error
+              ? err.message
+              : "Falha ao enviar o vídeo.",
+        },
+      );
+
       throw err;
     }
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
-    if (!context || !profile || submitting) return;
+
+    if (
+      !context ||
+      !profile ||
+      submitting
+    ) {
+      return;
+    }
 
     setError("");
 
     try {
-      if (!draft) validate();
-      setSubmitting(true);
-
-      const registration = draft ?? (await createDraft());
-      const backendEntries = new Map(
-        registration.entries.map((entry) => [entry.contestCategory, entry]),
-      );
-
-      for (const localEntry of entries) {
-        if (localEntry.sourceType !== "UPLOAD" || !localEntry.contestCategory) continue;
-        const backendEntry = backendEntries.get(localEntry.contestCategory);
-        if (!backendEntry) throw new Error("Categoria de mídia não encontrada no rascunho.");
-        if (backendEntry.mediaStatus === "READY") continue;
-        await uploadOne(registration, localEntry, backendEntry);
+      if (!draft) {
+        validate();
       }
 
-      const result = await clientApi<AwardRegistrationResponse>(
-        `/api/awards/registrations/${registration.id}/submit`,
-        { method: "POST" },
+      setSubmitting(
+        true,
       );
-      setFinished(result);
+
+      const registration =
+        draft ??
+        (
+          await createDraft()
+        );
+
+      const backendEntries =
+        new Map(
+          registration.entries.map(
+            (entry) => [
+              entry.contestCategory,
+              entry,
+            ],
+          ),
+        );
+
+      const processingEntryIds:
+        string[] = [];
+
+      for (
+        const localEntry
+        of entries
+      ) {
+        if (
+          localEntry.sourceType !==
+          "UPLOAD" ||
+          !localEntry.contestCategory
+        ) {
+          continue;
+        }
+
+        const backendEntry =
+          backendEntries.get(
+            localEntry.contestCategory,
+          );
+
+        if (!backendEntry) {
+          throw new Error(
+            "Categoria de mídia não encontrada no rascunho.",
+          );
+        }
+
+        if (
+          backendEntry.mediaStatus ===
+          "READY"
+        ) {
+          continue;
+        }
+
+        const entryId =
+          await uploadOne(
+            registration,
+            localEntry,
+            backendEntry,
+          );
+
+        processingEntryIds.push(
+          entryId,
+        );
+      }
+      if (
+        processingEntryIds.length ===
+        0
+      ) {
+        await clientApi<AwardRegistrationResponse>(
+          `/api/awards/registrations/${registration.id}/submit`,
+          {
+            method: "POST",
+          },
+        );
+
+        publishAwardNotice({
+          type: "success",
+
+          message:
+            `Inscrição #${String(
+              registration.registrationNumber,
+            ).padStart(
+              6,
+              "0",
+            )} confirmada com sucesso!`,
+        });
+
+        router.replace(
+          "/app",
+        );
+
+        return;
+      }
+      watchAwardProcessing({
+        registrationId:
+          registration.id,
+
+        registrationNumber:
+          registration.registrationNumber,
+
+        entryIds:
+          processingEntryIds,
+      });
+
+      publishAwardNotice({
+        type: "info",
+
+        message:
+          "Recebemos sua inscrição e seus vídeos. "
+          + "Você pode continuar usando o app enquanto finalizamos o processamento.",
+      });
+
+      router.replace(
+        "/app",
+      );
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível concluir a inscrição.");
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível enviar a inscrição.",
+      );
+
     } finally {
-      setSubmitting(false);
+      setSubmitting(
+        false,
+      );
     }
   }
 
@@ -344,7 +493,21 @@ export default function AwardRegistrationPage() {
         <p className="mt-2 text-sm leading-relaxed text-muted">
           Os vídeos permanecem vinculados a esta inscrição e poderão ser substituídos enquanto o período estiver aberto.
         </p>
-        <Link href="/app" className="btn-ghost mt-7">Voltar ao aplicativo</Link>
+        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/app/premio/minha-inscricao"
+            className="btn-primary"
+          >
+            Ver minha inscrição
+          </Link>
+
+          <Link
+            href="/app"
+            className="btn-ghost"
+          >
+            Voltar ao aplicativo
+          </Link>
+        </div>
       </section>
     );
   }
@@ -497,7 +660,11 @@ export default function AwardRegistrationPage() {
 
         <button className="btn-primary w-full" disabled={submitting || entries.some((entry) => entry.processing)}>
           {submitting ? <LoaderCircle className="size-5 animate-spin" /> : <Send className="size-5" />}
-          {submitting ? "Processando inscrição..." : draft ? "Tentar concluir novamente" : "Registrar inscrição"}
+          {submitting
+            ? "Enviando inscrição..."
+            : draft
+              ? "Tentar envio novamente"
+              : "Registrar inscrição"}
         </button>
       </form>
     </div>

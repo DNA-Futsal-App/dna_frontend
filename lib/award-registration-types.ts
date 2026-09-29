@@ -5,7 +5,7 @@ export type AwardContestCategory =
   | "BEST_SAVE";
 
 export type MediaSourceType = "LINK" | "UPLOAD";
-export type MediaStatus = "PENDING" | "READY";
+export type MediaStatus = "PENDING" | "PROCESSING" | "READY" | "FAILED";
 
 export type AwardContestCategoryOption = {
   code: AwardContestCategory;
@@ -55,4 +55,9 @@ export type AwardUploadTicketResponse = {
   uploadUrl: string;
   expiresAt: string;
   maxUploadBytes: number;
+};
+
+export type AwardMediaTicketResponse = {
+  url: string;
+  expiresAt: string;
 };

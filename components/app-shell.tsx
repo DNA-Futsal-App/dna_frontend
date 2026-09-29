@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
+  CheckCircle2,
+  X,
+  BadgeCheck,
   CalendarDays,
   ClipboardCheck,
   House,
@@ -21,6 +25,19 @@ import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
 import { clientApi } from "@/lib/client-api";
 import type { CoachVotingContext } from "@/lib/awards-types";
+import type {
+  AwardRegistrationResponse,
+} from "@/lib/award-registration-types";
+
+import {
+  AWARD_NOTICE_EVENT,
+  AWARD_PROCESSING_EVENT,
+  clearAwardProcessingWatch,
+  consumeAwardNotice,
+  publishAwardNotice,
+  readAwardProcessingWatch,
+  type AwardNotice,
+} from "@/lib/award-processing";
 
 type NavigationItem = {
   href: string;
@@ -44,7 +61,7 @@ const navigation: NavigationItem[] = [
     icon: CalendarDays,
     mobile: true,
   },
-   {
+  {
     href: "/app/meu-time",
     label: "Meu time",
     icon: Shield,
@@ -68,6 +85,12 @@ const navigation: NavigationItem[] = [
     icon: Newspaper,
     mobile: false,
   },
+  {
+    href: "/app/premio/minha-inscricao",
+    label: "Minha inscrição",
+    icon: BadgeCheck,
+    mobile: false,
+  }
 ];
 
 const coachVotingNavigation: NavigationItem = {
@@ -87,6 +110,162 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const { profile, preferenceLabel } = useProfile();
   const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
   const [awardAdminEnabled, setAwardAdminEnabled] = useState(false);
+  const [
+    awardNotice,
+    setAwardNotice,
+  ] = useState<AwardNotice | null>(
+    null,
+  );
+
+  useEffect(() => {
+    function consumeNotice() {
+      const notice =
+        consumeAwardNotice();
+
+      if (notice) {
+        setAwardNotice(
+          notice,
+        );
+      }
+    }
+
+    consumeNotice();
+
+    window.addEventListener(
+      AWARD_NOTICE_EVENT,
+      consumeNotice,
+    );
+
+    return () => {
+      window.removeEventListener(
+        AWARD_NOTICE_EVENT,
+        consumeNotice,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    let running = false;
+
+    async function checkAwardProcessing() {
+      if (running) {
+        return;
+      }
+
+      const watch =
+        readAwardProcessingWatch();
+
+      if (!watch) {
+        return;
+      }
+
+      running = true;
+
+      try {
+        const registration =
+          await clientApi<AwardRegistrationResponse>(
+            "/api/awards/registrations/current",
+          );
+
+        const watchedEntries =
+          registration.entries.filter(
+            (entry) =>
+              watch.entryIds.includes(
+                entry.id,
+              ),
+          );
+
+        const failed =
+          watchedEntries.some(
+            (entry) =>
+              entry.mediaStatus ===
+              "FAILED",
+          );
+
+        if (failed) {
+          clearAwardProcessingWatch();
+
+          publishAwardNotice({
+            type: "error",
+
+            message:
+              "Não conseguimos processar um dos vídeos da sua inscrição. "
+              + "Acesse Minha inscrição para tentar novamente.",
+          });
+
+          return;
+        }
+
+        const allReady =
+          watchedEntries.length ===
+          watch.entryIds.length &&
+          watchedEntries.every(
+            (entry) =>
+              entry.mediaStatus ===
+              "READY",
+          );
+
+        if (
+          allReady &&
+          registration.status ===
+          "SUBMITTED"
+        ) {
+          clearAwardProcessingWatch();
+
+          publishAwardNotice({
+            type: "success",
+
+            message:
+              `Inscrição #${String(
+                watch.registrationNumber,
+              ).padStart(
+                6,
+                "0",
+              )} confirmada com sucesso!`,
+          });
+        }
+
+      } catch {
+        /*
+         * Uma falha temporária de rede não deve
+         * apagar o monitor.
+         */
+      } finally {
+        running = false;
+      }
+    }
+
+    void checkAwardProcessing();
+
+    const interval =
+      window.setInterval(
+        () => {
+          void checkAwardProcessing();
+        },
+        4_000,
+      );
+
+    const handleNewWatch =
+      () => {
+        void checkAwardProcessing();
+      };
+
+    window.addEventListener(
+      AWARD_PROCESSING_EVENT,
+      handleNewWatch,
+    );
+
+    return () => {
+      window.clearInterval(
+        interval,
+      );
+
+      window.removeEventListener(
+        AWARD_PROCESSING_EVENT,
+        handleNewWatch,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -218,6 +397,59 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
             );
           })}
       </nav>
+
+      {awardNotice ? (
+        <div
+          className={`fixed right-4 top-20 z-[70] w-[calc(100%-2rem)] max-w-md rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${awardNotice.type === "success"
+              ? "border-cyan/30 bg-night/95"
+              : awardNotice.type === "error"
+                ? "border-coral/35 bg-night/95"
+                : "border-amber/30 bg-night/95"
+            }`}
+        >
+          <div className="flex gap-3">
+            {awardNotice.type ===
+              "success" ? (
+              <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-cyan" />
+            ) : (
+              <AlertTriangle className="mt-0.5 size-6 shrink-0 text-coral" />
+            )}
+
+            <div className="min-w-0 flex-1">
+              <strong className="text-sm text-ivory">
+                {awardNotice.type ===
+                  "success"
+                  ? "Prêmio Legacy DNA Futsal"
+                  : "Processado vídeo"}
+              </strong>
+
+              <p className="mt-1 text-sm leading-relaxed text-muted">
+                {
+                  awardNotice.message
+                }
+              </p>
+
+              <Link
+                href="/app/premio/minha-inscricao"
+                className="mt-3 inline-flex text-xs font-black text-cyan"
+              >
+                Ver minha inscrição
+              </Link>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setAwardNotice(null)
+              }
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white/5 hover:text-ivory"
+              aria-label="Fechar aviso"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
