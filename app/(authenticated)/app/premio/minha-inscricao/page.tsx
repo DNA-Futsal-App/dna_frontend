@@ -122,14 +122,6 @@ export default function MyAwardRegistrationPage() {
         useRef<Record<string, HTMLInputElement | null>>(
             {},
         );
-
-    /*
-     * Guarda a última combinação de IDs/status.
-     *
-     * Assim o polling pode consultar /current
-     * a cada poucos segundos sem gerar uma nova
-     * PAR Oracle em toda consulta.
-     */
     const mediaStateSignatureRef =
         useRef("");
 
@@ -186,12 +178,6 @@ export default function MyAwardRegistrationPage() {
                         },
                     ),
                 );
-
-            /*
-             * Remove URLs de candidaturas que já
-             * não existem mais e atualiza as que
-             * receberam um novo ticket.
-             */
             setMediaUrls(
                 (previous) => {
                     const activeIds =
@@ -354,18 +340,6 @@ export default function MyAwardRegistrationPage() {
     useEffect(() => {
         void load();
     }, [load]);
-
-    /*
-     * POLLING LOCAL
-     *
-     * Só fica ativo se realmente houver
-     * vídeo PROCESSING.
-     *
-     * Quando o backend altera para READY
-     * ou FAILED, applyRegistration percebe
-     * a mudança de assinatura e atualiza
-     * automaticamente os players.
-     */
     const hasProcessing =
         registration?.entries.some(
             (entry) =>
@@ -390,10 +364,6 @@ export default function MyAwardRegistrationPage() {
 
                     await reloadRegistration();
                 } catch {
-                    /*
-                     * Falha temporária de rede não deve
-                     * interromper o acompanhamento.
-                     */
                 }
             };
 
@@ -612,10 +582,6 @@ export default function MyAwardRegistrationPage() {
                             }),
                     },
                 );
-
-            /*
-             * UPLOAD
-             */
             if (
                 addForm.sourceType ===
                 "UPLOAD" &&
@@ -626,13 +592,6 @@ export default function MyAwardRegistrationPage() {
                     created.id,
                     addForm.file,
                 );
-
-                /*
-                 * A partir daqui o backend já aceitou
-                 * o vídeo e está processando sozinho.
-                 *
-                 * NÃO chamar /submit aqui.
-                 */
                 watchAwardProcessing({
                     registrationId:
                         registration.id,
@@ -654,10 +613,6 @@ export default function MyAwardRegistrationPage() {
                         "Recebemos seu vídeo. "
                         + "Você pode continuar usando o app enquanto concluímos o processamento.",
                 });
-
-                /*
-                 * FECHA O MODAL IMEDIATAMENTE.
-                 */
                 setAdding(
                     false,
                 );
@@ -665,21 +620,10 @@ export default function MyAwardRegistrationPage() {
                 setAddForm(
                     initialAddState,
                 );
-
-                /*
-                 * Atualiza a candidatura para PROCESSING.
-                 * Depois o polling cuida do restante.
-                 */
                 await reloadRegistration();
 
                 return;
             }
-
-            /*
-             * LINK
-             *
-             * Não passa por processamento de vídeo.
-             */
             const current =
                 await clientApi<AwardRegistrationResponse>(
                     "/api/awards/registrations/current",
@@ -733,14 +677,11 @@ export default function MyAwardRegistrationPage() {
                     : "Não foi possível adicionar a candidatura.",
             );
 
-            /*
-             * Em erro real de upload o modal continua aberto
-             * para que o usuário tente novamente.
-             */
+          
             try {
                 await reloadRegistration();
             } catch {
-                // preserva o erro original
+               
             }
 
         } finally {
@@ -749,10 +690,6 @@ export default function MyAwardRegistrationPage() {
             );
         }
     }
-
-    /*
-     * SUBSTITUIR VÍDEO EXISTENTE
-     */
     async function replaceVideo(
         entry:
             AwardRegistrationEntryResponse,
@@ -812,13 +749,6 @@ export default function MyAwardRegistrationPage() {
                     "Recebemos o novo vídeo. "
                     + "Você pode continuar usando o app enquanto concluímos o processamento.",
             });
-
-            /*
-             * Agora deve voltar PROCESSING.
-             *
-             * O player antigo continuará disponível
-             * se houver objectName anterior.
-             */
             await reloadRegistration();
 
         } catch (err) {
@@ -834,16 +764,6 @@ export default function MyAwardRegistrationPage() {
             );
         }
     }
-
-    /*
-     * Esta função termina quando:
-     *
-     * 1. arquivo chegou na Oracle;
-     * 2. backend confirmou sua existência;
-     * 3. complete-upload respondeu 202.
-     *
-     * Ela NÃO espera FFmpeg.
-     */
     async function uploadVideo(
         registrationId: string,
         entryId: string,
@@ -1108,7 +1028,7 @@ export default function MyAwardRegistrationPage() {
         <div className="mx-auto max-w-5xl">
             <header className="mb-7">
                 <p className="eyebrow">
-                    Prêmio DNA Futsal
+                    Prêmio Legacy
                 </p>
 
                 <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

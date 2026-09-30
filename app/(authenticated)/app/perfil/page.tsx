@@ -1,13 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   CheckCircle2,
   KeyRound,
   LoaderCircle,
   Save,
   ShieldCheck,
+  Trophy,
 } from "lucide-react";
 import { ErrorState, LoadingCards } from "@/components/feedback";
 import { PageIntro } from "@/components/page-intro";
@@ -117,7 +120,7 @@ export default function ProfilePage() {
     setFormError("");
     const form = new FormData(event.currentTarget);
     try {
-      const updated = await clientApi<UserProfile>("/api/me", {
+      await clientApi<UserProfile>("/api/me", {
         method: "PUT",
         body: JSON.stringify({
           name: form.get("name"),
@@ -137,13 +140,6 @@ export default function ProfilePage() {
           currentPassword: form.get("currentPassword"),
         }),
       });
-      if (!updated.emailVerified) {
-        await fetch("/api/auth/logout", { method: "POST" });
-        router.replace(
-          `/verificar-email?login=${encodeURIComponent(updated.email)}`,
-        );
-        return;
-      }
       setMessage("Perfil atualizado com sucesso.");
       await reload();
     } catch (err) {
@@ -195,6 +191,31 @@ export default function ProfilePage() {
         title="Meu perfil"
         description="Atualize seus dados e escolha o time que aparece primeiro no aplicativo."
       />
+
+      <section className="mb-5 lg:hidden">
+        <Link
+          href="/app/premio/minha-inscricao"
+          className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-amber/20 bg-gradient-to-br from-amber/10 via-panel to-night p-4 transition active:scale-[0.99]"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber/10 text-amber">
+              <Trophy className="size-5" />
+            </span>
+
+            <span className="min-w-0">
+              <strong className="block text-sm font-black text-ivory">
+                Minhas inscrições
+              </strong>
+
+              <small className="mt-0.5 block text-xs leading-relaxed text-muted">
+                Veja suas candidaturas, vídeos e o andamento do Prêmio Legacy.
+              </small>
+            </span>
+          </span>
+
+          <ArrowRight className="size-5 shrink-0 text-amber transition-transform group-hover:translate-x-1" />
+        </Link>
+      </section>
       <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
         <form
           onSubmit={submit}
@@ -386,7 +407,7 @@ export default function ProfilePage() {
             </p>
             <button
               type="button"
-              className="btn-secondary mt-4 w-full !min-h-10 !py-2 text-sm"
+              className="btn-secondary mt-4 w-full min-h-10! py-2! text-sm"
               onClick={requestPasswordReset}
               disabled={resetting}
             >

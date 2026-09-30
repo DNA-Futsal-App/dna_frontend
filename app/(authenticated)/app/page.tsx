@@ -29,6 +29,7 @@ import type {
 
 import { useApiData } from "@/lib/use-api-data";
 import { useProfile } from "@/components/profile-context";
+import { AwardRegistrationBanner } from "@/components/award-registration-banner";
 
 export default function DashboardPage() {
   const {
@@ -100,9 +101,11 @@ export default function DashboardPage() {
         </p>
       </header>
 
+      <AwardRegistrationBanner />
+
       {home.nextMatch ? (
-        <section className="relative overflow-hidden rounded-[1.75rem] border border-cyan/20 bg-gradient-to-br from-deep/35 via-panel to-night p-5 shadow-glow sm:p-7">
-          <div className="absolute -right-16 -top-20 size-64 rounded-full border-[26px] border-cyan/6" />
+        <section className="relative overflow-hidden rounded-[1.75rem] border border-cyan/20 bg-linear-to-br from-deep/35 via-panel to-night p-5 shadow-glow sm:p-7">
+          <div className="absolute -right-16 -top-20 size-64 rounded-full border-26 border-cyan/6" />
 
           <div className="relative">
             <p className="eyebrow">
