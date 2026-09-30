@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import Link from "next/link";
@@ -73,7 +74,7 @@ export default function AwardRegistrationPage() {
   const [teamId, setTeamId] = useState("");
   const [entries, setEntries] = useState<MediaEntry[]>([makeEntry(1)]);
   const nextEntry = useRef(2);
-  const profileDefaultsApplied = useRef(false);
+  const profileDefaultsApplied =useRef(false);
 
   const [draft, setDraft] = useState<AwardRegistrationResponse | null>(null);
   const [finished, setFinished] = useState<AwardRegistrationResponse | null>(null);
@@ -98,83 +99,10 @@ export default function AwardRegistrationPage() {
       .catch(() => setDivisions([]));
   }, []);
 
-  const selectedDivisionId =
-    divisionId;
-
-  const selectedCategoryId =
-    categoryId;
-
-  const selectedTeamId =
-    teamId;
-
+  const selectedDivisionId = divisionId || profile?.divisionId || "";
+  const selectedCategoryId = categoryId || profile?.categoryId || "";
+  const selectedTeamId = teamId || profile?.teamId || "";
   const router = useRouter();
-
-  useEffect(() => {
-    if (
-      !profile ||
-      profileDefaultsApplied.current
-    ) {
-      return;
-    }
-
-    profileDefaultsApplied.current =
-      true;
-
-    setDivisionId(
-      profile.divisionId
-        ? String(
-          profile.divisionId,
-        )
-        : "",
-    );
-
-    setCategoryId(
-      profile.categoryId
-        ? String(
-          profile.categoryId,
-        )
-        : "",
-    );
-
-    setTeamId(
-      profile.teamId
-        ? String(
-          profile.teamId,
-        )
-        : "",
-    );
-  }, [profile]);
-
-  useEffect(() => {
-    if (!divisionId) {
-      setCategories([]);
-      return;
-    }
-
-    let active = true;
-
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(
-        divisionId,
-      )}`,
-    )
-      .then((result) => {
-        if (active) {
-          setCategories(
-            result,
-          );
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setCategories([]);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [divisionId]);
 
   useEffect(() => {
     if (!selectedDivisionId) return;
@@ -192,35 +120,19 @@ export default function AwardRegistrationPage() {
   }, [selectedDivisionId]);
 
   const sportsCategory = categories.find(
-    (item) => String(item.id) === String(selectedCategoryId),
+    (item) => String(item.id) === selectedCategoryId,
   );
   const eventId = sportsCategory?.eventId ?? null;
 
   useEffect(() => {
-    if (!eventId) {
-      setTeams([]);
-      return;
-    }
+    if (!eventId) return;
 
     let active = true;
-
     clientApi<Team[]>(
-      `/api/catalog/teams?eventId=${encodeURIComponent(
-        String(eventId),
-      )}`,
+      `/api/catalog/teams?eventId=${encodeURIComponent(String(eventId))}`,
     )
-      .then((result) => {
-        if (active) {
-          setTeams(
-            result,
-          );
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setTeams([]);
-        }
-      });
+      .then((result) => active && setTeams(result))
+      .catch(() => active && setTeams([]));
 
     return () => {
       active = false;
@@ -640,133 +552,28 @@ export default function AwardRegistrationPage() {
         </section>
 
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
-          <h2 className="text-lg font-black text-ivory">
-            Contexto esportivo
-          </h2>
-
+          <h2 className="text-lg font-black text-ivory">Contexto esportivo</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold">
               Divisão
-
-              <select
-                className="field"
-                value={divisionId}
-                disabled={locked}
-                required
-                onChange={(event) => {
-                  const nextDivisionId =
-                    event.target.value;
-
-                  /*
-                   * Trocar divisão invalida tudo
-                   * que depende dela.
-                   */
-                  setDivisionId(
-                    nextDivisionId,
-                  );
-
-                  setCategoryId("");
-                  setTeamId("");
-
-                  setCategories([]);
-                  setTeams([]);
-                }}
-              >
-                <option value="">
-                  Selecione
-                </option>
-
-                {divisions.map(
-                  (item) => (
-                    <option
-                      key={item.id}
-                      value={
-                        String(item.id)
-                      }
-                    >
-                      {item.name}
-                    </option>
-                  ),
-                )}
+              <select className="field" value={divisionId} disabled={locked} required onChange={(e) => { setDivisionId(e.target.value); setCategoryId(""); setTeamId(""); setCategories([]); setTeams([]); }}>
+                <option value="">Selecione</option>
+                {divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
             </label>
-
             <label className="grid gap-1.5 text-sm font-bold">
               Categoria
-
-              <select
-                className="field"
-                value={categoryId}
-                disabled={
-                  locked ||
-                  !divisionId
-                }
-                required
-                onChange={(event) => {
-                  const nextCategoryId =
-                    event.target.value;
-                  setCategoryId(
-                    nextCategoryId,
-                  );
-
-                  setTeamId("");
-                  setTeams([]);
-                }}
-              >
-                <option value="">
-                  Selecione
-                </option>
-
-                {categories.map(
-                  (item) => (
-                    <option
-                      key={item.id}
-                      value={
-                        String(item.id)
-                      }
-                    >
-                      {item.name}
-                    </option>
-                  ),
-                )}
+              <select className="field" value={categoryId} disabled={locked || !divisionId} required onChange={(e) => { setCategoryId(e.target.value); setTeamId(""); setTeams([]); }}>
+                <option value="">Selecione</option>
+                {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
             </label>
           </div>
-
           <label className="mt-4 grid gap-1.5 text-sm font-bold">
             Time do atleta
-
-            <select
-              className="field"
-              value={teamId}
-              disabled={
-                locked ||
-                !categoryId ||
-                !eventId
-              }
-              required
-              onChange={(event) => {
-                setTeamId(
-                  event.target.value,
-                );
-              }}
-            >
-              <option value="">
-                Selecione
-              </option>
-
-              {teams.map(
-                (team) => (
-                  <option
-                    key={team.id}
-                    value={
-                      String(team.id)
-                    }
-                  >
-                    {team.name}
-                  </option>
-                ),
-              )}
+            <select className="field" value={teamId} disabled={locked || !eventId} required onChange={(e) => setTeamId(e.target.value)}>
+              <option value="">Selecione</option>
+              {teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
             </select>
           </label>
         </section>

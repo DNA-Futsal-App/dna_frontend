@@ -195,7 +195,7 @@ export default function ProfilePage() {
       <section className="mb-5 lg:hidden">
         <Link
           href="/app/premio/minha-inscricao"
-          className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-amber/20 bg-gradient-to-br from-amber/10 via-panel to-night p-4 transition active:scale-[0.99]"
+          className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-amber/20 bg-linear-to-br from-amber/10 via-panel to-night p-4 transition active:scale-[0.99]"
         >
           <span className="flex min-w-0 items-center gap-3">
             <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber/10 text-amber">
