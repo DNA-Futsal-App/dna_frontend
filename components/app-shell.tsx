@@ -378,14 +378,14 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                   <ClipboardCheck className="size-5" />
                 </Link>
               ) : null}
-              <Link href="/app/perfil" className="inline-flex size-10 items-center justify-center rounded-full border border-cyan/20 bg-gradient-to-br from-cyan/20 to-deep/30 text-xs font-black text-cyan" aria-label="Abrir meu perfil">{initials(profile?.name ?? "DNA")}</Link>
+              <Link href="/app/perfil" className="inline-flex size-10 items-center justify-center rounded-full border border-cyan/20 bg-linear-to-br from-cyan/20 to-deep/30 text-xs font-black text-cyan" aria-label="Abrir meu perfil">{initials(profile?.name ?? "DNA")}</Link>
             </div>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
       </div>
 
-      <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileNavigation.length >= 6 ? "grid-cols-6" : "grid-cols-5"} border-t border-white/10 bg-night/94 px-1 pb-[var(--safe-bottom)] backdrop-blur-xl lg:hidden`} aria-label="Navegação principal">
+      <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileNavigation.length >= 6 ? "grid-cols-6" : "grid-cols-5"} border-t border-white/10 bg-night/94 px-1 pb-(--safe-bottom) backdrop-blur-xl lg:hidden`} aria-label="Navegação principal">
         {mobileNavigation
           .map((item) => {
             const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
@@ -400,7 +400,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
       {awardNotice ? (
         <div
-          className={`fixed right-4 top-20 z-[70] w-[calc(100%-2rem)] max-w-md rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${awardNotice.type === "success"
+          className={`fixed right-4 top-20 z-70 w-[calc(100%-2rem)] max-w-md rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${awardNotice.type === "success"
               ? "border-cyan/30 bg-night/95"
               : awardNotice.type === "error"
                 ? "border-coral/35 bg-night/95"
