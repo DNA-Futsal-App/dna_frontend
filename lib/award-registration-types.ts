@@ -12,6 +12,10 @@ export type AwardContestCategoryOption = {
   label: string;
 };
 
+export type AwardGender =
+  | "MALE"
+  | "FEMALE";
+
 export type AwardRegistrationContext = {
   editionName: string;
   season: number;
@@ -49,6 +53,7 @@ export type AwardRegistrationResponse = {
   teamName: string;
   submittedAt?: string | null;
   entries: AwardRegistrationEntryResponse[];
+  gender: AwardGender;
 };
 
 export type AwardUploadTicketResponse = {

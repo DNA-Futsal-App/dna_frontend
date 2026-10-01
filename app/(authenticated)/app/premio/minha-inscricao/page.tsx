@@ -677,11 +677,11 @@ export default function MyAwardRegistrationPage() {
                     : "Não foi possível adicionar a candidatura.",
             );
 
-          
+
             try {
                 await reloadRegistration();
             } catch {
-               
+
             }
 
         } finally {
@@ -1173,6 +1173,16 @@ export default function MyAwardRegistrationPage() {
                             registration.teamName
                         }
                     />
+
+                    <ReadOnlyField
+                        label="Gênero"
+                        value={
+                            registration.gender ===
+                                "FEMALE"
+                                ? "Feminino"
+                                : "Masculino"
+                        }
+                    />
                 </div>
             </section>
 
@@ -1612,8 +1622,8 @@ export default function MyAwardRegistrationPage() {
                             <div className="mt-4">
                                 <label
                                     className={`flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-cyan/25 bg-cyan/4 px-4 py-5 text-center ${savingNewCandidate
-                                            ? "cursor-not-allowed opacity-60"
-                                            : "cursor-pointer hover:border-cyan/50"
+                                        ? "cursor-not-allowed opacity-60"
+                                        : "cursor-pointer hover:border-cyan/50"
                                         }`}
                                 >
                                     {savingNewCandidate ? (

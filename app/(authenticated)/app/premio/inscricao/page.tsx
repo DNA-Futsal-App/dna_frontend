@@ -25,6 +25,7 @@ import { clientApi } from "@/lib/client-api";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
 import type {
   AwardContestCategory,
+  AwardGender,
   AwardRegistrationContext,
   AwardRegistrationEntryResponse,
   AwardRegistrationResponse,
@@ -77,12 +78,14 @@ export default function AwardRegistrationPage() {
   const [teamId, setTeamId] = useState("");
   const [entries, setEntries] = useState<MediaEntry[]>([makeEntry(1)]);
   const nextEntry = useRef(2);
-  const profileDefaultsApplied = useRef(false);
 
   const [draft, setDraft] = useState<AwardRegistrationResponse | null>(null);
   const [finished, setFinished] = useState<AwardRegistrationResponse | null>(
     null,
   );
+
+  const [gender, setGender] =
+    useState<AwardGender | "">("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -99,10 +102,6 @@ export default function AwardRegistrationPage() {
             : "Não foi possível carregar as regras da inscrição.",
         ),
       );
-
-    clientApi<CatalogItem[]>("/api/catalog/divisions")
-      .then(setDivisions)
-      .catch(() => setDivisions([]));
   }, []);
 
   const selectedDivisionId = divisionId;
@@ -112,18 +111,76 @@ export default function AwardRegistrationPage() {
   const selectedTeamId = teamId;
 
   useEffect(() => {
-    if (!profile || profileDefaultsApplied.current) {
+    if (!gender) {
       return;
     }
 
-    profileDefaultsApplied.current = true;
+    let active =
+      true;
 
-    setDivisionId(profile.divisionId ? String(profile.divisionId) : "");
+    clientApi<CatalogItem[]>(
+      `/api/awards/registrations/catalog/divisions?gender=${encodeURIComponent(
+        gender,
+      )}`,
+    )
+      .then((result) => {
+        if (active) {
+          setDivisions(
+            result,
+          );
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setDivisions([]);
+        }
+      });
 
-    setCategoryId(profile.categoryId ? String(profile.categoryId) : "");
+    return () => {
+      active =
+        false;
+    };
+  }, [gender]);
 
-    setTeamId(profile.teamId ? String(profile.teamId) : "");
-  }, [profile]);
+  useEffect(() => {
+    if (
+      !gender ||
+      !divisionId
+    ) {
+      return;
+    }
+
+    let active =
+      true;
+
+    clientApi<CatalogCategory[]>(
+      `/api/awards/registrations/catalog/categories?gender=${encodeURIComponent(
+        gender,
+      )}&divisionId=${encodeURIComponent(
+        divisionId,
+      )}`,
+    )
+      .then((result) => {
+        if (active) {
+          setCategories(
+            result,
+          );
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setCategories([]);
+        }
+      });
+
+    return () => {
+      active =
+        false;
+    };
+  }, [
+    gender,
+    divisionId,
+  ]);
 
   useEffect(() => {
     if (!divisionId) {
@@ -199,6 +256,38 @@ export default function AwardRegistrationPage() {
     };
   }, [eventId]);
 
+  useEffect(() => {
+    if (!eventId) {
+      return;
+    }
+
+    let active =
+      true;
+
+    clientApi<Team[]>(
+      `/api/catalog/teams?eventId=${encodeURIComponent(
+        String(eventId),
+      )}`,
+    )
+      .then((result) => {
+        if (active) {
+          setTeams(
+            result,
+          );
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setTeams([]);
+        }
+      });
+
+    return () => {
+      active =
+        false;
+    };
+  }, [eventId]);
+
   const usedContestCategories = useMemo(
     () =>
       new Set(
@@ -239,6 +328,11 @@ export default function AwardRegistrationPage() {
   }
 
   function validate() {
+    if (!gender) {
+      throw new Error(
+        "Selecione o gênero do atleta.",
+      );
+    }
     if (!athleteName.trim()) throw new Error("Informe o nome do atleta.");
     if (!isValidCpf(cpf))
       throw new Error("Informe um CPF válido do representante.");
@@ -280,17 +374,45 @@ export default function AwardRegistrationPage() {
       {
         method: "POST",
         body: JSON.stringify({
-          athleteName: athleteName.trim(),
-          representativeCpf: digitsOnly(cpf),
-          divisionId: Number(selectedDivisionId),
-          categoryId: Number(selectedCategoryId),
-          teamId: selectedTeamId,
-          entries: entries.map((entry) => ({
-            contestCategory: entry.contestCategory,
-            sourceType: entry.sourceType,
-            externalUrl:
-              entry.sourceType === "LINK" ? entry.externalUrl.trim() : null,
-          })),
+          athleteName:
+            athleteName.trim(),
+
+          representativeCpf:
+            digitsOnly(
+              cpf,
+            ),
+
+          gender,
+
+          divisionId:
+            Number(
+              selectedDivisionId,
+            ),
+
+          categoryId:
+            Number(
+              selectedCategoryId,
+            ),
+
+          teamId:
+            selectedTeamId,
+
+          entries:
+            entries.map(
+              (entry) => ({
+                contestCategory:
+                  entry.contestCategory,
+
+                sourceType:
+                  entry.sourceType,
+
+                externalUrl:
+                  entry.sourceType ===
+                    "LINK"
+                    ? entry.externalUrl.trim()
+                    : null,
+              }),
+            ),
         }),
       },
     );
@@ -570,24 +692,74 @@ export default function AwardRegistrationPage() {
         </section>
 
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
-          <h2 className="text-lg font-black text-ivory">Contexto esportivo</h2>
+          <h2 className="text-lg font-black text-ivory">
+            Contexto esportivo
+          </h2>
+
+          <p className="mt-1 text-sm text-muted">
+            Escolha o gênero para carregarmos as competições correspondentes.
+          </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold">
-              Divisão
+              Gênero
+
               <select
                 className="field"
-                value={divisionId}
+                value={gender}
                 disabled={locked}
                 required
                 onChange={(event) => {
-                  const nextDivisionId = event.target.value;
+                  const nextGender =
+                    event.target
+                      .value as AwardGender | "";
+
+                  setGender(
+                    nextGender,
+                  );
 
                   /*
-                   * Trocar divisão invalida tudo
-                   * que depende dela.
+                   * Gênero novo invalida todo o
+                   * contexto esportivo anterior.
                    */
-                  setDivisionId(nextDivisionId);
+                  setDivisionId("");
+                  setCategoryId("");
+                  setTeamId("");
+
+                  setDivisions([]);
+                  setCategories([]);
+                  setTeams([]);
+                }}
+              >
+                <option value="">
+                  Selecione
+                </option>
+
+                <option value="MALE">
+                  Masculino
+                </option>
+
+                <option value="FEMALE">
+                  Feminino
+                </option>
+              </select>
+            </label>
+
+            <label className="grid gap-1.5 text-sm font-bold">
+              Divisão
+
+              <select
+                className="field"
+                value={divisionId}
+                disabled={
+                  locked ||
+                  !gender
+                }
+                required
+                onChange={(event) => {
+                  setDivisionId(
+                    event.target.value,
+                  );
 
                   setCategoryId("");
                   setTeamId("");
@@ -596,67 +768,103 @@ export default function AwardRegistrationPage() {
                   setTeams([]);
                 }}
               >
-                <option value="">Selecione</option>
+                <option value="">
+                  Selecione
+                </option>
 
-                {divisions.map((item) => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.name}
-                  </option>
-                ))}
+                {divisions.map(
+                  (item) => (
+                    <option
+                      key={item.id}
+                      value={String(
+                        item.id,
+                      )}
+                    >
+                      {item.name}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
             <label className="grid gap-1.5 text-sm font-bold">
               Categoria
+
               <select
                 className="field"
                 value={categoryId}
-                disabled={locked || !divisionId}
+                disabled={
+                  locked ||
+                  !gender ||
+                  !divisionId
+                }
                 required
                 onChange={(event) => {
-                  const nextCategoryId = event.target.value;
-
-                  /*
-                   * Trocar categoria invalida
-                   * o time anteriormente escolhido.
-                   */
-                  setCategoryId(nextCategoryId);
+                  setCategoryId(
+                    event.target.value,
+                  );
 
                   setTeamId("");
                   setTeams([]);
                 }}
               >
-                <option value="">Selecione</option>
+                <option value="">
+                  Selecione
+                </option>
 
-                {categories.map((item) => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.name}
-                  </option>
-                ))}
+                {categories.map(
+                  (item) => (
+                    <option
+                      key={item.id}
+                      value={String(
+                        item.id,
+                      )}
+                    >
+                      {item.name}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+
+            <label className="grid gap-1.5 text-sm font-bold">
+              Time do atleta
+
+              <select
+                className="field"
+                value={teamId}
+                disabled={
+                  locked ||
+                  !gender ||
+                  !categoryId ||
+                  !eventId
+                }
+                required
+                onChange={(event) => {
+                  setTeamId(
+                    event.target.value,
+                  );
+                }}
+              >
+                <option value="">
+                  Selecione
+                </option>
+
+                {teams.map(
+                  (team) => (
+                    <option
+                      key={team.id}
+                      value={String(
+                        team.id,
+                      )}
+                    >
+                      {team.name}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
           </div>
-
-          <label className="mt-4 grid gap-1.5 text-sm font-bold">
-            Time do atleta
-            <select
-              className="field"
-              value={teamId}
-              disabled={locked || !categoryId || !eventId}
-              required
-              onChange={(event) => {
-                setTeamId(event.target.value);
-              }}
-            >
-              <option value="">Selecione</option>
-
-              {teams.map((team) => (
-                <option key={team.id} value={String(team.id)}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </label>
         </section>
 
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
