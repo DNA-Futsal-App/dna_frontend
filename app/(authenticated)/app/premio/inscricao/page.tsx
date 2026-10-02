@@ -427,49 +427,89 @@ export default function AwardRegistrationPage() {
     backendEntry: AwardRegistrationEntryResponse,
   ) {
     if (!localEntry.file) {
-      throw new Error("Selecione novamente o vídeo.");
+      throw new Error(
+        "Selecione novamente o vídeo.",
+      );
     }
 
-    patchEntry(localEntry.localId, {
-      processing: true,
-      uploadProgress: 0,
-      fileError: "",
-    });
+    patchEntry(
+      localEntry.localId,
+      {
+        processing: true,
+        uploadProgress: 0,
+        fileError: "",
+      },
+    );
 
     try {
-      const ticket = await clientApi<AwardUploadTicketResponse>(
-        `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/upload-ticket`,
-        {
-          method: "POST",
+      const ticket =
+        await clientApi<AwardUploadTicketResponse>(
+          `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/upload-ticket`,
+          {
+            method: "POST",
 
-          body: JSON.stringify({
-            sizeBytes: localEntry.file.size,
+            body: JSON.stringify({
+              sizeBytes:
+                localEntry.file.size,
 
-            contentType: localEntry.file.type || "application/octet-stream",
-          }),
-        },
+              contentType:
+                localEntry.file.type ||
+                "application/octet-stream",
+            }),
+          },
+        );
+
+      /*
+       * Upload direto:
+       * browser -> Oracle.
+       */
+      await uploadToOracle(
+        ticket.uploadUrl,
+        localEntry.file,
+        (progress) =>
+          patchEntry(
+            localEntry.localId,
+            {
+              uploadProgress:
+                progress,
+            },
+          ),
       );
 
-      await uploadToOracle(ticket.uploadUrl, localEntry.file, (progress) =>
-        patchEntry(localEntry.localId, {
-          uploadProgress: progress,
-        }),
-      );
-      await clientApi(
+      /*
+       * Isto agora deve responder 202 rapidamente.
+       *
+       * FFmpeg acontecerá no servidor depois.
+       */
+      await clientApi<AwardRegistrationEntryResponse>(
         `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/complete-upload`,
         {
           method: "POST",
         },
       );
 
-      return backendEntry.id;
-    } catch (err) {
-      patchEntry(localEntry.localId, {
-        processing: false,
+      patchEntry(
+        localEntry.localId,
+        {
+          processing: false,
+          uploadProgress: 100,
+        },
+      );
 
-        fileError:
-          err instanceof Error ? err.message : "Falha ao enviar o vídeo.",
-      });
+      return backendEntry.id;
+
+    } catch (err) {
+      patchEntry(
+        localEntry.localId,
+        {
+          processing: false,
+
+          fileError:
+            err instanceof Error
+              ? err.message
+              : "Falha ao enviar o vídeo.",
+        },
+      );
 
       throw err;
     }
@@ -496,28 +536,149 @@ export default function AwardRegistrationPage() {
       const backendEntries = new Map(
         registration.entries.map((entry) => [entry.contestCategory, entry]),
       );
+      const uploadJobs =
+        entries
+          .filter(
+            (entry) =>
+              entry.sourceType ===
+              "UPLOAD" &&
+              Boolean(
+                entry.contestCategory,
+              ),
+          )
+          .map(
+            async (localEntry) => {
+              const backendEntry =
+                backendEntries.get(
+                  localEntry.contestCategory as AwardContestCategory,
+                );
 
-      const processingEntryIds: string[] = [];
+              if (!backendEntry) {
+                throw new Error(
+                  "Categoria de mídia não encontrada no rascunho.",
+                );
+              }
 
-      for (const localEntry of entries) {
-        if (localEntry.sourceType !== "UPLOAD" || !localEntry.contestCategory) {
-          continue;
-        }
+              if (
+                backendEntry.mediaStatus ===
+                "READY"
+              ) {
+                return null;
+              }
 
-        const backendEntry = backendEntries.get(localEntry.contestCategory);
+              return uploadOne(
+                registration,
+                localEntry,
+                backendEntry,
+              );
+            },
+          );
 
-        if (!backendEntry) {
-          throw new Error("Categoria de mídia não encontrada no rascunho.");
-        }
+      const uploadResults =
+        await Promise.allSettled(
+          uploadJobs,
+        );
 
-        if (backendEntry.mediaStatus === "READY") {
-          continue;
-        }
+      const processingEntryIds =
+        uploadResults.flatMap(
+          (result) =>
+            result.status ===
+              "fulfilled" &&
+              result.value
+              ? [result.value]
+              : [],
+        );
 
-        const entryId = await uploadOne(registration, localEntry, backendEntry);
+      const failedUploads =
+        uploadResults.filter(
+          (result) =>
+            result.status ===
+            "rejected",
+        );
 
-        processingEntryIds.push(entryId);
+      if (
+        processingEntryIds.length >
+        0
+      ) {
+        watchAwardProcessing({
+          registrationId:
+            registration.id,
+
+          registrationNumber:
+            registration.registrationNumber,
+
+          entryIds:
+            processingEntryIds,
+        });
       }
+
+      if (
+        failedUploads.length >
+        0
+      ) {
+        throw new Error(
+          `${failedUploads.length} vídeo(s) não puderam ser enviados. `
+          + "Os demais vídeos recebidos continuarão sendo processados.",
+        );
+      }
+
+      /*
+       * Nenhum UPLOAD:
+       * significa que tudo foi LINK.
+       */
+      if (
+        processingEntryIds.length ===
+        0
+      ) {
+        await clientApi<AwardRegistrationResponse>(
+          `/api/awards/registrations/${registration.id}/submit`,
+          {
+            method:
+              "POST",
+          },
+        );
+
+        publishAwardNotice({
+          type:
+            "success",
+
+          message:
+            `Inscrição #${String(
+              registration.registrationNumber,
+            ).padStart(
+              6,
+              "0",
+            )} confirmada com sucesso!`,
+        });
+
+        router.replace(
+          "/app",
+        );
+
+        return;
+      }
+
+      /*
+       * Todos os arquivos chegaram na Oracle
+       * e o backend aceitou o processamento.
+       *
+       * Daqui para frente o navegador
+       * não é mais necessário.
+       */
+      publishAwardNotice({
+        type:
+          "info",
+
+        message:
+          "Recebemos seus vídeos. "
+          + "Você pode continuar usando o app enquanto finalizamos o processamento.",
+      });
+
+      router.replace(
+        "/app",
+      );
+
+
       if (processingEntryIds.length === 0) {
         await clientApi<AwardRegistrationResponse>(
           `/api/awards/registrations/${registration.id}/submit`,

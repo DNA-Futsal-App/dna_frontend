@@ -135,19 +135,6 @@ export default function MyAwardRegistrationPage() {
                 setMediaUrls({});
                 return;
             }
-
-            /*
-             * READY:
-             * vídeo definitivo disponível.
-             *
-             * PROCESSING / FAILED:
-             * tentamos também buscar o ticket porque,
-             * no caso de substituição, ainda pode existir
-             * o vídeo anterior em objectName.
-             *
-             * Se não existir, o backend responderá erro
-             * e simplesmente não teremos player ainda.
-             */
             const uploads =
                 current.entries.filter(
                     (entry) =>
