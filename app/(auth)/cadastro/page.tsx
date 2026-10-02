@@ -91,6 +91,11 @@ export default function RegisterPage() {
     setError("");
     const form = new FormData(event.currentTarget);
     const password = String(form.get("password") ?? "");
+    if (form.get("juryTermsAccepted") !== "on") {
+      return setError(
+        "Você precisa aceitar o Termo de Ciência, Aceite e Confidencialidade.",
+      );
+    }
     if (password !== form.get("passwordConfirmation"))
       return setError("As senhas precisam ser iguais.");
     setLoading(true);
@@ -280,6 +285,28 @@ export default function RegisterPage() {
           <Check className="mt-0.5 size-4 shrink-0 text-cyan" />
           Enviaremos um link para confirmar seu e-mail antes do primeiro acesso.
         </p>
+        <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <input
+            id="jury-terms-accepted"
+            name="juryTermsAccepted"
+            type="checkbox"
+            required
+            className="mt-0.5 size-4 shrink-0"
+          />
+          <p className="text-xs leading-relaxed text-muted">
+            <label htmlFor="jury-terms-accepted" className="cursor-pointer">
+              Li e aceito o{" "}
+            </label>
+            <Link
+              href="/termos/juri-tecnico-2026"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-black text-cyan underline decoration-cyan/40 underline-offset-4 hover:text-white"
+            >
+              Termo de Ciência, Aceite e Confidencialidade
+            </Link>{" "}
+          </p>
+        </div>
         {error ? (
           <p
             className="rounded-xl border border-coral/25 bg-coral/8 px-3.5 py-3 text-sm text-[#ffb195]"

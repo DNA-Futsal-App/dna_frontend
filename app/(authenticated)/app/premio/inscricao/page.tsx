@@ -522,6 +522,14 @@ export default function AwardRegistrationPage() {
       return;
     }
 
+    const form = new FormData(event.currentTarget);
+    if (form.get("juryTermsAccepted") !== "on") {
+      setError(
+        "Você precisa aceitar o Termo de Ciência, Aceite e Confidencialidade.",
+      );
+      return;
+    }
+
     setError("");
 
     try {
@@ -1239,6 +1247,36 @@ export default function AwardRegistrationPage() {
               Adicionar mais uma categoria
             </button>
           ) : null}
+        </section>
+
+        <section className="surface rounded-[1.75rem] p-5 sm:p-7">
+          <div className="flex items-start gap-3">
+            <input
+              id="legacy-jury-terms-accepted"
+              name="juryTermsAccepted"
+              type="checkbox"
+              required
+              disabled={submitting}
+              className="mt-0.5 size-4 shrink-0"
+            />
+            <p className="text-xs leading-relaxed text-muted sm:text-sm">
+              <label
+                htmlFor="legacy-jury-terms-accepted"
+                className="cursor-pointer"
+              >
+                Li e aceito o{" "}
+              </label>
+              <Link
+                href="/termos/juri-tecnico-2026"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-black text-cyan underline decoration-cyan/40 underline-offset-4 hover:text-white"
+              >
+                Termo de Ciência, Aceite e Confidencialidade
+              </Link>{" "}
+              do Júri Técnico – Prêmio Legacy 2026.
+            </p>
+          </div>
         </section>
 
         {error ? (
