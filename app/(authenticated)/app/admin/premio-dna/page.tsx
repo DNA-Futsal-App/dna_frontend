@@ -198,7 +198,7 @@ export default function AwardAdminPage() {
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: "overview", label: "Visão geral" },
     { id: "coaches", label: "Treinadores" },
-    { id: "control", label: "Votação" },
+    { id: "control", label: "Controle" },
   ];
 
   return (
@@ -317,20 +317,36 @@ export default function AwardAdminPage() {
       ) : null}
 
       {tab === "control" ? (
-        <VotingControlSection
-          edition={selectedEdition}
-          overview={overview}
-          onChanged={async (updated) => {
-            setEditions((current) =>
-              current.map((edition) =>
-                edition.id === updated.id ? updated : edition,
-              ),
-            );
-            await loadEditionData(editionId);
-          }}
-          setError={setError}
-          flash={flash}
-        />
+        <div className="grid gap-6">
+          <RegistrationControlSection
+            edition={selectedEdition}
+            onChanged={async (updated) => {
+              setEditions((current) =>
+                current.map((edition) =>
+                  edition.id === updated.id ? updated : edition,
+                ),
+              );
+              await loadEditionData(editionId);
+            }}
+            setError={setError}
+            flash={flash}
+          />
+
+          <VotingControlSection
+            edition={selectedEdition}
+            overview={overview}
+            onChanged={async (updated) => {
+              setEditions((current) =>
+                current.map((edition) =>
+                  edition.id === updated.id ? updated : edition,
+                ),
+              );
+              await loadEditionData(editionId);
+            }}
+            setError={setError}
+            flash={flash}
+          />
+        </div>
       ) : null}
     </>
   );
@@ -1095,6 +1111,140 @@ function CoachesSection({
         </div>
       </section>
     </div>
+  );
+}
+
+function RegistrationControlSection({
+  edition,
+  onChanged,
+  setError,
+  flash,
+}: {
+  edition: AdminAwardEdition;
+  onChanged: (edition: AdminAwardEdition) => Promise<void>;
+  setError: (message: string) => void;
+  flash: (message: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function changeRegistrationWindow(open: boolean) {
+    const confirmed = window.confirm(
+      open
+        ? "Abrir o período de inscrições agora? Os responsáveis poderão adicionar, remover e substituir candidaturas."
+        : "Encerrar o período de inscrições agora? A partir desse momento as inscrições ficarão somente para consulta.",
+    );
+
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError("");
+
+    try {
+      const updated = await clientApi<AdminAwardEdition>(
+        `/api/admin/awards/editions/${edition.id}/registrations/${open ? "open" : "close"}`,
+        { method: "POST" },
+      );
+
+      flash(
+        open
+          ? "Período de inscrições aberto."
+          : "Período de inscrições encerrado.",
+      );
+
+      await onChanged(updated);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível alterar o período de inscrições.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            {edition.registrationsOpen ? (
+              <UserRoundCheck className="size-6 text-cyan" />
+            ) : (
+              <LockKeyhole className="size-6 text-muted" />
+            )}
+            <h2 className="text-xl font-black">Período de inscrições</h2>
+          </div>
+
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            Enquanto estiver aberto, o responsável pode adicionar, retirar ou
+            substituir qualquer candidatura, inclusive uma já aprovada ou
+            reprovada. Alterar uma mídia analisada devolve a candidatura para
+            análise.
+          </p>
+        </div>
+
+        <span
+          className={`rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-wider ${
+            edition.registrationsOpen
+              ? "border-cyan/25 bg-cyan/8 text-cyan"
+              : "border-white/10 bg-night/40 text-muted"
+          }`}
+        >
+          {edition.registrationsOpen ? "Inscrições abertas" : "Inscrições fechadas"}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl bg-night/40 p-4">
+          <small className="block text-xs font-bold text-muted">Última abertura</small>
+          <strong className="mt-1 block text-sm text-ivory">
+            {edition.registrationsOpenedAt
+              ? formatDate(edition.registrationsOpenedAt, {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })
+              : "Ainda não registrada"}
+          </strong>
+        </div>
+
+        <div className="rounded-2xl bg-night/40 p-4">
+          <small className="block text-xs font-bold text-muted">Último encerramento</small>
+          <strong className="mt-1 block text-sm text-ivory">
+            {edition.registrationsClosedAt
+              ? formatDate(edition.registrationsClosedAt, {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })
+              : "—"}
+          </strong>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className={
+          edition.registrationsOpen
+            ? "btn-ghost mt-5 w-full border-coral/30 text-coral hover:bg-coral/10"
+            : "btn-primary mt-5 w-full"
+        }
+        disabled={busy}
+        onClick={() =>
+          void changeRegistrationWindow(!edition.registrationsOpen)
+        }
+      >
+        {busy ? (
+          <LoaderCircle className="size-5 animate-spin" />
+        ) : edition.registrationsOpen ? (
+          <XCircle className="size-5" />
+        ) : (
+          <ShieldCheck className="size-5" />
+        )}
+        {edition.registrationsOpen
+          ? "Encerrar inscrições agora"
+          : "Abrir inscrições agora"}
+      </button>
+    </section>
   );
 }
 

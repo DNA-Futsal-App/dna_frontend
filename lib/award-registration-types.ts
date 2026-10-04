@@ -23,6 +23,7 @@ export type AwardGender =
 export type AwardRegistrationContext = {
   editionName: string;
   season: number;
+  registrationsOpen: boolean;
   maxUploadBytes: number;
   maxDurationSeconds: number;
   contestCategories: AwardContestCategoryOption[];

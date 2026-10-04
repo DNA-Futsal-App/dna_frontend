@@ -1088,7 +1088,8 @@ export default function MyAwardRegistrationPage() {
                         </p>
                     </div>
 
-                    {registration.entries.length <
+                    {context.registrationsOpen &&
+                        registration.entries.length <
                         4 &&
                         availableCategories.length >
                         0 ? (
@@ -1126,6 +1127,19 @@ export default function MyAwardRegistrationPage() {
                 </div>
             ) : null}
 
+            {!context.registrationsOpen ? (
+                <div className="mb-5 rounded-2xl border border-amber/20 bg-amber/5 p-5">
+                    <strong className="text-amber">
+                        Período de inscrições encerrado
+                    </strong>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                        Sua inscrição continua disponível para consulta, mas
+                        nenhuma candidatura pode ser adicionada, retirada ou
+                        alterada enquanto o período estiver fechado.
+                    </p>
+                </div>
+            ) : null}
+
             {cancelled ? (
                 <div className="mb-5 rounded-2xl border border-coral/20 bg-coral/5 p-5">
                     <strong className="text-coral">
@@ -1155,10 +1169,10 @@ export default function MyAwardRegistrationPage() {
                     </p>
 
                     <p className="mt-2 text-xs leading-relaxed text-muted">
-                        Você pode continuar retirando candidaturas e substituindo
-                        vídeos ou links. Sempre que uma mídia analisada for substituída,
-                        a decisão anterior será invalidada e a candidatura voltará
-                        automaticamente para análise.
+                        Enquanto as inscrições estiverem abertas, você pode adicionar,
+                        retirar ou substituir candidaturas. Sempre que uma mídia
+                        analisada for substituída, a decisão anterior será invalidada
+                        e a candidatura voltará automaticamente para análise.
                     </p>
                 </div>
             ) : null}
@@ -1262,7 +1276,8 @@ export default function MyAwardRegistrationPage() {
                         </h2>
                     </div>
 
-                    {!cancelled &&
+                    {context.registrationsOpen &&
+                        !cancelled &&
                         registration.entries.length >
                         0 ? (
                         <button
@@ -1394,7 +1409,8 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {!cancelled ? (
+                                                    {context.registrationsOpen &&
+                                                        !cancelled ? (
                                                         <>
                                                             <button
                                                                 type="button"
@@ -1574,7 +1590,8 @@ export default function MyAwardRegistrationPage() {
                                                                 </a>
                                                             ) : null}
 
-                                                            {!cancelled ? (
+                                                            {context.registrationsOpen &&
+                                                                !cancelled ? (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
@@ -1616,7 +1633,8 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {!cancelled ? (
+                                                    {context.registrationsOpen &&
+                                                        !cancelled ? (
                                                         <button
                                                             type="button"
                                                             disabled={
@@ -1640,7 +1658,8 @@ export default function MyAwardRegistrationPage() {
                                                 </>
                                             )}
 
-                                            {!cancelled ? (
+                                            {context.registrationsOpen &&
+                                                !cancelled ? (
                                                 <button
                                                     type="button"
                                                     disabled={

@@ -6,6 +6,9 @@ export type AdminAwardEdition = {
   status: "DRAFT" | "OPEN" | "CLOSED";
   votingOpensAt?: string | null;
   votingClosesAt?: string | null;
+  registrationsOpen: boolean;
+  registrationsOpenedAt?: string | null;
+  registrationsClosedAt?: string | null;
 };
 
 export type AdminAwardOverview = {

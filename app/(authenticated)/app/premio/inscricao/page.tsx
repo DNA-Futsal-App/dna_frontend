@@ -522,6 +522,11 @@ export default function AwardRegistrationPage() {
       return;
     }
 
+    if (!context.registrationsOpen) {
+      setError("O período de inscrições do Prêmio Legacy está encerrado.");
+      return;
+    }
+
     const form = new FormData(event.currentTarget);
     if (form.get("juryTermsAccepted") !== "on") {
       setError(
@@ -740,6 +745,31 @@ export default function AwardRegistrationPage() {
       <div className="flex min-h-72 items-center justify-center">
         <LoaderCircle className="size-9 animate-spin text-cyan" />
       </div>
+    );
+  }
+
+  if (!context.registrationsOpen) {
+    return (
+      <section className="surface mx-auto max-w-2xl rounded-[1.75rem] p-6 sm:p-8">
+        <AlertTriangle className="size-10 text-amber" />
+        <p className="eyebrow mt-5">Prêmio Legacy</p>
+        <h1 className="display-title mt-2 text-4xl font-black">
+          Inscrições encerradas.
+        </h1>
+        <p className="mt-4 text-sm leading-relaxed text-muted">
+          O período de candidaturas está fechado. As inscrições já realizadas
+          permanecem disponíveis para consulta, mas não podem ser alteradas
+          enquanto o período estiver encerrado.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link href="/app/premio/minha-inscricao" className="btn-primary">
+            Ver minha inscrição
+          </Link>
+          <Link href="/app" className="btn-ghost">
+            Voltar ao aplicativo
+          </Link>
+        </div>
+      </section>
     );
   }
 
