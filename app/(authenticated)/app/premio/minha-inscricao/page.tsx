@@ -140,7 +140,7 @@ export default function MyAwardRegistrationPage() {
                 current.entries.filter(
                     (entry) =>
                         entry.sourceType === "UPLOAD" &&
-                        entry.mediaStatus !== "PENDING",
+                        entry.mediaStatus === "READY",
                 );
 
             const results =
@@ -170,7 +170,7 @@ export default function MyAwardRegistrationPage() {
                 (previous) => {
                     const activeIds =
                         new Set(
-                            current.entries.map(
+                            uploads.map(
                                 (entry) => entry.id,
                             ),
                         );
@@ -678,6 +678,24 @@ export default function MyAwardRegistrationPage() {
             );
         }
     }
+
+    function confirmReviewReset(
+        entry:
+            AwardRegistrationEntryResponse,
+    ) {
+        if (
+            entry.reviewStatus ===
+            "PENDING_REVIEW"
+        ) {
+            return true;
+        }
+
+        return window.confirm(
+            "Esta candidatura já foi analisada. Ao substituir a mídia, " +
+            "a decisão atual será invalidada e a candidatura voltará para análise. Continuar?",
+        );
+    }
+
     async function replaceVideo(
         entry:
             AwardRegistrationEntryResponse,
@@ -695,6 +713,10 @@ export default function MyAwardRegistrationPage() {
             !registration ||
             !context
         ) {
+            return;
+        }
+
+        if (!confirmReviewReset(entry)) {
             return;
         }
 
@@ -734,8 +756,10 @@ export default function MyAwardRegistrationPage() {
                     "info",
 
                 message:
-                    "Recebemos o novo vídeo. "
-                    + "Você pode continuar usando o app enquanto concluímos o processamento.",
+                    entry.reviewStatus ===
+                    "PENDING_REVIEW"
+                        ? "Recebemos o novo vídeo. Você pode continuar usando o app enquanto concluímos o processamento."
+                        : "Recebemos o novo vídeo. A candidatura voltou para análise e o processamento continuará em segundo plano.",
             });
             await reloadRegistration();
 
@@ -821,6 +845,10 @@ export default function MyAwardRegistrationPage() {
             return;
         }
 
+        if (!confirmReviewReset(entry)) {
+            return;
+        }
+
         setProcessingEntry(
             entry.id,
         );
@@ -851,7 +879,10 @@ export default function MyAwardRegistrationPage() {
                     "success",
 
                 message:
-                    "Link do vídeo atualizado com sucesso.",
+                    entry.reviewStatus ===
+                    "PENDING_REVIEW"
+                        ? "Link do vídeo atualizado com sucesso."
+                        : "Link atualizado. A candidatura voltou para análise.",
             });
 
             await reloadRegistration();
@@ -1057,8 +1088,7 @@ export default function MyAwardRegistrationPage() {
                         </p>
                     </div>
 
-                    {!reviewStarted &&
-                        registration.entries.length <
+                    {registration.entries.length <
                         4 &&
                         availableCategories.length >
                         0 ? (
@@ -1125,9 +1155,10 @@ export default function MyAwardRegistrationPage() {
                     </p>
 
                     <p className="mt-2 text-xs leading-relaxed text-muted">
-                        Para preservar a decisão da organização, vídeos,
-                        links e categorias não podem mais ser alterados
-                        depois que a primeira candidatura é analisada.
+                        Você pode continuar retirando candidaturas e substituindo
+                        vídeos ou links. Sempre que uma mídia analisada for substituída,
+                        a decisão anterior será invalidada e a candidatura voltará
+                        automaticamente para análise.
                     </p>
                 </div>
             ) : null}
@@ -1232,7 +1263,6 @@ export default function MyAwardRegistrationPage() {
                     </div>
 
                     {!cancelled &&
-                        !reviewStarted &&
                         registration.entries.length >
                         0 ? (
                         <button
@@ -1364,37 +1394,111 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {!cancelled &&
-                                                        !reviewStarted ? (
-                                                        <button
-                                                            type="button"
-                                                            disabled={
-                                                                localProcessing ||
-                                                                backendProcessing
-                                                            }
-                                                            onClick={() =>
-                                                                fileInputs.current[
-                                                                    entry.id
-                                                                ]?.click()
-                                                            }
-                                                            className="btn-ghost mt-4 w-full"
-                                                        >
-                                                            {localProcessing ||
-                                                                backendProcessing ? (
-                                                                <LoaderCircle className="size-4 animate-spin" />
-                                                            ) : (
-                                                                <RefreshCw className="size-4" />
-                                                            )}
+                                                    {!cancelled ? (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                disabled={
+                                                                    localProcessing ||
+                                                                    backendProcessing
+                                                                }
+                                                                onClick={() =>
+                                                                    fileInputs.current[
+                                                                        entry.id
+                                                                    ]?.click()
+                                                                }
+                                                                className="btn-ghost mt-4 w-full"
+                                                            >
+                                                                {localProcessing ||
+                                                                    backendProcessing ? (
+                                                                    <LoaderCircle className="size-4 animate-spin" />
+                                                                ) : (
+                                                                    <RefreshCw className="size-4" />
+                                                                )}
 
-                                                            {backendProcessing
-                                                                ? "Processando vídeo..."
-                                                                : failed
-                                                                    ? "Tentar novamente"
-                                                                    : entry.mediaStatus ===
-                                                                        "READY"
-                                                                        ? "Substituir vídeo"
-                                                                        : "Enviar vídeo"}
-                                                        </button>
+                                                                {backendProcessing
+                                                                    ? "Processando vídeo..."
+                                                                    : failed
+                                                                        ? "Tentar novamente"
+                                                                        : entry.mediaStatus ===
+                                                                            "READY"
+                                                                            ? "Substituir vídeo"
+                                                                            : "Enviar vídeo"}
+                                                            </button>
+
+                                                            {editingLink ===
+                                                                entry.id ? (
+                                                                <div className="mt-3 grid gap-3">
+                                                                    <input
+                                                                        className="field"
+                                                                        type="url"
+                                                                        value={
+                                                                            linkDraft
+                                                                        }
+                                                                        onChange={(
+                                                                            event,
+                                                                        ) =>
+                                                                            setLinkDraft(
+                                                                                event.target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        placeholder="https://..."
+                                                                    />
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setEditingLink(
+                                                                                    null,
+                                                                                )
+                                                                            }
+                                                                            className="btn-ghost"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={
+                                                                                localProcessing
+                                                                            }
+                                                                            onClick={() =>
+                                                                                void saveLink(
+                                                                                    entry,
+                                                                                )
+                                                                            }
+                                                                            className="btn-primary"
+                                                                        >
+                                                                            {localProcessing ? (
+                                                                                <LoaderCircle className="size-4 animate-spin" />
+                                                                            ) : (
+                                                                                <Save className="size-4" />
+                                                                            )}
+                                                                            Usar link
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={
+                                                                        localProcessing ||
+                                                                        backendProcessing
+                                                                    }
+                                                                    onClick={() =>
+                                                                        beginEditLink(
+                                                                            entry,
+                                                                        )
+                                                                    }
+                                                                    className="btn-ghost mt-3 w-full"
+                                                                >
+                                                                    <Link2 className="size-4" />
+                                                                    Substituir por link
+                                                                </button>
+                                                            )}
+                                                        </>
                                                     ) : null}
                                                 </>
                                             ) : (
@@ -1470,8 +1574,7 @@ export default function MyAwardRegistrationPage() {
                                                                 </a>
                                                             ) : null}
 
-                                                            {!cancelled &&
-                                                                !reviewStarted ? (
+                                                            {!cancelled ? (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
@@ -1487,11 +1590,57 @@ export default function MyAwardRegistrationPage() {
                                                             ) : null}
                                                         </>
                                                     )}
+
+                                                    <input
+                                                        ref={(
+                                                            element,
+                                                        ) => {
+                                                            fileInputs.current[
+                                                                entry.id
+                                                            ] =
+                                                                element;
+                                                        }}
+                                                        type="file"
+                                                        accept="video/*"
+                                                        className="hidden"
+                                                        disabled={
+                                                            localProcessing
+                                                        }
+                                                        onChange={(
+                                                            event,
+                                                        ) =>
+                                                            void replaceVideo(
+                                                                entry,
+                                                                event,
+                                                            )
+                                                        }
+                                                    />
+
+                                                    {!cancelled ? (
+                                                        <button
+                                                            type="button"
+                                                            disabled={
+                                                                localProcessing
+                                                            }
+                                                            onClick={() =>
+                                                                fileInputs.current[
+                                                                    entry.id
+                                                                ]?.click()
+                                                            }
+                                                            className="btn-ghost mt-3 w-full"
+                                                        >
+                                                            {localProcessing ? (
+                                                                <LoaderCircle className="size-4 animate-spin" />
+                                                            ) : (
+                                                                <UploadCloud className="size-4" />
+                                                            )}
+                                                            Substituir por upload
+                                                        </button>
+                                                    ) : null}
                                                 </>
                                             )}
 
-                                            {!cancelled &&
-                                                !reviewStarted ? (
+                                            {!cancelled ? (
                                                 <button
                                                     type="button"
                                                     disabled={
