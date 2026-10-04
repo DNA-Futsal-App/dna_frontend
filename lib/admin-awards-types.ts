@@ -184,3 +184,64 @@ export type AdminAwardResults = {
   integrityOk: boolean;
   contexts: AdminAwardContextResult[];
 };
+
+export type AdminAwardRegistrationReviewStatus =
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "REJECTED";
+
+export type AdminAwardRegistrationEntry = {
+  id: string;
+  contestCategory: string;
+  contestCategoryLabel: string;
+  sourceType: "LINK" | "UPLOAD";
+  mediaStatus: "PENDING" | "PROCESSING" | "READY" | "FAILED";
+  reviewStatus: AdminAwardRegistrationReviewStatus;
+  externalUrl?: string | null;
+  displayFilename?: string | null;
+  durationMs?: number | null;
+  width?: number | null;
+  height?: number | null;
+  fileSizeBytes?: number | null;
+  reviewedAt?: string | null;
+  reviewedByUserId?: string | null;
+  reviewedByName?: string | null;
+  reviewReason?: string | null;
+};
+
+export type AdminAwardRegistration = {
+  id: string;
+  registrationNumber: number;
+  status: "SUBMITTED";
+  representativeUserId: string;
+  representativeName: string;
+  representativeEmail: string;
+  athleteName: string;
+  athleteInstagram: string;
+  gender: "MALE" | "FEMALE";
+  divisionId: number;
+  divisionName: string;
+  categoryId: number;
+  categoryName: string;
+  eventId: number;
+  teamId: string;
+  teamName: string;
+  submittedAt?: string | null;
+  entries: AdminAwardRegistrationEntry[];
+};
+
+export type AdminAwardRegistrationPage = {
+  items: AdminAwardRegistration[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  pendingReview: number;
+  approved: number;
+  rejected: number;
+};
+
+export type AdminAwardMediaTicket = {
+  url: string;
+  expiresAt: string;
+};

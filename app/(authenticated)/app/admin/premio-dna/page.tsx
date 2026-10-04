@@ -220,6 +220,14 @@ export default function AwardAdminPage() {
 
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/app/admin/premio-dna/candidaturas"
+              className="btn-ghost"
+            >
+              <ClipboardCheck className="size-4" />
+              Candidaturas
+            </Link>
+
+            <Link
               href="/app/admin/premio-dna/apuracao"
               className="btn-ghost"
             >

@@ -14,6 +14,7 @@ import {
     AlertTriangle,
     BadgeCheck,
     CheckCircle2,
+    Clock3,
     ExternalLink,
     FileVideo2,
     Link2,
@@ -1011,6 +1012,27 @@ export default function MyAwardRegistrationPage() {
         registration.status ===
         "CANCELLED";
 
+    const reviewStarted =
+        registration.entries.some(
+            (entry) =>
+                entry.reviewStatus !==
+                "PENDING_REVIEW",
+        );
+
+    const approvedCount =
+        registration.entries.filter(
+            (entry) =>
+                entry.reviewStatus ===
+                "APPROVED",
+        ).length;
+
+    const rejectedCount =
+        registration.entries.filter(
+            (entry) =>
+                entry.reviewStatus ===
+                "REJECTED",
+        ).length;
+
     return (
         <div className="mx-auto max-w-5xl">
             <header className="mb-7">
@@ -1035,7 +1057,8 @@ export default function MyAwardRegistrationPage() {
                         </p>
                     </div>
 
-                    {registration.entries.length <
+                    {!reviewStarted &&
+                        registration.entries.length <
                         4 &&
                         availableCategories.length >
                         0 ? (
@@ -1082,6 +1105,29 @@ export default function MyAwardRegistrationPage() {
                     <p className="mt-1 text-sm leading-relaxed text-muted">
                         Todas as candidaturas deste atleta foram retiradas.
                         Você pode reinscrevê-lo enquanto o período de inscrições estiver aberto.
+                    </p>
+                </div>
+            ) : null}
+
+            {reviewStarted &&
+                !cancelled ? (
+                <div className="mb-5 rounded-2xl border border-cyan/20 bg-cyan/5 p-5">
+                    <strong className="text-cyan">
+                        Análise administrativa iniciada
+                    </strong>
+
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                        {approvedCount} aprovada(s) •{" "}
+                        {rejectedCount} reprovada(s) •{" "}
+                        {registration.entries.length -
+                            approvedCount -
+                            rejectedCount} aguardando análise.
+                    </p>
+
+                    <p className="mt-2 text-xs leading-relaxed text-muted">
+                        Para preservar a decisão da organização, vídeos,
+                        links e categorias não podem mais ser alterados
+                        depois que a primeira candidatura é analisada.
                     </p>
                 </div>
             ) : null}
@@ -1186,6 +1232,7 @@ export default function MyAwardRegistrationPage() {
                     </div>
 
                     {!cancelled &&
+                        !reviewStarted &&
                         registration.entries.length >
                         0 ? (
                         <button
@@ -1243,6 +1290,19 @@ export default function MyAwardRegistrationPage() {
                                                     entry.contestCategoryLabel
                                                 }
                                             </h3>
+
+                                            {entry.reviewStatus ===
+                                                "REJECTED" &&
+                                                entry.reviewReason ? (
+                                                <div className="mt-3 rounded-xl border border-coral/20 bg-coral/5 p-3 text-sm leading-relaxed text-[#ffb195]">
+                                                    <strong>
+                                                        Motivo da reprovação:
+                                                    </strong>{" "}
+                                                    {
+                                                        entry.reviewReason
+                                                    }
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         <div className="p-5">
@@ -1304,7 +1364,8 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {!cancelled ? (
+                                                    {!cancelled &&
+                                                        !reviewStarted ? (
                                                         <button
                                                             type="button"
                                                             disabled={
@@ -1409,7 +1470,8 @@ export default function MyAwardRegistrationPage() {
                                                                 </a>
                                                             ) : null}
 
-                                                            {!cancelled ? (
+                                                            {!cancelled &&
+                                                                !reviewStarted ? (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
@@ -1428,7 +1490,8 @@ export default function MyAwardRegistrationPage() {
                                                 </>
                                             )}
 
-                                            {!cancelled ? (
+                                            {!cancelled &&
+                                                !reviewStarted ? (
                                                 <button
                                                     type="button"
                                                     disabled={
@@ -1775,6 +1838,30 @@ function EntryStatus({
     AwardRegistrationEntryResponse;
 }) {
     if (
+        entry.reviewStatus ===
+        "APPROVED"
+    ) {
+        return (
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan/20 bg-cyan/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan">
+                <BadgeCheck className="size-3.5" />
+                Candidatura aprovada
+            </span>
+        );
+    }
+
+    if (
+        entry.reviewStatus ===
+        "REJECTED"
+    ) {
+        return (
+            <span className="inline-flex items-center gap-2 rounded-full border border-coral/20 bg-coral/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-coral">
+                <AlertTriangle className="size-3.5" />
+                Candidatura reprovada
+            </span>
+        );
+    }
+
+    if (
         entry.mediaStatus ===
         "PROCESSING"
     ) {
@@ -1803,9 +1890,9 @@ function EntryStatus({
         "READY"
     ) {
         return (
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan/15 bg-cyan/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan">
-                <BadgeCheck className="size-3.5" />
-                Candidatura ativa
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber/15 bg-amber/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber">
+                <Clock3 className="size-3.5" />
+                Aguardando análise
             </span>
         );
     }
@@ -2090,7 +2177,7 @@ function registrationMediaSignature(
         ...registration.entries
             .map(
                 (entry) =>
-                    `${entry.id}:${entry.mediaStatus}:${entry.sourceType}`,
+                    `${entry.id}:${entry.mediaStatus}:${entry.sourceType}:${entry.reviewStatus}:${entry.reviewedAt ?? ""}:${entry.reviewReason ?? ""}`,
             )
             .sort(),
     ].join(
