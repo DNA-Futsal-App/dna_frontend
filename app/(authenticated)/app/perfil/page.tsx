@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -20,7 +19,6 @@ import { useApiData } from "@/lib/use-api-data";
 import { CatalogCategory } from "@/lib/types";
 
 export default function ProfilePage() {
-  const router = useRouter();
   const {
     data: profile,
     loading,

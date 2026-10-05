@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
     ChangeEvent,
     useCallback,
@@ -75,6 +76,8 @@ const initialAddState: AddCandidateState = {
 };
 
 export default function MyAwardRegistrationPage() {
+    const router = useRouter();
+
     const [registration, setRegistration] =
         useState<AwardRegistrationResponse | null>(null);
 
@@ -104,6 +107,11 @@ export default function MyAwardRegistrationPage() {
     const [
         savingNewCandidate,
         setSavingNewCandidate,
+    ] = useState(false);
+
+    const [
+        deletingRegistration,
+        setDeletingRegistration,
     ] = useState(false);
 
     const [
@@ -1001,6 +1009,68 @@ export default function MyAwardRegistrationPage() {
         }
     }
 
+    async function deleteRegistrationPermanently() {
+        if (
+            !registration ||
+            !context?.registrationsOpen ||
+            deletingRegistration
+        ) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Apagar definitivamente esta inscrição? " +
+                "Todos os dados desta inscrição, candidaturas e vídeos serão removidos. " +
+                "Depois você precisará preencher tudo novamente. Esta ação não pode ser desfeita.",
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setDeletingRegistration(
+            true,
+        );
+
+        setError("");
+
+        try {
+            await clientApi(
+                `/api/awards/registrations/${registration.id}/permanent`,
+                {
+                    method:
+                        "DELETE",
+                },
+            );
+
+            setMediaUrls({});
+
+            publishAwardNotice({
+                type:
+                    "success",
+
+                message:
+                    "Inscrição apagada. Você pode preencher todos os dados novamente.",
+            });
+
+            router.push(
+                "/app/premio/inscricao",
+            );
+
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Não foi possível apagar a inscrição.",
+            );
+
+            setDeletingRegistration(
+                false,
+            );
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex min-h-80 items-center justify-center">
@@ -1684,6 +1754,52 @@ export default function MyAwardRegistrationPage() {
                     </div>
                 )}
             </section>
+
+            {context.registrationsOpen ? (
+                <section className="mt-6 rounded-[1.75rem] border border-coral/25 bg-coral/5 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 size-6 shrink-0 text-coral" />
+
+                        <div>
+                            <p className="eyebrow text-coral">
+                                Zona de risco
+                            </p>
+
+                            <h2 className="mt-2 text-xl font-black">
+                                Apagar inscrição e recomeçar
+                            </h2>
+
+                            <p className="mt-2 text-sm leading-relaxed text-muted">
+                                Esta ação remove completamente esta inscrição,
+                                incluindo os dados informados, todas as candidaturas,
+                                análises e vídeos vinculados. Depois disso, você poderá
+                                preencher uma nova inscrição do zero.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        disabled={
+                            deletingRegistration
+                        }
+                        onClick={() =>
+                            void deleteRegistrationPermanently()
+                        }
+                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-coral/35 bg-coral/10 px-4 text-sm font-black text-coral disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                        {deletingRegistration ? (
+                            <LoaderCircle className="size-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="size-4" />
+                        )}
+
+                        {deletingRegistration
+                            ? "Apagando inscrição..."
+                            : "Apagar inscrição e recomeçar"}
+                    </button>
+                </section>
+            ) : null}
 
             {adding ? (
                 <div
