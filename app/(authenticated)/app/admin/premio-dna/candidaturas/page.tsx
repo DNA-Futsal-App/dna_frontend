@@ -961,8 +961,19 @@ function AdminMediaPreview({
     return (
       <div className="mt-4 rounded-2xl border border-coral/20 bg-coral/5 p-4">
         <p className="text-xs font-bold text-coral">
-          O link desta candidatura é inválido ou não está disponível.
+          Este link não possui um formato de incorporação compatível ou não está disponível.
         </p>
+        {entry.externalUrl ? (
+          <a
+            href={entry.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1 text-xs font-black text-cyan hover:text-white"
+          >
+            <ExternalLink className="size-3.5" />
+            Abrir original
+          </a>
+        ) : null}
       </div>
     );
   }
@@ -989,12 +1000,18 @@ function AdminMediaPreview({
 
   return (
     <div className="mt-4">
-      <div className="aspect-video overflow-hidden rounded-2xl border border-white/8 bg-black">
+      <div
+        className={
+          externalSource.provider === "Instagram"
+            ? "mx-auto h-[640px] max-h-[75vh] w-full max-w-md overflow-hidden rounded-2xl border border-white/8 bg-black"
+            : "aspect-video overflow-hidden rounded-2xl border border-white/8 bg-black"
+        }
+      >
         <iframe
           src={externalSource.src}
           title={`${entry.contestCategoryLabel} — ${externalSource.provider}`}
           loading="lazy"
-          allow="autoplay; encrypted-media; picture-in-picture"
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
           sandbox={
@@ -1123,6 +1140,34 @@ function normalizeExternalMedia(
       }
     }
 
+    const instagramSource =
+      instagramEmbedSource(
+        url,
+        hostname,
+      );
+
+    if (instagramSource) {
+      return instagramSource;
+    }
+
+    if (isInstagramHostname(hostname)) {
+      return null;
+    }
+
+    const facebookSource =
+      facebookEmbedSource(
+        url,
+        hostname,
+      );
+
+    if (facebookSource) {
+      return facebookSource;
+    }
+
+    if (isFacebookHostname(hostname)) {
+      return null;
+    }
+
     if (
       /\.(mp4|webm|ogg|m4v)$/i.test(
         url.pathname,
@@ -1145,6 +1190,129 @@ function normalizeExternalMedia(
   } catch {
     return null;
   }
+}
+
+function isInstagramHostname(
+  hostname: string,
+) {
+  return (
+    hostname === "instagram.com" ||
+    hostname === "m.instagram.com" ||
+    hostname === "instagr.am"
+  );
+}
+
+function instagramEmbedSource(
+  url: URL,
+  hostname: string,
+): ExternalMediaSource | null {
+  if (!isInstagramHostname(hostname)) {
+    return null;
+  }
+
+  const parts =
+    url.pathname
+      .split("/")
+      .filter(Boolean);
+
+  const contentType =
+    parts[0]?.toLowerCase();
+
+  if (
+    !contentType ||
+    !["p", "reel", "tv"].includes(
+      contentType,
+    )
+  ) {
+    return null;
+  }
+
+  const shortcode =
+    parts[1];
+
+  if (
+    !shortcode ||
+    !/^[A-Za-z0-9_-]+$/.test(
+      shortcode,
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    kind: "EMBED",
+    src:
+      `https://www.instagram.com/${contentType}/${encodeURIComponent(shortcode)}/embed/`,
+    provider: "Instagram",
+    sandboxed: false,
+  };
+}
+
+function isFacebookHostname(
+  hostname: string,
+) {
+  return (
+    hostname === "facebook.com" ||
+    hostname === "m.facebook.com" ||
+    hostname === "web.facebook.com" ||
+    hostname === "mbasic.facebook.com" ||
+    hostname === "fb.watch"
+  );
+}
+
+function facebookEmbedSource(
+  url: URL,
+  hostname: string,
+): ExternalMediaSource | null {
+  if (!isFacebookHostname(hostname)) {
+    return null;
+  }
+
+  const pathname =
+    url.pathname.toLowerCase();
+
+  const isVideo =
+    hostname === "fb.watch" ||
+    pathname.includes("/videos/") ||
+    pathname.startsWith("/reel/") ||
+    pathname.startsWith("/share/r/") ||
+    pathname.startsWith("/share/v/") ||
+    pathname.startsWith("/watch") ||
+    (
+      pathname === "/video.php" &&
+      (
+        url.searchParams.has("v") ||
+        url.searchParams.has("id")
+      )
+    );
+
+  const isPost =
+    pathname.includes("/posts/") ||
+    pathname.startsWith("/share/p/") ||
+    pathname === "/permalink.php";
+
+  if (!isVideo && !isPost) {
+    return null;
+  }
+
+  const params =
+    new URLSearchParams({
+      href: url.toString(),
+      width: isVideo ? "560" : "500",
+    });
+
+  params.set(
+    "show_text",
+    isVideo ? "false" : "true",
+  );
+
+  return {
+    kind: "EMBED",
+    src:
+      `https://www.facebook.com/plugins/${isVideo ? "video.php" : "post.php"}?${params.toString()}`,
+    provider: "Facebook",
+    sandboxed: false,
+  };
 }
 
 function youtubeVideoId(
