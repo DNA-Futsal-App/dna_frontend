@@ -285,7 +285,7 @@ export default function RegisterPage() {
           <Check className="mt-0.5 size-4 shrink-0 text-cyan" />
           Enviaremos um link para confirmar seu e-mail antes do primeiro acesso.
         </p>
-        <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/3 p-4">
           <input
             id="jury-terms-accepted"
             name="juryTermsAccepted"

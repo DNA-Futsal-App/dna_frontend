@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run logos:manifest",
     "dev": "next dev",
+    "prebuild": "npm run logos:manifest",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "logos:manifest": "node scripts/generate-team-logo-manifest.mjs",
     "logos:test": "node --test scripts/team-logos.test.mjs"
   },
   "dependencies": {

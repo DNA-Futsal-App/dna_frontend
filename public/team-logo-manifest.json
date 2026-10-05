@@ -1,0 +1,617 @@
+{
+  "version": 1,
+  "logos": [
+    {
+      "key": "10napole",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/10%20Napole.jpeg"
+    },
+    {
+      "key": "10rsoccercfa",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/10%20Rsoccer%20CFA.jpg"
+    },
+    {
+      "key": "11camisa10b",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/11%20Camisa_10%20B.png"
+    },
+    {
+      "key": "12itapevi",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/12%20Itapevi.png"
+    },
+    {
+      "key": "12pontodeencontro",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/12%20Ponto_de_Encontro.png"
+    },
+    {
+      "key": "13f9taboao",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/13%20F9%20Taboao.jpeg"
+    },
+    {
+      "key": "13f9taboao",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/13%20F9%20Taboao.jpeg"
+    },
+    {
+      "key": "14cfaf",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/14%20CFAF.png"
+    },
+    {
+      "key": "14guarulhense",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/14%20Guarulhense.png"
+    },
+    {
+      "key": "16galata",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/16%20Galata.png"
+    },
+    {
+      "key": "16jabaquara",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/16%20Jabaquara.png"
+    },
+    {
+      "key": "1kgb",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/1%20KGB.jpeg"
+    },
+    {
+      "key": "1paulinense",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/1%20Paulinense.png"
+    },
+    {
+      "key": "1paulinense",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/1%20Paulinense.png"
+    },
+    {
+      "key": "2insfamilialorena",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/2%20Ins%20Familia%20Lorena.png"
+    },
+    {
+      "key": "2insfamilialorena",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/2%20Ins%20Familia%20Lorena.png"
+    },
+    {
+      "key": "2tatui",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/2%20Tatui.png"
+    },
+    {
+      "key": "3hortolandia",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/3%20Hortolandia.png"
+    },
+    {
+      "key": "3hortolandia",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/3%20Hortolandia.png"
+    },
+    {
+      "key": "3mogiec",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/3%20Mogi_EC.png"
+    },
+    {
+      "key": "4astros",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/4%20Astros.jpg"
+    },
+    {
+      "key": "4astros",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/4%20Astros.jpg"
+    },
+    {
+      "key": "4atibaiafutsa",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/4%20Atibaia%20Futsa.jpg"
+    },
+    {
+      "key": "5acap",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/5%20ACAP.png"
+    },
+    {
+      "key": "5acap",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/5%20ACAP.png"
+    },
+    {
+      "key": "5rosanegra",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/5%20Rosa_Negra.png"
+    },
+    {
+      "key": "5rosanegra",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/5%20Rosa_Negra.png"
+    },
+    {
+      "key": "618310300179076351003287011962963643787462475n",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/618310300_17907635100328701_1962963643787462475_n.jpg"
+    },
+    {
+      "key": "6pequeninos",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/6%20Pequeninos.png"
+    },
+    {
+      "key": "6raposasfutsal",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/6%20Raposas%20Futsal.jpeg"
+    },
+    {
+      "key": "6raposasfutsal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/6%20Raposas%20Futsal.jpeg"
+    },
+    {
+      "key": "7desetembro",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/7_de_setembro.png"
+    },
+    {
+      "key": "7itaquerense",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/7%20Itaquerense.png"
+    },
+    {
+      "key": "7nacionalacademy",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/7%20NACIONAL-ACADEMY.png"
+    },
+    {
+      "key": "8furiafs",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/8%20Furia_FS.png"
+    },
+    {
+      "key": "8resiliense",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/8%20Resiliense.png"
+    },
+    {
+      "key": "9c13",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/9%20C13.png"
+    },
+    {
+      "key": "9c13",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/9%20C13.png"
+    },
+    {
+      "key": "9companysports",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/9%20Company%20Sports.jpeg"
+    },
+    {
+      "key": "aabb",
+      "path": "/logos_times/BASE/A1/aabb.png"
+    },
+    {
+      "key": "abesc",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Abesc.jpg"
+    },
+    {
+      "key": "adef",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/ADEF.png"
+    },
+    {
+      "key": "adindaiatuba",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/AD_Indaiatuba.png"
+    },
+    {
+      "key": "adprudente",
+      "path": "/logos_times/BASE/A2/adprudente.png"
+    },
+    {
+      "key": "adsantoandre",
+      "path": "/logos_times/BASE/A2/adsantoandre.png"
+    },
+    {
+      "key": "adsantoandre",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/ad_santo_andre.png"
+    },
+    {
+      "key": "adsaobernardo",
+      "path": "/logos_times/BASE/A1/adsaobernardo.png"
+    },
+    {
+      "key": "adsuzano",
+      "path": "/logos_times/BASE/A2/adsuzano.png"
+    },
+    {
+      "key": "adsuzano",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png"
+    },
+    {
+      "key": "aliancajacarei",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/alianca_jacarei.jpeg"
+    },
+    {
+      "key": "amagn",
+      "path": "/logos_times/BASE/A1/amagn.png"
+    },
+    {
+      "key": "asfmagnus",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/ASF_Magnus.png"
+    },
+    {
+      "key": "atibaifutsal",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/atibai_futsal.jpg"
+    },
+    {
+      "key": "atleticomangalot",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Atletico%20Mangalot.png"
+    },
+    {
+      "key": "audax",
+      "path": "/logos_times/BASE/A1/audax.png"
+    },
+    {
+      "key": "audaxosasco",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Audax_Osasco.png"
+    },
+    {
+      "key": "batalha",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Batalha.png"
+    },
+    {
+      "key": "batebola",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/batebola.png"
+    },
+    {
+      "key": "benfica",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Benfica.png"
+    },
+    {
+      "key": "bolanope",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png"
+    },
+    {
+      "key": "bolanopesantos",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/BOLA%20NO%20PE%CC%81%20SANTOS.png"
+    },
+    {
+      "key": "bonsdebola",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Bons%20de%20Bola.png"
+    },
+    {
+      "key": "botucatuense",
+      "path": "/logos_times/BASE/A1/botucatuense.png"
+    },
+    {
+      "key": "caas",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Caas.png"
+    },
+    {
+      "key": "caas",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Caas.png"
+    },
+    {
+      "key": "caieiras1",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Caieiras%20(1).png"
+    },
+    {
+      "key": "cajuventuslogosvg",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/CA_Juventus_logo.svg.png"
+    },
+    {
+      "key": "camilopolis",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/camilopolis.png"
+    },
+    {
+      "key": "camisa10",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Camisa_10.png"
+    },
+    {
+      "key": "capao",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/CAPAO.jpg"
+    },
+    {
+      "key": "caypiranga",
+      "path": "/logos_times/BASE/A2/caypiranga.png"
+    },
+    {
+      "key": "chutefutsal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Chute_Futsal.png"
+    },
+    {
+      "key": "coloradocaieiras",
+      "path": "/logos_times/BASE/A1/coloradocaieiras.png"
+    },
+    {
+      "key": "corinthians",
+      "path": "/logos_times/BASE/A1/corinthians.png"
+    },
+    {
+      "key": "corinthianslogo",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Corinthians_logo.png"
+    },
+    {
+      "key": "ctcvilaema",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/ctc_vila_ema.png"
+    },
+    {
+      "key": "ctcvilaema",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/CTC_Vila_Ema.png"
+    },
+    {
+      "key": "desportivosorocaba",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/desportivo_sorocaba.jpeg"
+    },
+    {
+      "key": "discipulos",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Discipulos.png"
+    },
+    {
+      "key": "ferroviaria",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Ferrovia%CC%81ria.jpg"
+    },
+    {
+      "key": "flamengoguarulhos",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/flamengo_guarulhos.png"
+    },
+    {
+      "key": "friburgo",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/Friburgo.png"
+    },
+    {
+      "key": "friburgo",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Friburgo.png"
+    },
+    {
+      "key": "gremetal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/gremetal.png"
+    },
+    {
+      "key": "guaianases",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Guaianases.jpg"
+    },
+    {
+      "key": "guarulhense",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/guarulhense.png"
+    },
+    {
+      "key": "hortolandia",
+      "path": "/logos_times/BASE/A2/hortolandia.png"
+    },
+    {
+      "key": "impacto",
+      "path": "/logos_times/BASE/A2/impacto.png"
+    },
+    {
+      "key": "incriveis",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Incriveis.jpeg"
+    },
+    {
+      "key": "indaiatuba",
+      "path": "/logos_times/BASE/A1/indaiatuba.png"
+    },
+    {
+      "key": "intermogi",
+      "path": "/logos_times/BASE/A2/intermogi.png"
+    },
+    {
+      "key": "itapevi",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/itapevi.png"
+    },
+    {
+      "key": "juventus",
+      "path": "/logos_times/BASE/A1/juventus.png"
+    },
+    {
+      "key": "kgb",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/kgb.jpeg"
+    },
+    {
+      "key": "kiloukura",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Kiloukura.png"
+    },
+    {
+      "key": "lausanne",
+      "path": "/logos_times/BASE/A1/lausanne.png"
+    },
+    {
+      "key": "lausanneb",
+      "path": "/logos_times/BASE/A2/lausanneb.png"
+    },
+    {
+      "key": "lausannepaulista",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Lausanne_Paulista.png"
+    },
+    {
+      "key": "lazuli",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/lazuli.png"
+    },
+    {
+      "key": "ligaleste",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/liga_leste.jpeg"
+    },
+    {
+      "key": "ligasaocaetano",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Liga%20Sao%20Caetano.jpg"
+    },
+    {
+      "key": "lisfuts",
+      "path": "/logos_times/BASE/A2/lisfuts.png"
+    },
+    {
+      "key": "logoc8ebc47b",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/logo-c8ebc47b.jpg"
+    },
+    {
+      "key": "logotipomesc",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/logotipo-mesc.webp"
+    },
+    {
+      "key": "marvel",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Marvel.png"
+    },
+    {
+      "key": "mercedes",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Mercedes.png"
+    },
+    {
+      "key": "metalurgicos",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Metalurgicos.png"
+    },
+    {
+      "key": "metropole",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/Metropole.jpg"
+    },
+    {
+      "key": "mogidascruzes",
+      "path": "/logos_times/BASE/A2/mogidascruzes.png"
+    },
+    {
+      "key": "mx7diadema",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/mx7_diadema.png"
+    },
+    {
+      "key": "mx7diadema",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/MX7_Diadema.png"
+    },
+    {
+      "key": "nandograna",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Nando_Grana.png"
+    },
+    {
+      "key": "olimpik",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/Olimpik.png"
+    },
+    {
+      "key": "olimpik",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Olimpik.png"
+    },
+    {
+      "key": "palmeiras",
+      "path": "/logos_times/BASE/A1/palmeiras.png"
+    },
+    {
+      "key": "palmeiraslogosvg",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Palmeiras_logo.svg.png"
+    },
+    {
+      "key": "paulistamooca",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Paulista_Mooca.png"
+    },
+    {
+      "key": "penha",
+      "path": "/logos_times/BASE/A1/penha.png"
+    },
+    {
+      "key": "pequenomestre",
+      "path": "/logos_times/BASE/A2/pequenomestre.png"
+    },
+    {
+      "key": "portuguesa",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Portuguesa.png"
+    },
+    {
+      "key": "praiagrande",
+      "path": "/logos_times/BASE/A1/praiagrande.png"
+    },
+    {
+      "key": "primeirodemaio",
+      "path": "/logos_times/BASE/A1/primeirodemaio.png"
+    },
+    {
+      "key": "prospere",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/prospere.jpg"
+    },
+    {
+      "key": "pulofutsal",
+      "path": "/logos_times/BASE/A2/pulofutsal.png"
+    },
+    {
+      "key": "pulofutsal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Pulo_Futsal.png"
+    },
+    {
+      "key": "pumas",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Pumas.jpeg"
+    },
+    {
+      "key": "r7futsal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/R7%20Futsal.png"
+    },
+    {
+      "key": "riverdobelem",
+      "path": "/logos_times/BASE/A2/riverdobelem.png"
+    },
+    {
+      "key": "riverdobelem",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/River_do_Belem.png"
+    },
+    {
+      "key": "rsfc",
+      "path": "/logos_times/BASE/A1/rsfc.png"
+    },
+    {
+      "key": "rssaocaetano",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/RS_Sa%CC%83o_Caetano.png"
+    },
+    {
+      "key": "safc",
+      "path": "/logos_times/BASE/A1/safc.png"
+    },
+    {
+      "key": "santoandrefutsal",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Santo_Andre_Futsal.png"
+    },
+    {
+      "key": "santos",
+      "path": "/logos_times/BASE/A1/santos.png"
+    },
+    {
+      "key": "santoslogo",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Santos_Logo.png"
+    },
+    {
+      "key": "saojosefutsal",
+      "path": "/logos_times/BASE/A1/saojosefutsal.png"
+    },
+    {
+      "key": "saopaulo",
+      "path": "/logos_times/BASE/A1/saopaulo.png"
+    },
+    {
+      "key": "saopaulo",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png"
+    },
+    {
+      "key": "saopaulob",
+      "path": "/logos_times/BASE/A2/saopaulob.png"
+    },
+    {
+      "key": "selecionados",
+      "path": "/logos_times/BASE/A2/selecionados.png"
+    },
+    {
+      "key": "selecionados",
+      "path": "/logos_times/BASE/A3/GRUPO%20B/Selecionados.png"
+    },
+    {
+      "key": "stadium",
+      "path": "/logos_times/BASE/A2/stadium.png"
+    },
+    {
+      "key": "tabucajuniors",
+      "path": "/logos_times/BASE/A2/tabucajuniors.png"
+    },
+    {
+      "key": "tabucajuniors",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Tabuca_Juniors.png"
+    },
+    {
+      "key": "taubate",
+      "path": "/logos_times/BASE/A2/taubate.png"
+    },
+    {
+      "key": "taubate",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Taubate%CC%81.png"
+    },
+    {
+      "key": "uniaomaua",
+      "path": "/logos_times/BASE/A3/GRUPO%20C/Uniao_Maua.png"
+    },
+    {
+      "key": "uniaomaua",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Uniao_Maua.png"
+    },
+    {
+      "key": "uniaord",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Unia%CC%83o%20RD.png"
+    },
+    {
+      "key": "unileste",
+      "path": "/logos_times/BASE/A3/GRUPO%20A/unileste.jpeg"
+    },
+    {
+      "key": "wimpro",
+      "path": "/logos_times/BASE/A2/wimpro.png"
+    },
+    {
+      "key": "wimpro",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A2/Wimpro.png"
+    },
+    {
+      "key": "ypiranga",
+      "path": "/logos_times/INICIA%C3%87%C3%83O/A1/Ypiranga.png"
+    }
+  ]
+}
