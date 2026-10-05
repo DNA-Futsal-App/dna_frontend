@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { clientApi } from "@/lib/client-api";
-import type { CoachInviteInfo } from "@/lib/awards-types";
+import type { CoachAccessLinkInfo } from "@/lib/awards-types";
 
 const statusMessage: Record<string, string> = {
-  CLAIMED: "Este convite já foi utilizado.",
-  REVOKED: "Este convite foi revogado pela organização.",
-  EXPIRED: "Este convite expirou.",
+  REVOKED: "Este link de credenciamento foi revogado pela organização.",
   EDITION_CLOSED: "A edição desta premiação já foi encerrada.",
-  CANDIDATE_INACTIVE: "Este cadastro de treinador não está mais ativo.",
+  NONE: "Nenhum credenciamento ativo foi encontrado.",
 };
 
 export default function CoachInviteTokenPage() {
@@ -19,14 +17,14 @@ export default function CoachInviteTokenPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const token = params.token;
-  const displayError = error || (!token ? "O link de convite está incompleto." : "");
+  const displayError = error || (!token ? "O link de credenciamento está incompleto." : "");
 
   useEffect(() => {
     if (!token) {
       return;
     }
 
-    clientApi<CoachInviteInfo>("/api/awards/coach-invite/start", {
+    clientApi<CoachAccessLinkInfo>("/api/awards/coach-invite/start", {
       method: "POST",
       body: JSON.stringify({ token }),
     })
@@ -34,7 +32,7 @@ export default function CoachInviteTokenPage() {
         if (!invite.available) {
           setError(
             statusMessage[invite.status] ??
-              "Este convite não está disponível.",
+              "Este credenciamento não está disponível.",
           );
           return;
         }
@@ -45,7 +43,7 @@ export default function CoachInviteTokenPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Não foi possível validar o convite.",
+            : "Não foi possível validar o credenciamento.",
         ),
       );
   }, [token, router]);
@@ -55,7 +53,7 @@ export default function CoachInviteTokenPage() {
       <div className="max-w-md text-center">
         {displayError ? (
           <>
-            <h1 className="display-title text-3xl">Convite indisponível</h1>
+            <h1 className="display-title text-3xl">Credenciamento indisponível</h1>
             <p className="mt-3 text-sm leading-relaxed text-muted">
               {displayError}
             </p>
@@ -64,7 +62,7 @@ export default function CoachInviteTokenPage() {
           <>
             <LoaderCircle className="mx-auto size-10 animate-spin text-cyan" />
             <p className="mt-4 text-sm font-bold text-muted">
-              Validando seu convite de treinador...
+              Validando seu credenciamento de treinador...
             </p>
           </>
         )}

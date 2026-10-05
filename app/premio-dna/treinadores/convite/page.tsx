@@ -1,5 +1,5 @@
-import { CoachInviteLanding } from "@/components/awards/coach-invite-landing";
+import { CoachAccessLanding } from "@/components/awards/coach-access-landing";
 
 export default function CoachInvitePage() {
-  return <CoachInviteLanding />;
+  return <CoachAccessLanding />;
 }

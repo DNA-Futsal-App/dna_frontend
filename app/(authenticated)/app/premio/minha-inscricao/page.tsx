@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
     ChangeEvent,
     useCallback,
@@ -14,6 +15,7 @@ import {
     AlertTriangle,
     BadgeCheck,
     CheckCircle2,
+    Clock3,
     ExternalLink,
     FileVideo2,
     Link2,
@@ -74,6 +76,8 @@ const initialAddState: AddCandidateState = {
 };
 
 export default function MyAwardRegistrationPage() {
+    const router = useRouter();
+
     const [registration, setRegistration] =
         useState<AwardRegistrationResponse | null>(null);
 
@@ -103,6 +107,11 @@ export default function MyAwardRegistrationPage() {
     const [
         savingNewCandidate,
         setSavingNewCandidate,
+    ] = useState(false);
+
+    const [
+        deletingRegistration,
+        setDeletingRegistration,
     ] = useState(false);
 
     const [
@@ -139,7 +148,7 @@ export default function MyAwardRegistrationPage() {
                 current.entries.filter(
                     (entry) =>
                         entry.sourceType === "UPLOAD" &&
-                        entry.mediaStatus !== "PENDING",
+                        entry.mediaStatus === "READY",
                 );
 
             const results =
@@ -169,7 +178,7 @@ export default function MyAwardRegistrationPage() {
                 (previous) => {
                     const activeIds =
                         new Set(
-                            current.entries.map(
+                            uploads.map(
                                 (entry) => entry.id,
                             ),
                         );
@@ -677,6 +686,24 @@ export default function MyAwardRegistrationPage() {
             );
         }
     }
+
+    function confirmReviewReset(
+        entry:
+            AwardRegistrationEntryResponse,
+    ) {
+        if (
+            entry.reviewStatus ===
+            "PENDING_REVIEW"
+        ) {
+            return true;
+        }
+
+        return window.confirm(
+            "Esta candidatura já foi analisada. Ao substituir a mídia, " +
+            "a decisão atual será invalidada e a candidatura voltará para análise. Continuar?",
+        );
+    }
+
     async function replaceVideo(
         entry:
             AwardRegistrationEntryResponse,
@@ -694,6 +721,10 @@ export default function MyAwardRegistrationPage() {
             !registration ||
             !context
         ) {
+            return;
+        }
+
+        if (!confirmReviewReset(entry)) {
             return;
         }
 
@@ -733,8 +764,10 @@ export default function MyAwardRegistrationPage() {
                     "info",
 
                 message:
-                    "Recebemos o novo vídeo. "
-                    + "Você pode continuar usando o app enquanto concluímos o processamento.",
+                    entry.reviewStatus ===
+                    "PENDING_REVIEW"
+                        ? "Recebemos o novo vídeo. Você pode continuar usando o app enquanto concluímos o processamento."
+                        : "Recebemos o novo vídeo. A candidatura voltou para análise e o processamento continuará em segundo plano.",
             });
             await reloadRegistration();
 
@@ -820,6 +853,10 @@ export default function MyAwardRegistrationPage() {
             return;
         }
 
+        if (!confirmReviewReset(entry)) {
+            return;
+        }
+
         setProcessingEntry(
             entry.id,
         );
@@ -850,7 +887,10 @@ export default function MyAwardRegistrationPage() {
                     "success",
 
                 message:
-                    "Link do vídeo atualizado com sucesso.",
+                    entry.reviewStatus ===
+                    "PENDING_REVIEW"
+                        ? "Link do vídeo atualizado com sucesso."
+                        : "Link atualizado. A candidatura voltou para análise.",
             });
 
             await reloadRegistration();
@@ -969,6 +1009,68 @@ export default function MyAwardRegistrationPage() {
         }
     }
 
+    async function deleteRegistrationPermanently() {
+        if (
+            !registration ||
+            !context?.registrationsOpen ||
+            deletingRegistration
+        ) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Apagar definitivamente esta inscrição? " +
+                "Todos os dados desta inscrição, candidaturas e vídeos serão removidos. " +
+                "Depois você precisará preencher tudo novamente. Esta ação não pode ser desfeita.",
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setDeletingRegistration(
+            true,
+        );
+
+        setError("");
+
+        try {
+            await clientApi(
+                `/api/awards/registrations/${registration.id}/permanent`,
+                {
+                    method:
+                        "DELETE",
+                },
+            );
+
+            setMediaUrls({});
+
+            publishAwardNotice({
+                type:
+                    "success",
+
+                message:
+                    "Inscrição apagada. Você pode preencher todos os dados novamente.",
+            });
+
+            router.push(
+                "/app/premio/inscricao",
+            );
+
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Não foi possível apagar a inscrição.",
+            );
+
+            setDeletingRegistration(
+                false,
+            );
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex min-h-80 items-center justify-center">
@@ -1011,6 +1113,27 @@ export default function MyAwardRegistrationPage() {
         registration.status ===
         "CANCELLED";
 
+    const reviewStarted =
+        registration.entries.some(
+            (entry) =>
+                entry.reviewStatus !==
+                "PENDING_REVIEW",
+        );
+
+    const approvedCount =
+        registration.entries.filter(
+            (entry) =>
+                entry.reviewStatus ===
+                "APPROVED",
+        ).length;
+
+    const rejectedCount =
+        registration.entries.filter(
+            (entry) =>
+                entry.reviewStatus ===
+                "REJECTED",
+        ).length;
+
     return (
         <div className="mx-auto max-w-5xl">
             <header className="mb-7">
@@ -1035,7 +1158,8 @@ export default function MyAwardRegistrationPage() {
                         </p>
                     </div>
 
-                    {registration.entries.length <
+                    {context.registrationsOpen &&
+                        registration.entries.length <
                         4 &&
                         availableCategories.length >
                         0 ? (
@@ -1073,6 +1197,19 @@ export default function MyAwardRegistrationPage() {
                 </div>
             ) : null}
 
+            {!context.registrationsOpen ? (
+                <div className="mb-5 rounded-2xl border border-amber/20 bg-amber/5 p-5">
+                    <strong className="text-amber">
+                        Período de inscrições encerrado
+                    </strong>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                        Sua inscrição continua disponível para consulta, mas
+                        nenhuma candidatura pode ser adicionada, retirada ou
+                        alterada enquanto o período estiver fechado.
+                    </p>
+                </div>
+            ) : null}
+
             {cancelled ? (
                 <div className="mb-5 rounded-2xl border border-coral/20 bg-coral/5 p-5">
                     <strong className="text-coral">
@@ -1082,6 +1219,30 @@ export default function MyAwardRegistrationPage() {
                     <p className="mt-1 text-sm leading-relaxed text-muted">
                         Todas as candidaturas deste atleta foram retiradas.
                         Você pode reinscrevê-lo enquanto o período de inscrições estiver aberto.
+                    </p>
+                </div>
+            ) : null}
+
+            {reviewStarted &&
+                !cancelled ? (
+                <div className="mb-5 rounded-2xl border border-cyan/20 bg-cyan/5 p-5">
+                    <strong className="text-cyan">
+                        Análise administrativa iniciada
+                    </strong>
+
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                        {approvedCount} aprovada(s) •{" "}
+                        {rejectedCount} reprovada(s) •{" "}
+                        {registration.entries.length -
+                            approvedCount -
+                            rejectedCount} aguardando análise.
+                    </p>
+
+                    <p className="mt-2 text-xs leading-relaxed text-muted">
+                        Enquanto as inscrições estiverem abertas, você pode adicionar,
+                        retirar ou substituir candidaturas. Sempre que uma mídia
+                        analisada for substituída, a decisão anterior será invalidada
+                        e a candidatura voltará automaticamente para análise.
                     </p>
                 </div>
             ) : null}
@@ -1185,7 +1346,8 @@ export default function MyAwardRegistrationPage() {
                         </h2>
                     </div>
 
-                    {!cancelled &&
+                    {context.registrationsOpen &&
+                        !cancelled &&
                         registration.entries.length >
                         0 ? (
                         <button
@@ -1243,6 +1405,19 @@ export default function MyAwardRegistrationPage() {
                                                     entry.contestCategoryLabel
                                                 }
                                             </h3>
+
+                                            {entry.reviewStatus ===
+                                                "REJECTED" &&
+                                                entry.reviewReason ? (
+                                                <div className="mt-3 rounded-xl border border-coral/20 bg-coral/5 p-3 text-sm leading-relaxed text-[#ffb195]">
+                                                    <strong>
+                                                        Motivo da reprovação:
+                                                    </strong>{" "}
+                                                    {
+                                                        entry.reviewReason
+                                                    }
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         <div className="p-5">
@@ -1304,36 +1479,112 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {!cancelled ? (
-                                                        <button
-                                                            type="button"
-                                                            disabled={
-                                                                localProcessing ||
-                                                                backendProcessing
-                                                            }
-                                                            onClick={() =>
-                                                                fileInputs.current[
-                                                                    entry.id
-                                                                ]?.click()
-                                                            }
-                                                            className="btn-ghost mt-4 w-full"
-                                                        >
-                                                            {localProcessing ||
-                                                                backendProcessing ? (
-                                                                <LoaderCircle className="size-4 animate-spin" />
-                                                            ) : (
-                                                                <RefreshCw className="size-4" />
-                                                            )}
+                                                    {context.registrationsOpen &&
+                                                        !cancelled ? (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                disabled={
+                                                                    localProcessing ||
+                                                                    backendProcessing
+                                                                }
+                                                                onClick={() =>
+                                                                    fileInputs.current[
+                                                                        entry.id
+                                                                    ]?.click()
+                                                                }
+                                                                className="btn-ghost mt-4 w-full"
+                                                            >
+                                                                {localProcessing ||
+                                                                    backendProcessing ? (
+                                                                    <LoaderCircle className="size-4 animate-spin" />
+                                                                ) : (
+                                                                    <RefreshCw className="size-4" />
+                                                                )}
 
-                                                            {backendProcessing
-                                                                ? "Processando vídeo..."
-                                                                : failed
-                                                                    ? "Tentar novamente"
-                                                                    : entry.mediaStatus ===
-                                                                        "READY"
-                                                                        ? "Substituir vídeo"
-                                                                        : "Enviar vídeo"}
-                                                        </button>
+                                                                {backendProcessing
+                                                                    ? "Processando vídeo..."
+                                                                    : failed
+                                                                        ? "Tentar novamente"
+                                                                        : entry.mediaStatus ===
+                                                                            "READY"
+                                                                            ? "Substituir vídeo"
+                                                                            : "Enviar vídeo"}
+                                                            </button>
+
+                                                            {editingLink ===
+                                                                entry.id ? (
+                                                                <div className="mt-3 grid gap-3">
+                                                                    <input
+                                                                        className="field"
+                                                                        type="url"
+                                                                        value={
+                                                                            linkDraft
+                                                                        }
+                                                                        onChange={(
+                                                                            event,
+                                                                        ) =>
+                                                                            setLinkDraft(
+                                                                                event.target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        placeholder="https://..."
+                                                                    />
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setEditingLink(
+                                                                                    null,
+                                                                                )
+                                                                            }
+                                                                            className="btn-ghost"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={
+                                                                                localProcessing
+                                                                            }
+                                                                            onClick={() =>
+                                                                                void saveLink(
+                                                                                    entry,
+                                                                                )
+                                                                            }
+                                                                            className="btn-primary"
+                                                                        >
+                                                                            {localProcessing ? (
+                                                                                <LoaderCircle className="size-4 animate-spin" />
+                                                                            ) : (
+                                                                                <Save className="size-4" />
+                                                                            )}
+                                                                            Usar link
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={
+                                                                        localProcessing ||
+                                                                        backendProcessing
+                                                                    }
+                                                                    onClick={() =>
+                                                                        beginEditLink(
+                                                                            entry,
+                                                                        )
+                                                                    }
+                                                                    className="btn-ghost mt-3 w-full"
+                                                                >
+                                                                    <Link2 className="size-4" />
+                                                                    Substituir por link
+                                                                </button>
+                                                            )}
+                                                        </>
                                                     ) : null}
                                                 </>
                                             ) : (
@@ -1409,7 +1660,8 @@ export default function MyAwardRegistrationPage() {
                                                                 </a>
                                                             ) : null}
 
-                                                            {!cancelled ? (
+                                                            {context.registrationsOpen &&
+                                                                !cancelled ? (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
@@ -1425,10 +1677,59 @@ export default function MyAwardRegistrationPage() {
                                                             ) : null}
                                                         </>
                                                     )}
+
+                                                    <input
+                                                        ref={(
+                                                            element,
+                                                        ) => {
+                                                            fileInputs.current[
+                                                                entry.id
+                                                            ] =
+                                                                element;
+                                                        }}
+                                                        type="file"
+                                                        accept="video/*"
+                                                        className="hidden"
+                                                        disabled={
+                                                            localProcessing
+                                                        }
+                                                        onChange={(
+                                                            event,
+                                                        ) =>
+                                                            void replaceVideo(
+                                                                entry,
+                                                                event,
+                                                            )
+                                                        }
+                                                    />
+
+                                                    {context.registrationsOpen &&
+                                                        !cancelled ? (
+                                                        <button
+                                                            type="button"
+                                                            disabled={
+                                                                localProcessing
+                                                            }
+                                                            onClick={() =>
+                                                                fileInputs.current[
+                                                                    entry.id
+                                                                ]?.click()
+                                                            }
+                                                            className="btn-ghost mt-3 w-full"
+                                                        >
+                                                            {localProcessing ? (
+                                                                <LoaderCircle className="size-4 animate-spin" />
+                                                            ) : (
+                                                                <UploadCloud className="size-4" />
+                                                            )}
+                                                            Substituir por upload
+                                                        </button>
+                                                    ) : null}
                                                 </>
                                             )}
 
-                                            {!cancelled ? (
+                                            {context.registrationsOpen &&
+                                                !cancelled ? (
                                                 <button
                                                     type="button"
                                                     disabled={
@@ -1453,6 +1754,52 @@ export default function MyAwardRegistrationPage() {
                     </div>
                 )}
             </section>
+
+            {context.registrationsOpen ? (
+                <section className="mt-6 rounded-[1.75rem] border border-coral/25 bg-coral/5 p-5 sm:p-6">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 size-6 shrink-0 text-coral" />
+
+                        <div>
+                            <p className="eyebrow text-coral">
+                                Zona de risco
+                            </p>
+
+                            <h2 className="mt-2 text-xl font-black">
+                                Apagar inscrição e recomeçar
+                            </h2>
+
+                            <p className="mt-2 text-sm leading-relaxed text-muted">
+                                Esta ação remove completamente esta inscrição,
+                                incluindo os dados informados, todas as candidaturas,
+                                análises e vídeos vinculados. Depois disso, você poderá
+                                preencher uma nova inscrição do zero.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        disabled={
+                            deletingRegistration
+                        }
+                        onClick={() =>
+                            void deleteRegistrationPermanently()
+                        }
+                        className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-coral/35 bg-coral/10 px-4 text-sm font-black text-coral disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                        {deletingRegistration ? (
+                            <LoaderCircle className="size-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="size-4" />
+                        )}
+
+                        {deletingRegistration
+                            ? "Apagando inscrição..."
+                            : "Apagar inscrição e recomeçar"}
+                    </button>
+                </section>
+            ) : null}
 
             {adding ? (
                 <div
@@ -1775,6 +2122,30 @@ function EntryStatus({
     AwardRegistrationEntryResponse;
 }) {
     if (
+        entry.reviewStatus ===
+        "APPROVED"
+    ) {
+        return (
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan/20 bg-cyan/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan">
+                <BadgeCheck className="size-3.5" />
+                Candidatura aprovada
+            </span>
+        );
+    }
+
+    if (
+        entry.reviewStatus ===
+        "REJECTED"
+    ) {
+        return (
+            <span className="inline-flex items-center gap-2 rounded-full border border-coral/20 bg-coral/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-coral">
+                <AlertTriangle className="size-3.5" />
+                Candidatura reprovada
+            </span>
+        );
+    }
+
+    if (
         entry.mediaStatus ===
         "PROCESSING"
     ) {
@@ -1803,9 +2174,9 @@ function EntryStatus({
         "READY"
     ) {
         return (
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan/15 bg-cyan/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-cyan">
-                <BadgeCheck className="size-3.5" />
-                Candidatura ativa
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber/15 bg-amber/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber">
+                <Clock3 className="size-3.5" />
+                Aguardando análise
             </span>
         );
     }
@@ -2090,7 +2461,7 @@ function registrationMediaSignature(
         ...registration.entries
             .map(
                 (entry) =>
-                    `${entry.id}:${entry.mediaStatus}:${entry.sourceType}`,
+                    `${entry.id}:${entry.mediaStatus}:${entry.sourceType}:${entry.reviewStatus}:${entry.reviewedAt ?? ""}:${entry.reviewReason ?? ""}`,
             )
             .sort(),
     ].join(

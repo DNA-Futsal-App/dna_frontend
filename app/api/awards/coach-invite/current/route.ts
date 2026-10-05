@@ -4,7 +4,7 @@ import {
   coachInviteToken,
   clearCoachInviteCookie,
 } from "@/lib/coach-invite-cookie";
-import type { CoachInviteInfo } from "@/lib/awards-types";
+import type { CoachAccessLinkInfo } from "@/lib/awards-types";
 
 export async function GET(request: NextRequest) {
   const token = coachInviteToken(request);
@@ -12,17 +12,17 @@ export async function GET(request: NextRequest) {
   if (!token) {
     return NextResponse.json(
       {
-        title: "Convite não iniciado",
+        title: "Credenciamento não iniciado",
         status: 404,
-        detail: "Nenhum convite de treinador está ativo neste navegador.",
-        code: "COACH_INVITE_NOT_STARTED",
+        detail: "Nenhum link de credenciamento de treinador está ativo neste navegador.",
+        code: "COACH_ACCESS_NOT_STARTED",
       },
       { status: 404 },
     );
   }
 
   const response = await proxyPublic(
-    `/api/v1/public/awards/coach-invites/${encodeURIComponent(token)}`,
+    `/api/v1/public/awards/coach-access/${encodeURIComponent(token)}`,
   );
 
   if (!response.ok) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  const invite = (await response.clone().json()) as CoachInviteInfo;
+  const invite = (await response.clone().json()) as CoachAccessLinkInfo;
 
   if (!invite.available) {
     clearCoachInviteCookie(response);

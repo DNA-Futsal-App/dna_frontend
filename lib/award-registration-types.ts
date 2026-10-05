@@ -6,6 +6,10 @@ export type AwardContestCategory =
 
 export type MediaSourceType = "LINK" | "UPLOAD";
 export type MediaStatus = "PENDING" | "PROCESSING" | "READY" | "FAILED";
+export type AwardRegistrationReviewStatus =
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "REJECTED";
 
 export type AwardContestCategoryOption = {
   code: AwardContestCategory;
@@ -19,6 +23,7 @@ export type AwardGender =
 export type AwardRegistrationContext = {
   editionName: string;
   season: number;
+  registrationsOpen: boolean;
   maxUploadBytes: number;
   maxDurationSeconds: number;
   contestCategories: AwardContestCategoryOption[];
@@ -30,12 +35,15 @@ export type AwardRegistrationEntryResponse = {
   contestCategoryLabel: string;
   sourceType: MediaSourceType;
   mediaStatus: MediaStatus;
+  reviewStatus: AwardRegistrationReviewStatus;
   externalUrl?: string | null;
   displayFilename?: string | null;
   durationMs?: number | null;
   width?: number | null;
   height?: number | null;
   fileSizeBytes?: number | null;
+  reviewedAt?: string | null;
+  reviewReason?: string | null;
 };
 
 export type AwardRegistrationResponse = {

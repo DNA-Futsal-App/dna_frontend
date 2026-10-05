@@ -56,9 +56,14 @@ export default function AwardResultsAdminPage() {
       setAudit(nextAudit);
       setResults(null);
 
-      if (targetEdition.status === "CLOSED" && nextAudit.integrityOk) {
+      if (nextAudit.integrityOk) {
+        const endpoint =
+          targetEdition.status === "CLOSED"
+            ? "results"
+            : "partial-results";
+
         const nextResults = await clientApi<AdminAwardResults>(
-          `/api/admin/awards/editions/${targetEdition.id}/results`,
+          `/api/admin/awards/editions/${targetEdition.id}/${endpoint}`,
         );
         setResults(nextResults);
 
@@ -336,17 +341,16 @@ export default function AwardResultsAdminPage() {
         </section>
       ) : null}
 
-      {selectedEdition.status !== "CLOSED" ? (
-        <section className="mt-6 rounded-3xl border border-amber/20 bg-amber/5 p-6">
+      {selectedEdition.status !== "CLOSED" && results ? (
+        <section className="mt-6 rounded-3xl border border-amber/20 bg-amber/5 p-5">
           <div className="flex items-start gap-3">
-            <LockKeyhole className="mt-0.5 size-6 shrink-0 text-amber" />
+            <BarChart3 className="mt-0.5 size-6 shrink-0 text-amber" />
             <div>
-              <h2 className="font-black text-ivory">Ranking bloqueado</h2>
+              <h2 className="font-black text-ivory">Parcial administrativa</h2>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-                Enquanto a edição estiver em {selectedEdition.status}, nenhum
-                endpoint retorna votos por candidato. Você pode acompanhar a
-                integridade e a quantidade total de cédulas, mas não o placar
-                parcial.
+                Este placar é provisório e visível somente para administradores.
+                Ele muda à medida que novas cédulas são registradas e não deve ser
+                tratado como resultado oficial antes do encerramento da votação.
               </p>
             </div>
           </div>
@@ -372,7 +376,11 @@ export default function AwardResultsAdminPage() {
                 <ShieldCheck className="size-5" />
                 Auditoria aprovada
               </div>
-              <h2 className="display-title mt-2 text-3xl">Apuração final</h2>
+              <h2 className="display-title mt-2 text-3xl">
+                {selectedEdition.status === "CLOSED"
+                  ? "Apuração final"
+                  : "Parcial da apuração"}
+              </h2>
               <p className="mt-2 text-sm text-muted">
                 {results.ballotsSubmitted} cédulas • {results.voteRows} votos
                 registrados
