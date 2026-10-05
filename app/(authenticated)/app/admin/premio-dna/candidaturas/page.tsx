@@ -255,52 +255,19 @@ export default function AwardRegistrationsAdminPage() {
     }
   }
 
-  async function openUploadedMedia(
+  async function loadUploadedMedia(
     registration: AdminAwardRegistration,
     entry: AdminAwardRegistrationEntry,
   ) {
-    const popup =
-      window.open(
-        "",
-        "_blank",
+    const ticket =
+      await clientApi<AdminAwardMediaTicket>(
+        `/api/admin/awards/registrations/${registration.id}/entries/${entry.id}/media-ticket`,
+        {
+          method: "POST",
+        },
       );
 
-    if (popup) {
-      popup.opener = null;
-      popup.document.title =
-        "Carregando vídeo...";
-    }
-
-    setBusyEntryId(entry.id);
-    setError("");
-
-    try {
-      const ticket =
-        await clientApi<AdminAwardMediaTicket>(
-          `/api/admin/awards/registrations/${registration.id}/entries/${entry.id}/media-ticket`,
-          {
-            method: "POST",
-          },
-        );
-
-      if (popup) {
-        popup.location.href =
-          ticket.url;
-      } else {
-        window.location.href =
-          ticket.url;
-      }
-    } catch (err) {
-      popup?.close();
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível abrir o vídeo.",
-      );
-    } finally {
-      setBusyEntryId(null);
-    }
+    return ticket.url;
   }
 
   if (loading) {
@@ -380,8 +347,8 @@ export default function AwardRegistrationsAdminPage() {
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
               Analise cada categoria e vídeo individualmente.
-              A primeira decisão administrativa bloqueia alterações
-              posteriores do responsável nessa inscrição.
+              Enquanto as inscrições estiverem abertas, uma mídia alterada
+              pelo responsável volta automaticamente para análise.
             </p>
           </div>
 
@@ -510,8 +477,8 @@ export default function AwardRegistrationsAdminPage() {
                     entry,
                   });
                 }}
-                onOpenUploadedMedia={
-                  openUploadedMedia
+                onLoadUploadedMedia={
+                  loadUploadedMedia
                 }
               />
             ),
@@ -668,7 +635,7 @@ function RegistrationCard({
   busyEntryId,
   onApprove,
   onReject,
-  onOpenUploadedMedia,
+  onLoadUploadedMedia,
 }: {
   registration: AdminAwardRegistration;
   busyEntryId: string | null;
@@ -679,10 +646,10 @@ function RegistrationCard({
   onReject: (
     entry: AdminAwardRegistrationEntry,
   ) => void;
-  onOpenUploadedMedia: (
+  onLoadUploadedMedia: (
     registration: AdminAwardRegistration,
     entry: AdminAwardRegistrationEntry,
-  ) => Promise<void>;
+  ) => Promise<string>;
 }) {
   return (
     <article className="surface overflow-hidden rounded-[1.75rem]">
@@ -756,47 +723,15 @@ function RegistrationCard({
                   </p>
                 </div>
 
-                {entry.sourceType ===
-                "LINK" ? (
-                  <a
-                    href={
-                      entry.externalUrl ??
-                      "#"
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-ghost min-h-10! px-3! py-2! text-xs"
-                  >
-                    <ExternalLink className="size-4" />
-                    Abrir vídeo
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-ghost min-h-10! px-3! py-2! text-xs"
-                    disabled={
-                      busyEntryId ===
-                        entry.id ||
-                      entry.mediaStatus !==
-                        "READY"
-                    }
-                    onClick={() =>
-                      void onOpenUploadedMedia(
-                        registration,
-                        entry,
-                      )
-                    }
-                  >
-                    {busyEntryId ===
-                    entry.id ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : (
-                      <ExternalLink className="size-4" />
-                    )}
-                    Abrir vídeo
-                  </button>
-                )}
               </div>
+
+              <AdminMediaPreview
+                registration={registration}
+                entry={entry}
+                onLoadUploadedMedia={
+                  onLoadUploadedMedia
+                }
+              />
 
               {entry.reviewStatus ===
               "PENDING_REVIEW" ? (
@@ -874,6 +809,399 @@ function RegistrationCard({
       </div>
     </article>
   );
+}
+
+type ExternalMediaSource = {
+  kind: "VIDEO" | "EMBED";
+  src: string;
+  provider: string;
+  sandboxed: boolean;
+};
+
+function AdminMediaPreview({
+  registration,
+  entry,
+  onLoadUploadedMedia,
+}: {
+  registration: AdminAwardRegistration;
+  entry: AdminAwardRegistrationEntry;
+  onLoadUploadedMedia: (
+    registration: AdminAwardRegistration,
+    entry: AdminAwardRegistrationEntry,
+  ) => Promise<string>;
+}) {
+  const [uploadedUrl, setUploadedUrl] =
+    useState<string | null>(null);
+  const [loadingMedia, setLoadingMedia] =
+    useState(false);
+  const [mediaError, setMediaError] =
+    useState("");
+
+  const externalSource =
+    entry.sourceType === "LINK"
+      ? normalizeExternalMedia(
+          entry.externalUrl,
+        )
+      : null;
+
+  async function loadUpload() {
+    if (
+      loadingMedia ||
+      uploadedUrl ||
+      entry.mediaStatus !== "READY"
+    ) {
+      return;
+    }
+
+    setLoadingMedia(true);
+    setMediaError("");
+
+    try {
+      const url =
+        await onLoadUploadedMedia(
+          registration,
+          entry,
+        );
+
+      setUploadedUrl(url);
+    } catch (err) {
+      setMediaError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível carregar o vídeo.",
+      );
+    } finally {
+      setLoadingMedia(false);
+    }
+  }
+
+  if (entry.sourceType === "UPLOAD") {
+    if (entry.mediaStatus !== "READY") {
+      return (
+        <div className="mt-4 flex aspect-video items-center justify-center rounded-2xl border border-white/8 bg-black/25 p-5 text-center">
+          <div>
+            {entry.mediaStatus ===
+            "PROCESSING" ? (
+              <LoaderCircle className="mx-auto size-7 animate-spin text-amber" />
+            ) : (
+              <Clock3 className="mx-auto size-7 text-muted" />
+            )}
+            <p className="mt-3 text-xs font-bold text-muted">
+              {entry.mediaStatus ===
+              "PROCESSING"
+                ? "Vídeo em processamento."
+                : entry.mediaStatus ===
+                    "FAILED"
+                  ? "O processamento do vídeo falhou."
+                  : "O vídeo ainda não está pronto para reprodução."}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!uploadedUrl) {
+      return (
+        <div className="mt-4 flex aspect-video items-center justify-center rounded-2xl border border-white/8 bg-black/25 p-5 text-center">
+          <div>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={loadingMedia}
+              onClick={() =>
+                void loadUpload()
+              }
+            >
+              {loadingMedia ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <ExternalLink className="size-4" />
+              )}
+              Visualizar vídeo aqui
+            </button>
+
+            <p className="mt-3 text-xs leading-relaxed text-muted">
+              O vídeo privado será carregado nesta página
+              usando um acesso temporário ao arquivo.
+            </p>
+
+            {mediaError ? (
+              <p
+                className="mt-3 text-xs text-coral"
+                role="alert"
+              >
+                {mediaError}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4">
+        <video
+          key={uploadedUrl}
+          controls
+          playsInline
+          preload="metadata"
+          src={uploadedUrl}
+          className="aspect-video w-full rounded-2xl bg-black object-contain"
+        >
+          Seu navegador não suporta reprodução de vídeo.
+        </video>
+        <p className="mt-2 text-[11px] text-muted">
+          Vídeo enviado diretamente à plataforma.
+        </p>
+      </div>
+    );
+  }
+
+  if (!externalSource) {
+    return (
+      <div className="mt-4 rounded-2xl border border-coral/20 bg-coral/5 p-4">
+        <p className="text-xs font-bold text-coral">
+          O link desta candidatura é inválido ou não está disponível.
+        </p>
+      </div>
+    );
+  }
+
+  if (externalSource.kind === "VIDEO") {
+    return (
+      <div className="mt-4">
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          src={externalSource.src}
+          className="aspect-video w-full rounded-2xl bg-black object-contain"
+        >
+          Seu navegador não suporta reprodução de vídeo.
+        </video>
+        <MediaSourceFooter
+          provider={externalSource.provider}
+          originalUrl={entry.externalUrl}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      <div className="aspect-video overflow-hidden rounded-2xl border border-white/8 bg-black">
+        <iframe
+          src={externalSource.src}
+          title={`${entry.contestCategoryLabel} — ${externalSource.provider}`}
+          loading="lazy"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          sandbox={
+            externalSource.sandboxed
+              ? "allow-scripts allow-forms allow-presentation allow-popups"
+              : undefined
+          }
+          className="h-full w-full border-0"
+        />
+      </div>
+
+      <MediaSourceFooter
+        provider={externalSource.provider}
+        originalUrl={entry.externalUrl}
+        mayBlockEmbedding={
+          externalSource.sandboxed
+        }
+      />
+    </div>
+  );
+}
+
+function MediaSourceFooter({
+  provider,
+  originalUrl,
+  mayBlockEmbedding = false,
+}: {
+  provider: string;
+  originalUrl?: string | null;
+  mayBlockEmbedding?: boolean;
+}) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+      <span>
+        Fonte: {provider}
+        {mayBlockEmbedding
+          ? " • incorporação depende do provedor"
+          : ""}
+      </span>
+
+      {originalUrl ? (
+        <a
+          href={originalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-bold text-cyan hover:text-white"
+        >
+          <ExternalLink className="size-3.5" />
+          Abrir original
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+function normalizeExternalMedia(
+  value?: string | null,
+): ExternalMediaSource | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url =
+      new URL(value);
+
+    if (url.protocol !== "https:") {
+      return null;
+    }
+
+    const hostname =
+      url.hostname
+        .toLowerCase()
+        .replace(/^www\./, "");
+
+    const youtubeId =
+      youtubeVideoId(
+        url,
+        hostname,
+      );
+
+    if (youtubeId) {
+      return {
+        kind: "EMBED",
+        src:
+          `https://www.youtube-nocookie.com/embed/${encodeURIComponent(youtubeId)}`,
+        provider: "YouTube",
+        sandboxed: false,
+      };
+    }
+
+    if (
+      hostname === "drive.google.com"
+    ) {
+      const driveId =
+        googleDriveFileId(url);
+
+      if (driveId) {
+        return {
+          kind: "EMBED",
+          src:
+            `https://drive.google.com/file/d/${encodeURIComponent(driveId)}/preview`,
+          provider: "Google Drive",
+          sandboxed: false,
+        };
+      }
+    }
+
+    if (
+      hostname === "vimeo.com" ||
+      hostname.endsWith(".vimeo.com")
+    ) {
+      const match =
+        url.pathname.match(
+          /(?:\/video)?\/(\d+)/,
+        );
+
+      if (match?.[1]) {
+        return {
+          kind: "EMBED",
+          src:
+            `https://player.vimeo.com/video/${encodeURIComponent(match[1])}`,
+          provider: "Vimeo",
+          sandboxed: false,
+        };
+      }
+    }
+
+    if (
+      /\.(mp4|webm|ogg|m4v)$/i.test(
+        url.pathname,
+      )
+    ) {
+      return {
+        kind: "VIDEO",
+        src: url.toString(),
+        provider: hostname,
+        sandboxed: false,
+      };
+    }
+
+    return {
+      kind: "EMBED",
+      src: url.toString(),
+      provider: hostname,
+      sandboxed: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function youtubeVideoId(
+  url: URL,
+  hostname: string,
+) {
+  if (hostname === "youtu.be") {
+    return (
+      url.pathname
+        .split("/")
+        .filter(Boolean)[0] ??
+      null
+    );
+  }
+
+  if (
+    hostname === "youtube.com" ||
+    hostname === "m.youtube.com" ||
+    hostname.endsWith(".youtube.com")
+  ) {
+    const queryId =
+      url.searchParams.get("v");
+
+    if (queryId) {
+      return queryId;
+    }
+
+    const parts =
+      url.pathname
+        .split("/")
+        .filter(Boolean);
+
+    if (
+      ["shorts", "embed", "live"].includes(
+        parts[0] ?? "",
+      )
+    ) {
+      return parts[1] ?? null;
+    }
+  }
+
+  return null;
+}
+
+function googleDriveFileId(
+  url: URL,
+) {
+  const match =
+    url.pathname.match(
+      /\/file\/d\/([^/]+)/,
+    );
+
+  if (match?.[1]) {
+    return match[1];
+  }
+
+  return url.searchParams.get("id");
 }
 
 function ReviewBadge({
