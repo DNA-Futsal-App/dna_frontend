@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     method: "POST",
     body: JSON.stringify({
       ...payload,
-      coachInviteToken: inviteToken ?? null,
+      coachAccessToken: inviteToken ?? null,
     }),
   });
 

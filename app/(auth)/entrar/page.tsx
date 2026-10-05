@@ -68,7 +68,7 @@ function LoginForm() {
           method: "POST",
         });
 
-        window.location.replace("/app/votacao-treinador");
+        window.location.replace("/app/votacao-treinador-v2");
         return;
       }
 

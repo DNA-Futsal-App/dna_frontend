@@ -94,3 +94,48 @@ export type CoachBallot = {
   submittedAt: string;
   votes: CoachBallotChoice[];
 };
+
+export type CoachAccessLinkInfo = {
+  linkId?: string | null;
+  available: boolean;
+  status: "AVAILABLE" | "REVOKED" | "EDITION_CLOSED" | "NONE";
+  editionId: string;
+  editionSlug: string;
+  editionName: string;
+  season: number;
+  createdAt?: string | null;
+  revokedAt?: string | null;
+};
+
+export type CoachVotingContextSummary = {
+  id: string;
+  eventId: number;
+  divisionId: number;
+  categoryId: number;
+  teamId: string;
+  teamName: string;
+  source: "SELF_SELECTED" | "ADMIN" | "MIGRATED";
+  active: boolean;
+  submitted: boolean;
+  createdAt: string;
+};
+
+export type CoachCredential = {
+  credentialId: string;
+  editionId: string;
+  editionSlug: string;
+  editionName: string;
+  season: number;
+  userId: string;
+  coachName: string;
+  email: string;
+  active: boolean;
+  createdAt: string;
+  contexts: CoachVotingContextSummary[];
+};
+
+export type CreateCoachAccessLinkResult = {
+  linkId: string;
+  accessUrl: string;
+  createdAt: string;
+};

@@ -180,7 +180,7 @@ export type AdminAwardResults = {
   editionId: string;
   editionName: string;
   season: number;
-  status: "CLOSED";
+  status: "DRAFT" | "OPEN" | "CLOSED";
   votingClosedAt?: string | null;
   ballotsSubmitted: number;
   voteRows: number;

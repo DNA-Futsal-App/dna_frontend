@@ -24,7 +24,6 @@ import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
 import { clientApi } from "@/lib/client-api";
-import type { CoachVotingContext } from "@/lib/awards-types";
 import type {
   AwardRegistrationResponse,
 } from "@/lib/award-registration-types";
@@ -94,7 +93,7 @@ const navigation: NavigationItem[] = [
 ];
 
 const coachVotingNavigation: NavigationItem = {
-  href: "/app/votacao-treinador",
+  href: "/app/votacao-treinador-v2",
   label: "Votação",
   icon: Trophy,
   mobile: true,
@@ -270,7 +269,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    clientApi<CoachVotingContext>("/api/awards/coach-voting/context")
+    clientApi("/api/awards/coach-access/me")
       .then(() => {
         if (active) setCoachVotingEnabled(true);
       })

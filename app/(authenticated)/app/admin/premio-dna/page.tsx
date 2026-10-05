@@ -915,7 +915,7 @@ function CoachesSection({
               desse campeonato e traz somente os técnicos principais para a lista
               de convites. Atletas não precisam ser importados pelo administrador.
             </p>
-          </div>
+          </div>git apply dna_frontend_remove_individual_invites_partial_results_v2.patch
         </div>
 
         {edition.status !== "DRAFT" ? (

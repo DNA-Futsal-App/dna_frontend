@@ -4,7 +4,7 @@ import {
   clearCoachInviteCookie,
   setCoachInviteCookie,
 } from "@/lib/coach-invite-cookie";
-import type { CoachInviteInfo } from "@/lib/awards-types";
+import type { CoachAccessLinkInfo } from "@/lib/awards-types";
 
 export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => null)) as
@@ -19,17 +19,17 @@ export async function POST(request: NextRequest) {
   if (token.length < 20 || token.length > 200) {
     return NextResponse.json(
       {
-        title: "Convite inválido",
+        title: "Credenciamento inválido",
         status: 400,
-        detail: "O link de convite está incompleto.",
-        code: "COACH_INVITE_INVALID",
+        detail: "O link de credenciamento está incompleto.",
+        code: "COACH_ACCESS_INVALID",
       },
       { status: 400 },
     );
   }
 
   const response = await proxyPublic(
-    `/api/v1/public/awards/coach-invites/${encodeURIComponent(token)}`,
+    `/api/v1/public/awards/coach-access/${encodeURIComponent(token)}`,
   );
 
   if (!response.ok) {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return response;
   }
 
-  const invite = (await response.clone().json()) as CoachInviteInfo;
+  const invite = (await response.clone().json()) as CoachAccessLinkInfo;
 
   if (invite.available) {
     setCoachInviteCookie(response, token);
