@@ -225,7 +225,7 @@ export default function DashboardPage() {
         </section>
       ) : null}
 
-      {teamMode ? (
+      {profile?.teamId ? (
         <section className="mt-8">
           <Link
             href="/app/meu-time"
@@ -290,7 +290,7 @@ export default function DashboardPage() {
               home.standings
             }
             followedTeamId={
-              home.team?.id
+              profile?.teamId
             }
             limit={5}
           />

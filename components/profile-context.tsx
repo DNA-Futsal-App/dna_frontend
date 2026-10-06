@@ -1,97 +1,119 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { clientApi } from "@/lib/client-api";
 import type { CatalogCategory, CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
 
+type PreferenceNames = {
+  category?: string;
+  division?: string;
+  team?: string;
+};
 
 type ProfileContextValue = {
   profile: UserProfile | null;
   preferenceLabel: string;
+  loading: boolean;
+  error: string;
+  reload: () => Promise<void>;
+  applyProfile: (profile: UserProfile, names?: PreferenceNames) => void;
 };
 
-const ProfileContext = createContext<ProfileContextValue>({ profile: null, preferenceLabel: "Escolha seu time" });
+const ProfileContext = createContext<ProfileContextValue>({
+  profile: null,
+  preferenceLabel: "Escolha sua categoria",
+  loading: true,
+  error: "",
+  reload: async () => undefined,
+  applyProfile: () => undefined,
+});
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const { data: profile } =
+  const { data: loadedProfile, loading, error, reload } =
     useApiData<UserProfile>("/api/me");
-  const [names, setNames] = useState<{ category?: string; division?: string; team?: string }>({});
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [names, setNames] = useState<PreferenceNames>({});
+
+  useEffect(() => {
+    if (loadedProfile) {
+      setProfile(loadedProfile);
+    }
+  }, [loadedProfile]);
+
+  const applyProfile = useCallback(
+    (nextProfile: UserProfile, resolvedNames: PreferenceNames = {}) => {
+      setProfile(nextProfile);
+      setNames(resolvedNames);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!profile) return;
     let active = true;
+
     async function resolvePreference() {
-      const resolved: {
-        category?: string;
-        division?: string;
-        team?: string;
-      } = {};
+      const resolved: PreferenceNames = {};
 
       if (profile?.divisionId) {
-        const divisions =
-          await clientApi<CatalogItem[]>(
-            "/api/catalog/divisions",
-          );
-
-        resolved.division =
-          divisions.find(
-            (item) =>
-              String(item.id) === profile.divisionId,
-          )?.name;
+        const divisions = await clientApi<CatalogItem[]>("/api/catalog/divisions");
+        resolved.division = divisions.find(
+          (item) => String(item.id) === profile?.divisionId,
+        )?.name;
       }
 
-      if (
-        profile?.divisionId &&
-        profile.categoryId
-      ) {
-        const categories =
-          await clientApi<CatalogCategory[]>(
-            `/api/catalog/categories?divisionId=${encodeURIComponent(
-              profile.divisionId,
-            )}`,
-          );
-
-        resolved.category =
-          categories.find(
-            (item) =>
-              String(item.id) === profile.categoryId,
-          )?.name;
+      if (profile?.divisionId && profile?.categoryId) {
+        const categories = await clientApi<CatalogCategory[]>(
+          `/api/catalog/categories?divisionId=${encodeURIComponent(profile.divisionId)}`,
+        );
+        resolved.category = categories.find(
+          (item) => String(item.id) === profile.categoryId,
+        )?.name;
       }
 
-      if (
-        profile?.eventId &&
-        profile.teamId
-      ) {
-        const teams =
-          await clientApi<Team[]>(
-            `/api/catalog/teams?eventId=${encodeURIComponent(
-              String(profile.eventId),
-            )}`,
-          );
-
-        resolved.team =
-          teams.find(
-            (item) =>
-              item.id === profile.teamId,
-          )?.name;
+      if (profile?.eventId && profile?.teamId) {
+        const teams = await clientApi<Team[]>(
+          `/api/catalog/teams?eventId=${encodeURIComponent(String(profile?.eventId))}`,
+        );
+        resolved.team = teams.find((item) => item.id === profile?.teamId)?.name;
       }
 
       if (active) {
         setNames(resolved);
       }
     }
+
     void resolvePreference().catch(() => undefined);
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [profile]);
 
   const value = useMemo(() => {
-    const fallback = [profile?.categoryId, profile?.divisionId, profile?.teamId]
+    const fallback = [profile?.divisionId, profile?.categoryId, profile?.teamId]
       .filter((value): value is string => Boolean(value))
       .map(humanizeId);
-    const resolved = [names.category, names.division, names.team].filter(Boolean);
-    return { profile, preferenceLabel: (resolved.length ? resolved : fallback).join(" • ") || "Escolha seu time" };
-  }, [names, profile]);
+    const resolved = [names.division, names.category, names.team].filter(Boolean);
+
+    return {
+      profile,
+      loading,
+      error,
+      reload,
+      applyProfile,
+      preferenceLabel:
+        (resolved.length ? resolved : fallback).join(" • ") ||
+        "Escolha sua categoria",
+    };
+  }, [applyProfile, error, loading, names, profile, reload]);
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }

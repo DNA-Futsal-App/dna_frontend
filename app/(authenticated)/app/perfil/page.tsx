@@ -15,16 +15,17 @@ import { ErrorState, LoadingCards } from "@/components/feedback";
 import { PageIntro } from "@/components/page-intro";
 import { clientApi } from "@/lib/client-api";
 import type { CatalogItem, Team, UserProfile } from "@/lib/types";
-import { useApiData } from "@/lib/use-api-data";
+import { useProfile } from "@/components/profile-context";
 import { CatalogCategory } from "@/lib/types";
 
 export default function ProfilePage() {
   const {
-    data: profile,
+    profile,
     loading,
     error,
     reload,
-  } = useApiData<UserProfile>("/api/me");
+    applyProfile,
+  } = useProfile();
   const [divisions, setDivisions] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -118,7 +119,7 @@ export default function ProfilePage() {
     setFormError("");
     const form = new FormData(event.currentTarget);
     try {
-      await clientApi<UserProfile>("/api/me", {
+      const updatedProfile = await clientApi<UserProfile>("/api/me", {
         method: "PUT",
         body: JSON.stringify({
           name: form.get("name"),
@@ -138,8 +139,18 @@ export default function ProfilePage() {
           currentPassword: form.get("currentPassword"),
         }),
       });
+
+      applyProfile(updatedProfile, {
+        division: divisions.find(
+          (item) => String(item.id) === updatedProfile.divisionId,
+        )?.name,
+        category: categories.find(
+          (item) => String(item.id) === updatedProfile.categoryId,
+        )?.name,
+        team: teams.find((item) => item.id === updatedProfile.teamId)?.name,
+      });
+
       setMessage("Perfil atualizado com sucesso.");
-      await reload();
     } catch (err) {
       setFormError(
         err instanceof Error
@@ -272,7 +283,7 @@ export default function ProfilePage() {
               Preferência esportiva
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Estes filtros definem o conteúdo inicial do app.
+              Divisão e categoria definem o conteúdo geral do app. O time escolhido é usado exclusivamente na seção Meu Time.
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
               <label className="grid gap-1.5 text-sm font-bold">
