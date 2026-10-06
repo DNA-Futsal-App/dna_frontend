@@ -23,6 +23,7 @@ import {
 import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
+import { CompetitionBrowseProvider } from "@/components/competition-search";
 import { clientApi } from "@/lib/client-api";
 import type {
   AwardRegistrationResponse,
@@ -100,7 +101,15 @@ const coachVotingNavigation: NavigationItem = {
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  return <ProfileProvider><AppShellContent>{children}</AppShellContent></ProfileProvider>;
+  return (
+    <ProfileProvider>
+      <CompetitionBrowseProvider>
+        <AppShellContent>
+          {children}
+        </AppShellContent>
+      </CompetitionBrowseProvider>
+    </ProfileProvider>
+  );
 }
 
 function AppShellContent({ children }: { children: React.ReactNode }) {

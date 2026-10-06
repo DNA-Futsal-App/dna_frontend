@@ -16,6 +16,10 @@ import {
 
 import { MatchCard } from "@/components/match-card";
 import { PageIntro } from "@/components/page-intro";
+import {
+  CompetitionSearch,
+  useCompetitionBrowse,
+} from "@/components/competition-search";
 
 import type {
   MatchCalendar,
@@ -35,6 +39,9 @@ function Matches() {
   const searchParams =
     useSearchParams();
 
+  const { activeEventId } =
+    useCompetitionBrowse();
+
   const initialTab =
     searchParams.get("tab") === "played"
       ? "played"
@@ -50,6 +57,13 @@ function Matches() {
   const [selectedPhase, setSelectedPhase] =
     useState<string | null>(null);
 
+  const matchesUrl =
+    activeEventId != null
+      ? `/api/matches?eventId=${encodeURIComponent(
+          String(activeEventId),
+        )}`
+      : "/api/matches";
+
   const {
     data,
     loading,
@@ -57,7 +71,7 @@ function Matches() {
     reload,
   } =
     useApiData<MatchCalendar>(
-      "/api/matches",
+      matchesUrl,
     );
 
   const phases =
@@ -169,6 +183,8 @@ function Matches() {
           </div>
         }
       />
+
+      <CompetitionSearch />
 
       {data.currentPhase ? (
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan/15 bg-cyan/8 px-3 py-2 text-xs font-black text-cyan">

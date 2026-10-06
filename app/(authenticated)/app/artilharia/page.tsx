@@ -15,18 +15,32 @@ import { PageIntro } from "@/components/page-intro";
 import { AthleteAvatar } from "@/components/athlete-avatar";
 import { TeamMark } from "@/components/team-mark";
 import { TopScorerList } from "@/components/top-scorer-list";
+import {
+  CompetitionSearch,
+  useCompetitionBrowse,
+} from "@/components/competition-search";
 
 import type { TopScorer } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
 
 export default function TopScorersPage() {
+  const { activeEventId } =
+    useCompetitionBrowse();
+
+  const dataUrl =
+    activeEventId != null
+      ? `/api/top-scorers?eventId=${encodeURIComponent(
+          String(activeEventId),
+        )}`
+      : "/api/top-scorers";
+
   const {
     data,
     loading,
     error,
     reload,
   } = useApiData<TopScorer[]>(
-    "/api/top-scorers",
+    dataUrl,
   );
 
   const leader = data?.[0];
@@ -45,6 +59,8 @@ export default function TopScorersPage() {
         title="Artilharia"
         description="Os goleadores da categoria, atualizados após a conclusão de cada jogo."
       />
+
+      <CompetitionSearch />
 
       {loading ? (
         <LoadingCards count={5} />
