@@ -12,6 +12,17 @@ const ACCESS_COOKIE = "dna_access";
 const REFRESH_COOKIE = "dna_refresh";
 const DEMO_COOKIE = "dna_demo";
 
+const DEFAULT_BACKEND_TIMEOUT_MS = 12_000;
+const SPORTS_BACKEND_TIMEOUT_MS = 70_000;
+
+const SPORTS_QUERY_PATHS = [
+  "/api/v1/matches",
+  "/api/v1/standings",
+  "/api/v1/top-scorers",
+  "/api/v1/home",
+  "/api/v1/my-team",
+] as const;
+
 type FetchInit = Omit<RequestInit, "headers"> & {
   headers?: HeadersInit;
   timeoutMs?: number;
@@ -75,9 +86,22 @@ function setSessionCookies(response: NextResponse, auth: AuthResponse) {
   response.cookies.set(DEMO_COOKIE, "", { ...cookieBase, maxAge: 0 });
 }
 
+function defaultBackendTimeout(path: string) {
+  const isSportsQuery = SPORTS_QUERY_PATHS.some(
+    (prefix) =>
+      path === prefix ||
+      path.startsWith(`${prefix}?`) ||
+      path.startsWith(`${prefix}/`),
+  );
+
+  return isSportsQuery
+    ? SPORTS_BACKEND_TIMEOUT_MS
+    : DEFAULT_BACKEND_TIMEOUT_MS;
+}
+
 async function callBackend(path: string, init: FetchInit = {}) {
   const {
-    timeoutMs = 12_000,
+    timeoutMs = defaultBackendTimeout(path),
     ...requestInit
   } = init;
 
