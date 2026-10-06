@@ -39,22 +39,24 @@ const ProfileContext = createContext<ProfileContextValue>({
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const { data: loadedProfile, loading, error, reload } =
     useApiData<UserProfile>("/api/me");
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [localProfile, setLocalProfile] = useState<UserProfile | null>(null);
   const [names, setNames] = useState<PreferenceNames>({});
 
-  useEffect(() => {
-    if (loadedProfile) {
-      setProfile(loadedProfile);
-    }
-  }, [loadedProfile]);
+  const profile = localProfile ?? loadedProfile;
 
   const applyProfile = useCallback(
     (nextProfile: UserProfile, resolvedNames: PreferenceNames = {}) => {
-      setProfile(nextProfile);
+      setLocalProfile(nextProfile);
       setNames(resolvedNames);
     },
     [],
   );
+
+  const reloadProfile = useCallback(async () => {
+    setLocalProfile(null);
+    setNames({});
+    await reload();
+  }, [reload]);
 
   useEffect(() => {
     if (!profile) return;
@@ -107,13 +109,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       profile,
       loading,
       error,
-      reload,
+      reload: reloadProfile,
       applyProfile,
       preferenceLabel:
         (resolved.length ? resolved : fallback).join(" • ") ||
         "Escolha sua categoria",
     };
-  }, [applyProfile, error, loading, names, profile, reload]);
+  }, [applyProfile, error, loading, names, profile, reloadProfile]);
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
