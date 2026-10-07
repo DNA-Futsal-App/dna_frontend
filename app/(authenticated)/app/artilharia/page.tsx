@@ -60,7 +60,9 @@ export default function TopScorersPage() {
         description="Os goleadores da categoria, atualizados após a conclusão de cada jogo."
       />
 
-      <CompetitionSearch />
+      <CompetitionSearch
+        loading={loading}
+      />
 
       {loading ? (
         <LoadingCards count={5} />
