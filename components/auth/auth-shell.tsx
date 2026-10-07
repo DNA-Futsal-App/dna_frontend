@@ -1,8 +1,25 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { AwardFpfsSignature } from "@/components/awards/award-fpfs-signature";
 import { BrandLogo } from "@/components/brand-logo";
 
-export function AuthShell({ eyebrow, title, description, children, backHref = "/" }: { eyebrow: string; title: string; description: string; children: React.ReactNode; backHref?: string }) {
+type AuthShellProps = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  backHref?: string;
+  awardBranding?: boolean;
+};
+
+export function AuthShell({
+  eyebrow,
+  title,
+  description,
+  children,
+  backHref = "/",
+  awardBranding = false,
+}: AuthShellProps) {
   return (
     <main className="relative min-h-dvh overflow-hidden px-4 py-6 sm:grid sm:place-items-center sm:px-6 sm:py-10">
       <div className="pointer-events-none absolute -right-36 -top-36 size-96 rounded-full border-[42px] border-cyan/5" />
@@ -13,6 +30,13 @@ export function AuthShell({ eyebrow, title, description, children, backHref = "/
           <Link href="/" aria-label="DNA Futsal — Página inicial"><BrandLogo size={56} priority /></Link>
           <span className="size-11" aria-hidden="true" />
         </div>
+
+        {awardBranding ? (
+          <div className="mb-5 flex justify-center">
+            <AwardFpfsSignature compact />
+          </div>
+        ) : null}
+
         <section className="surface rounded-[1.75rem] p-5 sm:p-8">
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="display-title mt-3 text-4xl font-black leading-[0.95] text-ivory sm:text-5xl">{title}</h1>

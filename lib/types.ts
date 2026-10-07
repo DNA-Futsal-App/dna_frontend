@@ -9,6 +9,18 @@ export type Team = {
   name: string;
   shortName?: string | null;
   logoUrl?: string | null;
+
+  /**
+   * Nome bruto recebido da FPFS antes da apresentação no app.
+   * Mantém o fallback de resolução dos escudos locais funcionando.
+   */
+  sourceName?: string | null;
+
+  /**
+   * Logo definido explicitamente na planilha de identidade dos times.
+   * Tem prioridade visual sobre todas as demais fontes.
+   */
+  preferredLogoUrl?: string | null;
 };
 
 export type Match = {

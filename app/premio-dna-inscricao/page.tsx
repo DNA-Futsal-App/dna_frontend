@@ -11,6 +11,7 @@ import {
   Trophy,
   UserRoundPlus,
 } from "lucide-react";
+import { AwardFpfsSignature } from "@/components/awards/award-fpfs-signature";
 import { BrandLogo } from "@/components/brand-logo";
 
 const participationSteps = [
@@ -76,12 +77,16 @@ export default function PremioDnaPage() {
           </span>
         </Link>
 
-        <Link
-          href="/entrar"
-          className="btn-ghost !min-h-10 !px-4 !py-2 text-sm"
-        >
-          Já tenho conta
-        </Link>
+        <div className="flex items-center gap-2">
+          <AwardFpfsSignature compact />
+
+          <Link
+            href="/entrar"
+            className="btn-ghost !min-h-10 !px-4 !py-2 text-sm"
+          >
+            Já tenho conta
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto grid min-h-[calc(100dvh-5rem)] max-w-7xl items-center gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1fr_.92fr] lg:px-8 lg:py-16">

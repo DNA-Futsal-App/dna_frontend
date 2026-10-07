@@ -20,6 +20,7 @@ import {
   Trophy,
   type LucideIcon,
 } from "lucide-react";
+import { AwardFpfsSignature } from "@/components/awards/award-fpfs-signature";
 import { BrandLogo } from "@/components/brand-logo";
 import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
@@ -116,6 +117,12 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, preferenceLabel } = useProfile();
+
+  const awardPage =
+    pathname.startsWith("/app/premio") ||
+    pathname.startsWith("/app/votacao-treinador") ||
+    pathname.startsWith("/app/admin/premio-dna");
+
   const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
   const [awardAdminEnabled, setAwardAdminEnabled] = useState(false);
   const [
@@ -390,7 +397,15 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
+        <main className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
+          {awardPage ? (
+            <AwardFpfsSignature
+              className="mb-6"
+            />
+          ) : null}
+
+          {children}
+        </main>
       </div>
 
       <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${mobileNavigation.length >= 6 ? "grid-cols-6" : "grid-cols-5"} border-t border-white/10 bg-night/94 px-1 pb-(--safe-bottom) backdrop-blur-xl lg:hidden`} aria-label="Navegação principal">

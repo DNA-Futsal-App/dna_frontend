@@ -36,31 +36,68 @@ function approvedLogo(value?: string | null): string | null {
 }
 
 export function TeamMark({ team, size = "md" }: Props) {
-  const upstreamSrc = approvedLogo(team.logoUrl);
-  const [localSrc, setLocalSrc] = useState<string | null>(null);
+  const preferredSrc = approvedLogo(
+    team.preferredLogoUrl,
+  );
+  const upstreamSrc = approvedLogo(
+    team.logoUrl,
+  );
+  const [localSrc, setLocalSrc] =
+    useState<string | null>(null);
+
+  const logoLookupName =
+    team.sourceName ??
+    team.name;
 
   useEffect(() => {
     let active = true;
 
     setLocalSrc(null);
 
-    void resolveLocalTeamLogo(team.name, team.shortName)
+    void resolveLocalTeamLogo(
+      logoLookupName,
+      team.shortName,
+    )
       .then((resolved) => {
-        if (active) setLocalSrc(resolved);
+        if (active) {
+          setLocalSrc(resolved);
+        }
       })
       .catch(() => {
-        if (active) setLocalSrc(null);
+        if (active) {
+          setLocalSrc(null);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [team.name, team.shortName]);
+  }, [
+    logoLookupName,
+    team.shortName,
+  ]);
 
   const sources = useMemo(
     () =>
-      [...new Set([localSrc, upstreamSrc].filter((value): value is string => Boolean(value)))],
-    [localSrc, upstreamSrc],
+      [
+        ...new Set(
+          [
+            preferredSrc,
+            localSrc,
+            upstreamSrc,
+          ].filter(
+            (
+              value,
+            ): value is string =>
+              Boolean(value),
+          ),
+        ),
+      ],
+    [
+      preferredSrc,
+      localSrc,
+      upstreamSrc,
+    ],
   );
 
   return (

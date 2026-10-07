@@ -1,0 +1,716 @@
+{
+  "version": 1,
+  "sourceFiles": [
+    "team-names.xlsx"
+  ],
+  "teams": [
+    {
+      "key": "aawimproguarulhos",
+      "sourceName": "AA WIMPRO GUARULHOS",
+      "displayName": "WIMPRO",
+      "logoUrl": null
+    },
+    {
+      "key": "abesccacapava",
+      "sourceName": "ABESC/CAÇAPAVA",
+      "displayName": "ADESC",
+      "logoUrl": null
+    },
+    {
+      "key": "acissaastrosfutsal",
+      "sourceName": "ACISSA ASTROS FUTSAL",
+      "displayName": "ASTROS",
+      "logoUrl": null
+    },
+    {
+      "key": "actbolanopesaovicente",
+      "sourceName": "A.C.T. BOLA NO PÉ SÃO VICENTE",
+      "displayName": "BOLA NO PÉ",
+      "logoUrl": null
+    },
+    {
+      "key": "adbatebola",
+      "sourceName": "A.D. BATEBOLA",
+      "displayName": "BATEBOLA",
+      "logoUrl": null
+    },
+    {
+      "key": "adcintermogi",
+      "sourceName": "A.D.C. INTER MOGI",
+      "displayName": "INTER MOGI",
+      "logoUrl": null
+    },
+    {
+      "key": "adcmarvel",
+      "sourceName": "ADC MARVEL",
+      "displayName": "MARVEL",
+      "logoUrl": null
+    },
+    {
+      "key": "adcmercedesbenz",
+      "sourceName": "ADC MERCEDES BENZ",
+      "displayName": "MERCEDES",
+      "logoUrl": null
+    },
+    {
+      "key": "adcsaobernardofutsal",
+      "sourceName": "ADC SÃO BERNARDO FUTSAL",
+      "displayName": "SÃO BERNARDO",
+      "logoUrl": null
+    },
+    {
+      "key": "adefcotia",
+      "sourceName": "ADEF/COTIA",
+      "displayName": "ADEF",
+      "logoUrl": null
+    },
+    {
+      "key": "adgalata",
+      "sourceName": "A.D. GALATA",
+      "displayName": "GALATA",
+      "logoUrl": null
+    },
+    {
+      "key": "adindaiatuba",
+      "sourceName": "A.D. INDAIATUBA",
+      "displayName": "AD INDAIATUBA",
+      "logoUrl": null
+    },
+    {
+      "key": "adsuzano",
+      "sourceName": "A.D. SUZANO",
+      "displayName": "AD SUZANO",
+      "logoUrl": null
+    },
+    {
+      "key": "aecincriveiscidadetiradentesincriveisfutsal",
+      "sourceName": "A. E. C. INCRÍVEIS CIDADE TIRADENTES | INCRÍVEIS FUTSAL",
+      "displayName": "INCRÍVEIS",
+      "logoUrl": null
+    },
+    {
+      "key": "aecompanysports",
+      "sourceName": "A.E. COMPANY SPORTS",
+      "displayName": "COMPANY SPORTS",
+      "logoUrl": null
+    },
+    {
+      "key": "aefriburgo",
+      "sourceName": "AE FRIBURGO",
+      "displayName": "FRIBURGO",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoamigosdecamilopoliscamilopolisfutsal",
+      "sourceName": "ASSOCIAÇÃO AMIGOS DE CAMILOPOLIS | CAMILÓPOLIS FUTSAL",
+      "displayName": "CAMILÓPOLIS",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoatleticabancodobrasil",
+      "sourceName": "ASSOCIAÇÃO ATLÉTICA BANCO DO BRASIL",
+      "displayName": "AABB",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoatleticabotucatuense",
+      "sourceName": "ASSOCIAÇÃO ATLÉTICA BOTUCATUENSE",
+      "displayName": "BOTUCATUENSE",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoatleticaflamengo",
+      "sourceName": "ASSOCIACAO ATLETICA FLAMENGO",
+      "displayName": "FLAMENGO GRU",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaocontraataquepaulistaacap",
+      "sourceName": "ASSOCIAÇÃO CONTRA ATAQUE PAULISTA - ACAP",
+      "displayName": "ACAP",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivadoabcdmescsaobernardo",
+      "sourceName": "ASSOCIAÇÃO DESPORTIVA DO ABCD - MESC SÃO BERNARDO",
+      "displayName": "MESC",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivaeculturallazuliadclazuli",
+      "sourceName": "ASSOCIACAO DESPORTIVA E CULTURAL LAZULI | A.D.C. LAZULI",
+      "displayName": "LAZULI",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivanandograna",
+      "sourceName": "ASSOCIAÇÃO DESPORTIVA NANDO GRANA",
+      "displayName": "NANDO GRANA",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivaolimpikativo",
+      "sourceName": "ASSOCIAÇÃO DESPORTIVA OLIMPIK | ATIVO",
+      "displayName": "OLIMPIK",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivaprudenteadprudente",
+      "sourceName": "ASSOCIAÇÃO DESPORTIVA PRUDENTE | A.D. PRUDENTE",
+      "displayName": "AD PRUDENTE",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivasantoandrefutsal",
+      "sourceName": "ASSOCIAÇÃO DESPORTIVA SANTO ANDRE FUTSAL",
+      "displayName": "AD SANTO ANDRÉ",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaodesportivasfadsuzano",
+      "sourceName": "ASSOCIACAO DESPORTIVA S.F. | A.D. SUZANO",
+      "displayName": "AD SUZANO",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivacapaobonitoaecapaobonito",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA CAPÃO BONITO | A.E. CAPÃO BONITO",
+      "displayName": "CAPÃO BONITO",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivacentrodetreinamentobolanope",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA CENTRO DE TREINAMENTO BOLA NO PÉ",
+      "displayName": "BOLA NO PÉ",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivaculturalvmanegeritaquerac13",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA CULTURAL VMANEGER ITAQUERA C13",
+      "displayName": "C13",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivadiscipulosdofutebol",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA DISCIPULOS DO FUTEBOL",
+      "displayName": "DISCÍPULOS",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivafriburgoaefriburgo",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA FRIBURGO | AE FRIBURGO",
+      "displayName": "FRIBURGO",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivafutmax",
+      "sourceName": "ASSOCIAçãO ESPORTIVA FUTMAX",
+      "displayName": "CAAS",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivametropole",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA METROPoLE",
+      "displayName": "METRÓPOLE",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivaraposasdalesteaeraposadaleste",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA RAPOSAS DA LESTE | A.E. RAPOSA DA LESTE",
+      "displayName": "RAPOSAS DA LESTE",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoesportivariverdobelemriverdobelem",
+      "sourceName": "ASSOCIAÇÃO ESPORTIVA RIVER DO BELÉM | RIVER DO BELÉM",
+      "displayName": "RIVER DO BELÉM",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaomoradoresjardimliderznfuriafs",
+      "sourceName": "ASSOCIAÇÃO MORADORES JARDIM LÍDER Z/N - FÚRIA F.S.",
+      "displayName": "FÚRIA FS",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaopaulistafutebolclubemooca",
+      "sourceName": "ASSOCIAÇÃO PAULISTA FUTEBOL CLUBE MOOCA",
+      "displayName": "PAULISTA MOOOCA",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaopequenomestreapequenomestre",
+      "sourceName": "ASSOCIAÇÃO PEQUENO MESTRE | A. PEQUENO MESTRE",
+      "displayName": "PEQUENO MESTRE",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaoportuguesadedesportos",
+      "sourceName": "ASSOCIAÇÃO PORTUGUESA DE DESPORTOS",
+      "displayName": "PORTUGUESA",
+      "logoUrl": null
+    },
+    {
+      "key": "associacaosorocabanadefutsalasfmagnu",
+      "sourceName": "ASSOCIAÇÃO SOROCABANA DE FUTSAL - ASF/MAGNU",
+      "displayName": "ASF / MAGNUS",
+      "logoUrl": null
+    },
+    {
+      "key": "auniaomaua",
+      "sourceName": "A. UNIÃO MAUÁ",
+      "displayName": "UNIÃO MAUÁ",
+      "logoUrl": null
+    },
+    {
+      "key": "cajuventus",
+      "sourceName": "C.A. JUVENTUS",
+      "displayName": "JUVENTUS",
+      "logoUrl": null
+    },
+    {
+      "key": "camisa10fca",
+      "sourceName": "CAMISA 10 F.C. A",
+      "displayName": "CAMISA 10",
+      "logoUrl": null
+    },
+    {
+      "key": "camisa10fcb",
+      "sourceName": "CAMISA 10 F.C. B",
+      "displayName": "CAMISA 10 B",
+      "logoUrl": null
+    },
+    {
+      "key": "catabucajrs",
+      "sourceName": "C.A. TABUCA JRS",
+      "displayName": "TABUCA JRS",
+      "logoUrl": null
+    },
+    {
+      "key": "ccdetatui",
+      "sourceName": "C.C. DE TATUí",
+      "displayName": "TATUÍ",
+      "logoUrl": null
+    },
+    {
+      "key": "chutefutsal",
+      "sourceName": "CHUTE FUTSAL",
+      "displayName": "CHUTE FUTSAL",
+      "logoUrl": null
+    },
+    {
+      "key": "clubeatleticoypirangacaypiranga",
+      "sourceName": "CLUBE ATLÉTICO YPIRANGA | C.A. YPIRANGA",
+      "displayName": "YPIRANGA",
+      "logoUrl": null
+    },
+    {
+      "key": "clubebatalha",
+      "sourceName": "CLUBE BATALHA",
+      "displayName": "BATALHA",
+      "logoUrl": null
+    },
+    {
+      "key": "clubedacomunidadefarialimakiloukuravilaindustrial",
+      "sourceName": "CLUBE DA COMUNIDADE FARIA LIMA - KILOUKURA VILA INDUSTRIAL",
+      "displayName": "KILOUKURA",
+      "logoUrl": null
+    },
+    {
+      "key": "clubeesportivodapenhacepenha",
+      "sourceName": "CLUBE ESPORTIVO DA PENHA - CE PENHA",
+      "displayName": "PENHA",
+      "logoUrl": null
+    },
+    {
+      "key": "coloradocaieirasfutebolclubeltdacoloradocaieirasfc",
+      "sourceName": "COLORADO CAIEIRAS FUTEBOL CLUBE LTDA - COLORADO CAIEIRAS FC",
+      "displayName": "COLORADO CAIEIRAS",
+      "logoUrl": null
+    },
+    {
+      "key": "ctcvilaema",
+      "sourceName": "CTC VILA EMA",
+      "displayName": "CTC VILA EMA",
+      "logoUrl": null
+    },
+    {
+      "key": "desportivosorocaba",
+      "sourceName": "DESPORTIVO SOROCABA",
+      "displayName": "DESP. SOROCABA",
+      "logoUrl": null
+    },
+    {
+      "key": "escoladefutsalatleticomangalotltdaefatleticomangalot",
+      "sourceName": "ESCOLA DE FUTSAL ATLÉTICO MANGALOT LTDA | EF ATLÉTICO MANGALOT",
+      "displayName": "ATLÉTICO MANGALOT",
+      "logoUrl": null
+    },
+    {
+      "key": "esporteclubepraiagrande",
+      "sourceName": "ESPORTE CLUBE PRAIA GRANDE",
+      "displayName": "PRAIA GRANDE",
+      "logoUrl": null
+    },
+    {
+      "key": "faeosascoaudax",
+      "sourceName": "FAE/OSASCO/AUDAX",
+      "displayName": "AUDAX",
+      "logoUrl": null
+    },
+    {
+      "key": "ferroviariapindafutsalsemelp",
+      "sourceName": "FERROVIÁRIA/PINDA FUTSAL/SEMELP",
+      "displayName": "PINDA",
+      "logoUrl": null
+    },
+    {
+      "key": "gdr7desetembro",
+      "sourceName": "G.D.R. 7 DE SETEMBRO",
+      "displayName": "7 DE SETEMBRO",
+      "logoUrl": null
+    },
+    {
+      "key": "grgremetal",
+      "sourceName": "GR GREMETAL",
+      "displayName": "GREMETAL",
+      "logoUrl": null
+    },
+    {
+      "key": "guaianazesevy",
+      "sourceName": "GUAIANAZES/EVY",
+      "displayName": "GUAIANAZES",
+      "logoUrl": null
+    },
+    {
+      "key": "guarulhensetbctranportes",
+      "sourceName": "GUARULHENSE/TBC TRANPORTES",
+      "displayName": "GUARULHENSE",
+      "logoUrl": null
+    },
+    {
+      "key": "impactofc",
+      "sourceName": "IMPACTO F.C.",
+      "displayName": "IMPACTO",
+      "logoUrl": null
+    },
+    {
+      "key": "instbonsdebola",
+      "sourceName": "INST. BONS DE BOLA",
+      "displayName": "BONS DE BOLA",
+      "logoUrl": null
+    },
+    {
+      "key": "institutof9",
+      "sourceName": "INSTITUTO F9+",
+      "displayName": "F9 TABOÃO",
+      "logoUrl": null
+    },
+    {
+      "key": "institutofamiliafutsalinstfamiliafadenplorena",
+      "sourceName": "INSTITUTO FAMÍLIA FUTSAL | INST. FAMÍLIA/FADENP LORENA",
+      "displayName": "FAMÍLIA LORENA",
+      "logoUrl": null
+    },
+    {
+      "key": "itaquafutsal",
+      "sourceName": "ITAQUÁ FUTSAL",
+      "displayName": "ITAQUÁ",
+      "logoUrl": null
+    },
+    {
+      "key": "itaquerensefutsal",
+      "sourceName": "ITAQUERENSE FUTSAL",
+      "displayName": "ITAQUERENSE",
+      "logoUrl": null
+    },
+    {
+      "key": "jabaquaraatleticoclube",
+      "sourceName": "JABAQUARA ATLÉTICO CLUBE",
+      "displayName": "JABAQUARA",
+      "logoUrl": null
+    },
+    {
+      "key": "jacareialiancafutsalser",
+      "sourceName": "JACAREÍ/ALIANÇA FUTSAL/SER",
+      "displayName": "ALIANÇA",
+      "logoUrl": null
+    },
+    {
+      "key": "jubafutsal",
+      "sourceName": "JUBA FUTSAL",
+      "displayName": "JUBA",
+      "logoUrl": null
+    },
+    {
+      "key": "lausannepaulistafca",
+      "sourceName": "LAUSANNE PAULISTA FC - A",
+      "displayName": "LAUSANNE",
+      "logoUrl": null
+    },
+    {
+      "key": "lausannepaulistafcb",
+      "sourceName": "LAUSANNE PAULISTA FC - B",
+      "displayName": "LAUSANNE B",
+      "logoUrl": null
+    },
+    {
+      "key": "lifesportsgestaoesportivaltdamx7diadema",
+      "sourceName": "LIFESPORTS GESTAO ESPORTIVA LTDA | MX7 DIADEMA",
+      "displayName": "MX7 DIADEMA",
+      "logoUrl": null
+    },
+    {
+      "key": "ligaamadoradeitapevidefutsal",
+      "sourceName": "LIGA AMADORA DE ITAPEVI DE FUTSAL",
+      "displayName": "ITAPEVI",
+      "logoUrl": null
+    },
+    {
+      "key": "ligaatibaiaensedefuitsallafs",
+      "sourceName": "LIGA ATIBAIAENSE DE FUITSAL - LAFS",
+      "displayName": "ATIBAIA",
+      "logoUrl": null
+    },
+    {
+      "key": "ligadesportivaclassistapontodeencontrofutsal",
+      "sourceName": "LIGA DESPORTIVA CLASSISTA PONTO DE ENCONTRO FUTSAL",
+      "displayName": "PONTO DE ENCONTRO",
+      "logoUrl": null
+    },
+    {
+      "key": "ligalestevikselevadores",
+      "sourceName": "LIGA LESTE/VIKS ELEVADORES",
+      "displayName": "LIGA LESTE",
+      "logoUrl": null
+    },
+    {
+      "key": "ligasancaetanensedefs",
+      "sourceName": "LIGA SANCAETANENSE DE F.S.",
+      "displayName": "LIGA SÃO CAETANO",
+      "logoUrl": null
+    },
+    {
+      "key": "ligasebastianensedefutsallisfutssaosebastiao",
+      "sourceName": "LIGA SEBASTIANENSE DE FUTSAL | LISFUTS/SÃO SEBASTIÃO",
+      "displayName": "LISFUTS",
+      "logoUrl": null
+    },
+    {
+      "key": "ligasorocabanadefuteboldesalao",
+      "sourceName": "LIGA SOROCABANA DE FUTEBOL DE SALÃO",
+      "displayName": "KGB FUTSAL",
+      "logoUrl": null
+    },
+    {
+      "key": "metalurgicosdejundiai",
+      "sourceName": "METALÚRGICOS DE JUNDIAÍ",
+      "displayName": "METALÚRGICOS",
+      "logoUrl": null
+    },
+    {
+      "key": "mogidascruzesesporteclubemogidascruzesec",
+      "sourceName": "MOGI DAS CRUZES ESPORTE CLUBE - MOGI DAS CRUZES EC",
+      "displayName": "MOGI EC",
+      "logoUrl": null
+    },
+    {
+      "key": "mx7diadema",
+      "sourceName": "MX7 DIADEMA",
+      "displayName": "MX7 DIADEMA",
+      "logoUrl": null
+    },
+    {
+      "key": "nacionalatleticoclube",
+      "sourceName": "NACIONAL ATLÉTICO CLUBE",
+      "displayName": "NACIONAL",
+      "logoUrl": null
+    },
+    {
+      "key": "napolesports",
+      "sourceName": "NAPOLE SPORTS",
+      "displayName": "NAPOLE",
+      "logoUrl": null
+    },
+    {
+      "key": "ocianpraiaclube",
+      "sourceName": "OCIAN PRAIA CLUBE",
+      "displayName": "OCIAN",
+      "logoUrl": null
+    },
+    {
+      "key": "olebrasilsocietyquadraesportivaltdameolebrasilsociety",
+      "sourceName": "OLE BRASIL SOCIETY QUADRA ESPORTIVA LTDA ME - OLE BRASIL SOCIETY",
+      "displayName": "PUMAS",
+      "logoUrl": null
+    },
+    {
+      "key": "pequeninosdeperus",
+      "sourceName": "PEQUENINOS DE PERUS",
+      "displayName": "PEQUENINOS",
+      "logoUrl": null
+    },
+    {
+      "key": "primeirodemaiofutebolclube",
+      "sourceName": "PRIMEIRO DE MAIO FUTEBOL CLUBE",
+      "displayName": "PRIMEIRO DE MAIO",
+      "logoUrl": null
+    },
+    {
+      "key": "prosperehortolandia",
+      "sourceName": "PROSPERE / HORTOLANDIA",
+      "displayName": "HORTOLÂNDIA",
+      "logoUrl": null
+    },
+    {
+      "key": "prosperehortolandiab",
+      "sourceName": "PROSPERE / HORTOLANDIA - B",
+      "displayName": "HORTOLÂNDIA B",
+      "logoUrl": null
+    },
+    {
+      "key": "pulofutsalcampinas",
+      "sourceName": "PULO FUTSAL CAMPINAS",
+      "displayName": "PULO FUTSAL",
+      "logoUrl": null
+    },
+    {
+      "key": "r7futsal",
+      "sourceName": "R7 FUTSAL",
+      "displayName": "R7 FUTSAL",
+      "logoUrl": null
+    },
+    {
+      "key": "resiliencefutsal",
+      "sourceName": "RESILIENCE FUTSAL",
+      "displayName": "RESILIENCE",
+      "logoUrl": null
+    },
+    {
+      "key": "rosanegraipasurefutsal",
+      "sourceName": "ROSA NEGRA/IPASURE FUTSAL",
+      "displayName": "ROSA NEGRA",
+      "logoUrl": null
+    },
+    {
+      "key": "rsoccer",
+      "sourceName": "RSOCCER",
+      "displayName": "RSOCCER",
+      "logoUrl": null
+    },
+    {
+      "key": "santoandrefutebolclubesantoandrefutsal",
+      "sourceName": "SANTO ANDRE FUTEBOL CLUBE | SANTO ANDRÉ FUTSAL",
+      "displayName": "SANTO ANDRÉ FC",
+      "logoUrl": null
+    },
+    {
+      "key": "santoandrefutsal",
+      "sourceName": "SANTO ANDRÉ FUTSAL",
+      "displayName": "SANTO ANDRÉ FC",
+      "logoUrl": null
+    },
+    {
+      "key": "santosfc",
+      "sourceName": "SANTOS FC",
+      "displayName": "SANTOS",
+      "logoUrl": null
+    },
+    {
+      "key": "saocaetanofcrsfc",
+      "sourceName": "SÃO CAETANO FC - RSFC",
+      "displayName": "SÃO CAETANO",
+      "logoUrl": null
+    },
+    {
+      "key": "saojosefutsal",
+      "sourceName": "SÃO JOSÉ FUTSAL",
+      "displayName": "SÃO JOSÉ",
+      "logoUrl": null
+    },
+    {
+      "key": "saopaulofca",
+      "sourceName": "SÃO PAULO FC - A",
+      "displayName": "SÃO PAULO",
+      "logoUrl": null
+    },
+    {
+      "key": "saopaulofcb",
+      "sourceName": "SÃO PAULO FC - B",
+      "displayName": "SÃO PAULO B",
+      "logoUrl": null
+    },
+    {
+      "key": "sccorinthianspaulistapta",
+      "sourceName": "S.C. CORINTHIANS PAULISTA PTA.",
+      "displayName": "CORINTHIANS",
+      "logoUrl": null
+    },
+    {
+      "key": "selecionadosfutsal",
+      "sourceName": "SELECIONADOS FUTSAL",
+      "displayName": "SELECIONADOS",
+      "logoUrl": null
+    },
+    {
+      "key": "selecionadosfutsala3",
+      "sourceName": "SELECIONADOS FUTSAL - A3",
+      "displayName": "SELECIONADOS",
+      "logoUrl": null
+    },
+    {
+      "key": "sepalmeiras",
+      "sourceName": "SE PALMEIRAS",
+      "displayName": "PALMEIRAS",
+      "logoUrl": null
+    },
+    {
+      "key": "sercaieiras",
+      "sourceName": "S.E.R. CAIEIRAS",
+      "displayName": "CAIEIRAS",
+      "logoUrl": null
+    },
+    {
+      "key": "sportbenficademogidascruzes",
+      "sourceName": "SPORT BENFICA DE MOGI DAS CRUZES",
+      "displayName": "BENFICA",
+      "logoUrl": null
+    },
+    {
+      "key": "sportingclubpaulinense",
+      "sourceName": "SPORTING CLUB PAULINENSE",
+      "displayName": "PAULINENSE",
+      "logoUrl": null
+    },
+    {
+      "key": "stadiumfutsal",
+      "sourceName": "STADIUM FUTSAL",
+      "displayName": "STADIUM",
+      "logoUrl": null
+    },
+    {
+      "key": "taubatefutsal",
+      "sourceName": "TAUBATÉ FUTSAL",
+      "displayName": "TAUBATÉ",
+      "logoUrl": null
+    },
+    {
+      "key": "uniaord",
+      "sourceName": "UNIÃO RD",
+      "displayName": "UNIÃO RD",
+      "logoUrl": null
+    },
+    {
+      "key": "unilestepontodeencontro",
+      "sourceName": "UNILESTE / PONTO DE ENCONTRO",
+      "displayName": "UNILESTE",
+      "logoUrl": null
+    },
+    {
+      "key": "vemcomigogerandofrutoscfaf",
+      "sourceName": "VEM COMIGO GERANDO FRUTOS - CFAF",
+      "displayName": "CFAF",
+      "logoUrl": null
+    }
+  ]
+}

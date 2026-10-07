@@ -1,5 +1,6 @@
 "use client";
 
+import { applyTeamDisplayOverrides } from "@/lib/team-display";
 import type { ApiProblem } from "@/lib/types";
 
 export class ClientApiError extends Error {
@@ -69,7 +70,9 @@ export async function clientApi<T>(
     );
   }
 
-  return data as T;
+  return applyTeamDisplayOverrides(
+    data as T,
+  );
 }
 
 export function formatDate(

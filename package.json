@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "npm run logos:manifest",
+    "predev": "npm run teams:display-manifest && npm run logos:manifest",
     "dev": "next dev",
-    "prebuild": "npm run logos:manifest",
+    "prebuild": "npm run teams:display-manifest && npm run logos:manifest",
     "build": "next build --webpack",
     "start": "next start",
+    "prelint": "npm run teams:display-manifest",
     "lint": "eslint .",
+    "pretypecheck": "npm run teams:display-manifest",
     "typecheck": "tsc --noEmit",
+    "teams:display-manifest": "node scripts/generate-team-display-manifest.mjs",
     "logos:manifest": "node scripts/generate-team-logo-manifest.mjs",
     "logos:test": "node --test scripts/team-logos.test.mjs"
   },

@@ -135,6 +135,7 @@ export default function CoachRegisterPage() {
   if (checkingInvite) {
     return (
       <AuthShell
+        awardBranding
         eyebrow="Prêmio DNA Futsal"
         title="Preparando seu cadastro."
         description="Validando sua credencial de treinador."
@@ -147,6 +148,7 @@ export default function CoachRegisterPage() {
   if (!invite) {
     return (
       <AuthShell
+        awardBranding
         eyebrow="Prêmio DNA Futsal"
         title="Convite necessário."
         description={error || "Abra novamente o link enviado pela organização."}
@@ -163,6 +165,7 @@ export default function CoachRegisterPage() {
 
   return (
     <AuthShell
+      awardBranding
       eyebrow="Cadastro de treinador"
       title="Crie sua conta."
       description="Sua permissão de votação será vinculada a esta conta depois que você confirmar o e-mail e entrar."
