@@ -49,9 +49,14 @@ type TiePosition = {
   centerY: number;
 };
 
+type BracketConnectionSource = {
+  position: TiePosition;
+  confirmed: boolean;
+};
+
 type BracketConnection = {
   key: string;
-  from: TiePosition;
+  sources: BracketConnectionSource[];
   to: TiePosition;
   confirmed: boolean;
 };
@@ -150,6 +155,27 @@ export function buildKnockoutStages(
     };
   }
 
+  /*
+   * Depois de ordenar as fases seguintes, reorganiza cada fase anterior
+   * pelo jogo que ela alimenta. Assim, os dois confrontos que levam à
+   * mesma semifinal/final ficam contíguos e os conectores nunca precisam
+   * atravessar o caminho de outro confronto.
+   */
+  for (
+    let index =
+      ordered.length - 2;
+    index >= 0;
+    index--
+  ) {
+    ordered[index] = {
+      ...ordered[index],
+      ties: orderByNextStage(
+        ordered[index].ties,
+        ordered[index + 1].ties,
+      ),
+    };
+  }
+
   return ordered;
 }
 
@@ -242,31 +268,61 @@ export function KnockoutBracket({
           >
             {connections.map(
               (connection) => {
-                const fromX =
-                  connection.from.x +
+                const sourceX =
+                  connection.sources[0]
+                    ?.position.x +
                   CARD_WIDTH;
-                const fromY =
-                  HEADER_HEIGHT +
-                  connection.from.centerY;
+
+                if (
+                  sourceX == null ||
+                  !connection.sources.length
+                ) {
+                  return null;
+                }
+
                 const toX =
                   connection.to.x;
                 const toY =
                   HEADER_HEIGHT +
                   connection.to.centerY;
-                const middleX =
-                  fromX +
+
+                /*
+                 * Um único tronco por jogo de destino. Os dois confrontos
+                 * anteriores entram lateralmente no mesmo eixo e, só depois,
+                 * esse eixo segue para a semifinal/final. Isso elimina
+                 * cruzamentos entre caminhos independentes.
+                 */
+                const trunkX =
+                  sourceX +
                   (
                     toX -
-                    fromX
-                  ) /
-                    2;
+                    sourceX
+                  ) *
+                    0.58;
 
-                const path = [
-                  `M ${fromX} ${fromY}`,
-                  `H ${middleX}`,
-                  `V ${toY}`,
-                  `H ${toX}`,
-                ].join(" ");
+                const sourceYs =
+                  connection.sources.map(
+                    (source) =>
+                      HEADER_HEIGHT +
+                      source.position.centerY,
+                  );
+
+                const minY =
+                  Math.min(
+                    ...sourceYs,
+                  );
+                const maxY =
+                  Math.max(
+                    ...sourceYs,
+                  );
+
+                const trunkPath =
+                  minY === maxY
+                    ? ""
+                    : `M ${trunkX} ${minY} V ${maxY}`;
+
+                const targetPath =
+                  `M ${trunkX} ${toY} H ${toX}`;
 
                 return (
                   <g
@@ -274,22 +330,105 @@ export function KnockoutBracket({
                       connection.key
                     }
                   >
+                    {connection.sources.map(
+                      (
+                        source,
+                        sourceIndex,
+                      ) => {
+                        const sourceY =
+                          HEADER_HEIGHT +
+                          source.position.centerY;
+
+                        const sourcePath =
+                          `M ${sourceX} ${sourceY} H ${trunkX}`;
+
+                        return (
+                          <g
+                            key={`${connection.key}:source:${sourceIndex}`}
+                          >
+                            <path
+                              d={sourcePath}
+                              fill="none"
+                              stroke="rgba(2, 6, 23, 0.82)"
+                              strokeWidth="7"
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+
+                            <path
+                              d={sourcePath}
+                              className={
+                                source.confirmed
+                                  ? "text-cyan"
+                                  : "text-white/30"
+                              }
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={
+                                source.confirmed
+                                  ? "3.5"
+                                  : "2"
+                              }
+                              strokeDasharray={
+                                source.confirmed
+                                  ? undefined
+                                  : "6 6"
+                              }
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </g>
+                        );
+                      },
+                    )}
+
+                    {trunkPath ? (
+                      <>
+                        <path
+                          d={trunkPath}
+                          fill="none"
+                          stroke="rgba(2, 6, 23, 0.82)"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          vectorEffect="non-scaling-stroke"
+                        />
+
+                        <path
+                          d={trunkPath}
+                          className={
+                            connection.confirmed
+                              ? "text-cyan"
+                              : "text-white/30"
+                          }
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={
+                            connection.confirmed
+                              ? "3.5"
+                              : "2"
+                          }
+                          strokeDasharray={
+                            connection.confirmed
+                              ? undefined
+                              : "6 6"
+                          }
+                          strokeLinecap="round"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </>
+                    ) : null}
+
                     <path
-                      d={path}
+                      d={targetPath}
                       fill="none"
-                      stroke="rgba(2, 6, 23, 0.72)"
-                      strokeWidth={
-                        connection.confirmed
-                          ? "7"
-                          : "5"
-                      }
+                      stroke="rgba(2, 6, 23, 0.82)"
+                      strokeWidth="7"
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                       vectorEffect="non-scaling-stroke"
                     />
 
                     <path
-                      d={path}
+                      d={targetPath}
                       className={
                         connection.confirmed
                           ? "text-cyan"
@@ -308,19 +447,24 @@ export function KnockoutBracket({
                           : "6 6"
                       }
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                       vectorEffect="non-scaling-stroke"
                     />
 
-                    {connection.confirmed ? (
-                      <circle
-                        cx={toX}
-                        cy={toY}
-                        r="4.5"
-                        className="text-cyan"
-                        fill="currentColor"
-                      />
-                    ) : null}
+                    <circle
+                      cx={toX}
+                      cy={toY}
+                      r={
+                        connection.confirmed
+                          ? "5"
+                          : "3.5"
+                      }
+                      className={
+                        connection.confirmed
+                          ? "text-cyan"
+                          : "text-white/35"
+                      }
+                      fill="currentColor"
+                    />
                   </g>
                 );
               },
@@ -785,12 +929,11 @@ function buildBracketPositions(
           tieIndex,
         ) => {
           const sources =
-            sourcePositionsForTie(
+            sourcePositionsForTarget(
               previousStage.ties,
               previousPositions,
-              tie,
+              stage.ties,
               tieIndex,
-              stage.ties.length,
             );
 
           const centerY =
@@ -830,28 +973,36 @@ function buildBracketPositions(
   return result;
 }
 
-function sourcePositionsForTie(
+function sourcePositionsForTarget(
   previousTies: KnockoutTie[],
   previousPositions: TiePosition[],
-  targetTie: KnockoutTie,
+  targetTies: KnockoutTie[],
   targetIndex: number,
-  targetCount: number,
 ) {
-  const exact =
+  const mapped =
     previousTies
       .map(
         (
           previousTie,
-          index,
-        ) =>
-          tiesShareTeam(
-            previousTie,
-            targetTie,
-          )
-            ? previousPositions[
-                index
-              ]
-            : null,
+          sourceIndex,
+        ) => {
+          const destination =
+            destinationForTie(
+              previousTie,
+              sourceIndex,
+              previousTies.length,
+              targetTies,
+            );
+
+          return (
+            destination.targetIndex ===
+            targetIndex
+              ? previousPositions[
+                  sourceIndex
+                ]
+              : null
+          );
+        },
       )
       .filter(
         (
@@ -860,81 +1011,85 @@ function sourcePositionsForTie(
           position != null,
       );
 
-  if (exact.length >= 2) {
-    return exact;
+  if (mapped.length) {
+    return mapped;
   }
+
+  /*
+   * Caso extremamente parcial (ex.: chave publicada antes dos jogos
+   * anteriores), mantém o card visível sem criar ligação cruzada.
+   */
+  const fallbackIndex =
+    Math.min(
+      previousPositions.length - 1,
+      Math.max(
+        0,
+        Math.floor(
+          targetIndex *
+            previousPositions.length /
+            Math.max(
+              1,
+              targetTies.length,
+            ),
+        ),
+      ),
+    );
 
   const fallback =
-    fallbackSourcePositions(
-      previousPositions,
-      targetIndex,
-      targetCount,
-    );
+    previousPositions[
+      fallbackIndex
+    ];
 
-  if (!exact.length) {
-    return fallback;
-  }
-
-  const exactIndexes =
-    new Set(
-      exact.map(
-        (position) =>
-          position.tieIndex,
-      ),
-    );
-
-  return [
-    ...exact,
-    ...fallback.filter(
-      (position) =>
-        !exactIndexes.has(
-          position.tieIndex,
-        ),
-    ),
-  ].slice(
-    0,
-    Math.min(
-      2,
-      previousPositions.length,
-    ),
-  );
+  return fallback
+    ? [fallback]
+    : [];
 }
 
-function fallbackSourcePositions(
-  previous: TiePosition[],
-  targetIndex: number,
-  targetCount: number,
+function destinationForTie(
+  sourceTie: KnockoutTie,
+  sourceIndex: number,
+  sourceCount: number,
+  targetTies: KnockoutTie[],
 ) {
-  if (
-    !previous.length ||
-    targetCount <= 0
-  ) {
-    return [];
+  const exactTargetIndex =
+    targetTies.findIndex(
+      (targetTie) =>
+        tiesShareTeam(
+          sourceTie,
+          targetTie,
+        ),
+    );
+
+  if (exactTargetIndex >= 0) {
+    return {
+      targetIndex:
+        exactTargetIndex,
+      confirmed: true,
+    };
   }
 
-  const start =
-    Math.floor(
-      targetIndex *
-        previous.length /
-        targetCount,
-    );
-  const end =
-    Math.max(
-      start + 1,
-      Math.floor(
-        (
-          targetIndex +
-          1
-        ) *
-          previous.length /
-          targetCount,
-      ),
-    );
+  if (!targetTies.length) {
+    return {
+      targetIndex: -1,
+      confirmed: false,
+    };
+  }
 
-  return previous.slice(
-    start,
-    end,
-  );
+  return {
+    targetIndex:
+      Math.min(
+        targetTies.length - 1,
+        Math.floor(
+          sourceIndex *
+            targetTies.length /
+            Math.max(
+              1,
+              sourceCount,
+            ),
+        ),
+      ),
+    confirmed: false,
+  };
 }
 
 function buildConnections(
@@ -959,88 +1114,137 @@ function buildConnections(
         stageIndex + 1
       ];
 
-    sourceStage.ties.forEach(
+    targetStage.ties.forEach(
       (
-        sourceTie,
-        sourceIndex,
+        targetTie,
+        targetIndex,
       ) => {
-        const promotedTeamId =
-          advancedTeamId(
-            sourceTie,
-            targetStage,
-          );
-
-        let targetIndex =
-          promotedTeamId
-            ? targetStage.ties.findIndex(
-                (targetTie) =>
-                  tieHasTeam(
-                    targetTie,
-                    promotedTeamId,
-                  ),
-              )
-            : targetStage.ties.findIndex(
-                (targetTie) =>
-                  tiesShareTeam(
+        const sources =
+          sourceStage.ties
+            .map(
+              (
+                sourceTie,
+                sourceIndex,
+              ) => {
+                const destination =
+                  destinationForTie(
                     sourceTie,
-                    targetTie,
-                  ),
-              );
-
-        if (
-          targetIndex < 0
-        ) {
-          targetIndex =
-            Math.min(
-              targetStage.ties.length -
-                1,
-              Math.floor(
-                sourceIndex *
-                  targetStage.ties.length /
-                  Math.max(
-                    1,
+                    sourceIndex,
                     sourceStage.ties.length,
-                  ),
-              ),
-            );
-        }
+                    targetStage.ties,
+                  );
 
-        if (
-          targetIndex < 0 ||
-          !positions[
-            stageIndex
-          ]?.[
-            sourceIndex
-          ] ||
-          !positions[
+                if (
+                  destination.targetIndex !==
+                  targetIndex
+                ) {
+                  return null;
+                }
+
+                const position =
+                  positions[
+                    stageIndex
+                  ]?.[
+                    sourceIndex
+                  ];
+
+                if (!position) {
+                  return null;
+                }
+
+                return {
+                  position,
+                  confirmed:
+                    destination.confirmed,
+                };
+              },
+            )
+            .filter(
+              (
+                source,
+              ): source is BracketConnectionSource =>
+                source != null,
+            );
+
+        const targetPosition =
+          positions[
             stageIndex + 1
           ]?.[
             targetIndex
-          ]
+          ];
+
+        if (
+          !sources.length ||
+          !targetPosition
         ) {
           return;
         }
 
         connections.push({
           key:
-            `${sourceStage.key}:${sourceTie.key}->${targetStage.key}:${targetStage.ties[targetIndex].key}`,
-          from:
-            positions[
-              stageIndex
-            ][sourceIndex],
+            `${sourceStage.key}->${targetStage.key}:${targetTie.key}`,
+          sources,
           to:
-            positions[
-              stageIndex + 1
-            ][targetIndex],
+            targetPosition,
           confirmed:
-            promotedTeamId !=
-            null,
+            sources.every(
+              (source) =>
+                source.confirmed,
+            ),
         });
       },
     );
   }
 
   return connections;
+}
+
+function orderByNextStage(
+  ties: KnockoutTie[],
+  next: KnockoutTie[],
+) {
+  return ties
+    .map(
+      (
+        tie,
+        sourceIndex,
+      ) => ({
+        tie,
+        sourceIndex,
+        destination:
+          destinationForTie(
+            tie,
+            sourceIndex,
+            ties.length,
+            next,
+          ).targetIndex,
+      }),
+    )
+    .sort(
+      (
+        left,
+        right,
+      ) => {
+        if (
+          left.destination !==
+          right.destination
+        ) {
+          return (
+            left.destination -
+            right.destination
+          );
+        }
+
+        return (
+          left.sourceIndex -
+          right.sourceIndex
+        );
+      },
+    )
+    .map(
+      (item) =>
+        item.tie,
+    );
 }
 
 function orderByPreviousStage(
