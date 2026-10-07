@@ -53,6 +53,7 @@ type BracketConnection = {
   key: string;
   from: TiePosition;
   to: TiePosition;
+  confirmed: boolean;
 };
 
 const STAGES: StageDefinition[] = [
@@ -79,10 +80,10 @@ const STAGES: StageDefinition[] = [
 ];
 
 const CARD_WIDTH = 320;
-const CARD_HEIGHT = 168;
-const COLUMN_GAP = 96;
-const ROW_GAP = 36;
-const HEADER_HEIGHT = 64;
+const CARD_HEIGHT = 176;
+const COLUMN_GAP = 132;
+const ROW_GAP = 52;
+const HEADER_HEIGHT = 72;
 const CHAMPION_WIDTH = 220;
 
 export function buildKnockoutStages(
@@ -260,22 +261,67 @@ export function KnockoutBracket({
                   ) /
                     2;
 
+                const path = [
+                  `M ${fromX} ${fromY}`,
+                  `H ${middleX}`,
+                  `V ${toY}`,
+                  `H ${toX}`,
+                ].join(" ");
+
                 return (
-                  <path
+                  <g
                     key={
                       connection.key
                     }
-                    d={[
-                      `M ${fromX} ${fromY}`,
-                      `H ${middleX}`,
-                      `V ${toY}`,
-                      `H ${toX}`,
-                    ].join(" ")}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    vectorEffect="non-scaling-stroke"
-                  />
+                  >
+                    <path
+                      d={path}
+                      fill="none"
+                      stroke="rgba(2, 6, 23, 0.72)"
+                      strokeWidth={
+                        connection.confirmed
+                          ? "7"
+                          : "5"
+                      }
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+
+                    <path
+                      d={path}
+                      className={
+                        connection.confirmed
+                          ? "text-cyan"
+                          : "text-white/30"
+                      }
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={
+                        connection.confirmed
+                          ? "3.5"
+                          : "2"
+                      }
+                      strokeDasharray={
+                        connection.confirmed
+                          ? undefined
+                          : "6 6"
+                      }
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+
+                    {connection.confirmed ? (
+                      <circle
+                        cx={toX}
+                        cy={toY}
+                        r="4.5"
+                        className="text-cyan"
+                        fill="currentColor"
+                      />
+                    ) : null}
+                  </g>
                 );
               },
             )}
@@ -482,9 +528,18 @@ function TieCard({
     )?.team.id ??
     null;
 
+  const hasWinner =
+    winner != null;
+
   return (
-    <article className="h-full overflow-hidden rounded-2xl border border-white/10 bg-white shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-500">
+    <article
+      className={`h-full overflow-hidden rounded-2xl bg-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] ${
+        hasWinner
+          ? "border-2 border-cyan/45"
+          : "border border-slate-200"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
         <span>
           {tie.matches.length > 1
             ? `${tie.matches.length} jogos`
@@ -493,10 +548,18 @@ function TieCard({
               )}
         </span>
 
-        <span>
-          {tie.complete
-            ? "Encerrado"
-            : "Em disputa"}
+        <span
+          className={
+            hasWinner
+              ? "font-black text-cyan-700"
+              : ""
+          }
+        >
+          {hasWinner
+            ? "Classificado definido"
+            : tie.complete
+              ? "Encerrado"
+              : "Em disputa"}
         </span>
       </div>
 
@@ -505,6 +568,11 @@ function TieCard({
         winner={
           winner ===
           first.team.id
+        }
+        eliminated={
+          hasWinner &&
+          winner !==
+            first.team.id
         }
       />
 
@@ -516,9 +584,14 @@ function TieCard({
           winner ===
           second.team.id
         }
+        eliminated={
+          hasWinner &&
+          winner !==
+            second.team.id
+        }
       />
 
-      <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500">
+      <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
         <span className="inline-flex items-center gap-1">
           <CalendarDays className="size-3" />
           {tie.matches.length > 1
@@ -546,16 +619,20 @@ function TieCard({
 function TeamRow({
   item,
   winner,
+  eliminated,
 }: {
   item: KnockoutTeam;
   winner: boolean;
+  eliminated: boolean;
 }) {
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-3 ${
+      className={`flex min-h-[54px] items-center gap-3 px-3 py-2.5 transition ${
         winner
-          ? "bg-cyan/10"
-          : "bg-white"
+          ? "bg-gradient-to-r from-cyan/22 via-cyan/10 to-white"
+          : eliminated
+            ? "bg-slate-50/80 opacity-55"
+            : "bg-white"
       }`}
     >
       <TeamMark
@@ -563,17 +640,31 @@ function TeamRow({
         size="sm"
       />
 
-      <span
-        className={`min-w-0 flex-1 truncate text-sm ${
-          winner
-            ? "font-black text-slate-950"
-            : "font-bold text-slate-700"
-        }`}
-      >
-        {item.team.name}
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block truncate text-sm ${
+            winner
+              ? "font-black text-slate-950"
+              : "font-bold text-slate-600"
+          }`}
+        >
+          {item.team.name}
+        </span>
+
+        {winner ? (
+          <span className="mt-0.5 inline-flex rounded-full bg-cyan px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-night">
+            Classificado
+          </span>
+        ) : null}
       </span>
 
-      <strong className="text-xl text-slate-950">
+      <strong
+        className={`min-w-10 rounded-lg px-2 py-1 text-center text-xl font-black ${
+          winner
+            ? "bg-slate-950 text-white shadow-sm"
+            : "text-slate-500"
+        }`}
+      >
         {item.score ??
           "—"}
       </strong>
@@ -694,8 +785,10 @@ function buildBracketPositions(
           tieIndex,
         ) => {
           const sources =
-            fallbackSourcePositions(
+            sourcePositionsForTie(
+              previousStage.ties,
               previousPositions,
+              tie,
               tieIndex,
               stage.ties.length,
             );
@@ -735,6 +828,76 @@ function buildBracketPositions(
   }
 
   return result;
+}
+
+function sourcePositionsForTie(
+  previousTies: KnockoutTie[],
+  previousPositions: TiePosition[],
+  targetTie: KnockoutTie,
+  targetIndex: number,
+  targetCount: number,
+) {
+  const exact =
+    previousTies
+      .map(
+        (
+          previousTie,
+          index,
+        ) =>
+          tiesShareTeam(
+            previousTie,
+            targetTie,
+          )
+            ? previousPositions[
+                index
+              ]
+            : null,
+      )
+      .filter(
+        (
+          position,
+        ): position is TiePosition =>
+          position != null,
+      );
+
+  if (exact.length >= 2) {
+    return exact;
+  }
+
+  const fallback =
+    fallbackSourcePositions(
+      previousPositions,
+      targetIndex,
+      targetCount,
+    );
+
+  if (!exact.length) {
+    return fallback;
+  }
+
+  const exactIndexes =
+    new Set(
+      exact.map(
+        (position) =>
+          position.tieIndex,
+      ),
+    );
+
+  return [
+    ...exact,
+    ...fallback.filter(
+      (position) =>
+        !exactIndexes.has(
+          position.tieIndex,
+        ),
+    ),
+  ].slice(
+    0,
+    Math.min(
+      2,
+      previousPositions.length,
+    ),
+  );
 }
 
 function fallbackSourcePositions(
@@ -801,14 +964,28 @@ function buildConnections(
         sourceTie,
         sourceIndex,
       ) => {
-        let targetIndex =
-          targetStage.ties.findIndex(
-            (targetTie) =>
-              tiesShareTeam(
-                sourceTie,
-                targetTie,
-              ),
+        const promotedTeamId =
+          advancedTeamId(
+            sourceTie,
+            targetStage,
           );
+
+        let targetIndex =
+          promotedTeamId
+            ? targetStage.ties.findIndex(
+                (targetTie) =>
+                  tieHasTeam(
+                    targetTie,
+                    promotedTeamId,
+                  ),
+              )
+            : targetStage.ties.findIndex(
+                (targetTie) =>
+                  tiesShareTeam(
+                    sourceTie,
+                    targetTie,
+                  ),
+              );
 
         if (
           targetIndex < 0
@@ -855,6 +1032,9 @@ function buildConnections(
             positions[
               stageIndex + 1
             ][targetIndex],
+          confirmed:
+            promotedTeamId !=
+            null,
         });
       },
     );
