@@ -1,13 +1,58 @@
 import { TeamMark } from "@/components/team-mark";
-import type { Standing } from "@/lib/types";
+import type {
+  CompetitionKey,
+  Standing,
+} from "@/lib/types";
+
+const KEY_META: Record<
+  CompetitionKey,
+  {
+    label: string;
+    rowClass: string;
+    badgeClass: string;
+    positionClass: string;
+  }
+> = {
+  GOLD: {
+    label: "Ouro",
+    rowClass:
+      "border-l-[3px] border-l-amber/80",
+    badgeClass:
+      "border-amber/30 bg-amber/10 text-amber",
+    positionClass:
+      "text-amber",
+  },
+  SILVER: {
+    label: "Prata",
+    rowClass:
+      "border-l-[3px] border-l-slate-300/70",
+    badgeClass:
+      "border-slate-300/25 bg-slate-300/10 text-slate-200",
+    positionClass:
+      "text-slate-300",
+  },
+  BRONZE: {
+    label: "Bronze",
+    rowClass:
+      "border-l-[3px] border-l-orange-400/80",
+    badgeClass:
+      "border-orange-400/30 bg-orange-400/10 text-orange-300",
+    positionClass:
+      "text-orange-300",
+  },
+};
 
 export function StandingsTable({
   standings,
   followedTeamId,
+  competitionKeyByTeamId,
   limit,
 }: {
   standings: Standing[];
   followedTeamId?: string | null;
+  competitionKeyByTeamId?: Partial<
+    Record<string, CompetitionKey>
+  >;
   limit?: number;
 }) {
   const rows =
@@ -47,6 +92,18 @@ export function StandingsTable({
           row.team.id ===
           followedTeamId;
 
+        const competitionKey =
+          competitionKeyByTeamId?.[
+            row.team.id
+          ];
+
+        const keyMeta =
+          competitionKey
+            ? KEY_META[
+                competitionKey
+              ]
+            : null;
+
         const topThree =
           row.position != null &&
           row.position <= 3;
@@ -65,13 +122,18 @@ export function StandingsTable({
               followed
                 ? "bg-cyan/8"
                 : ""
+            } ${
+              keyMeta?.rowClass ??
+              ""
             }`}
           >
             <span
               className={`text-sm font-black ${
-                topThree
-                  ? "text-cyan"
-                  : "text-muted"
+                keyMeta
+                  ? keyMeta.positionClass
+                  : topThree
+                    ? "text-cyan"
+                    : "text-muted"
               }`}
             >
               {valueOrDash(
@@ -85,9 +147,17 @@ export function StandingsTable({
                 size="sm"
               />
 
-              <span className="truncate text-sm font-bold text-ivory">
+              <span className="min-w-0 flex-1 truncate text-sm font-bold text-ivory">
                 {row.team.name}
               </span>
+
+              {keyMeta ? (
+                <span
+                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] ${keyMeta.badgeClass}`}
+                >
+                  {keyMeta.label}
+                </span>
+              ) : null}
             </span>
 
             <span className="text-center text-sm text-muted">

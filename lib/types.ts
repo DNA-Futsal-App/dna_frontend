@@ -63,6 +63,17 @@ export type Standing = {
   technicalIndex?: number | null;
 };
 
+export type CompetitionKey =
+  | "GOLD"
+  | "SILVER"
+  | "BRONZE";
+
+export type CompetitionKeyEntry = {
+  teamId: string;
+  teamName: string;
+  key: CompetitionKey;
+};
+
 export type TopScorer = {
   position: number;
 

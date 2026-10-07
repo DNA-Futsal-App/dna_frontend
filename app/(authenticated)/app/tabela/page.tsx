@@ -23,6 +23,8 @@ import { PageIntro } from "@/components/page-intro";
 import { useProfile } from "@/components/profile-context";
 import { StandingsTable } from "@/components/standings-table";
 import type {
+  CompetitionKey,
+  CompetitionKeyEntry,
   Match,
   MatchCalendar,
   Standing,
@@ -64,6 +66,13 @@ export default function StandingsPage() {
         )}`
       : "/api/matches";
 
+  const competitionKeysUrl =
+    activeEventId != null
+      ? `/api/standings/keys?eventId=${encodeURIComponent(
+          String(activeEventId),
+        )}`
+      : "/api/standings/keys";
+
   const {
     data,
     loading,
@@ -82,6 +91,15 @@ export default function StandingsPage() {
     matchesUrl,
   );
 
+  const {
+    data: competitionKeys,
+    loading: competitionKeysLoading,
+    error: competitionKeysError,
+    reload: reloadCompetitionKeys,
+  } = useApiData<CompetitionKeyEntry[]>(
+    competitionKeysUrl,
+  );
+
   const knockoutMatches =
     calendar
       ? [
@@ -91,13 +109,92 @@ export default function StandingsPage() {
         ]
       : [];
 
-  const stages =
-    buildKnockoutStages(
+  const competitionKeyByTeamId =
+    buildCompetitionKeyMap(
+      competitionKeys ?? [],
       knockoutMatches,
     );
 
+  const classifiedMatches =
+    knockoutMatches.map(
+      (match) => ({
+        match,
+        competitionKey:
+          competitionKeyForMatch(
+            match,
+            competitionKeyByTeamId,
+          ),
+      }),
+    );
+
+  const keyedBrackets =
+    COMPETITION_KEY_ORDER
+      .map(
+        (competitionKey) => ({
+          competitionKey,
+          stages:
+            buildKnockoutStages(
+              classifiedMatches
+                .filter(
+                  (item) =>
+                    item.competitionKey ===
+                    competitionKey,
+                )
+                .map(
+                  (item) =>
+                    item.match,
+                ),
+            ),
+        }),
+      )
+      .filter(
+        (item) =>
+          item.stages.length >
+          0,
+      );
+
+  const unassignedStages =
+    buildKnockoutStages(
+      classifiedMatches
+        .filter(
+          (item) =>
+            item.competitionKey ==
+            null,
+        )
+        .map(
+          (item) =>
+            item.match,
+        ),
+    );
+
+  const brackets =
+    keyedBrackets.length
+      ? [
+          ...keyedBrackets,
+          ...(unassignedStages.length
+            ? [
+                {
+                  competitionKey:
+                    null,
+                  stages:
+                    unassignedStages,
+                },
+              ]
+            : []),
+        ]
+      : unassignedStages.length
+        ? [
+            {
+              competitionKey:
+                null,
+              stages:
+                unassignedStages,
+            },
+          ]
+        : [];
+
   const hasKnockout =
-    stages.length > 0;
+    brackets.length > 0;
 
   const selectedView =
     tabState.eventId ===
@@ -181,19 +278,56 @@ export default function StandingsPage() {
 
       {selectedView ===
       "KNOCKOUT" ? (
-        matchesLoading ? (
+        matchesLoading ||
+        competitionKeysLoading ? (
           <LoadingCards count={4} />
-        ) : matchesError ? (
+        ) : matchesError ||
+          competitionKeysError ? (
           <ErrorState
-            message={matchesError}
-            onRetry={reloadMatches}
+            message={
+              matchesError ||
+              competitionKeysError
+            }
+            onRetry={() => {
+              void reloadMatches();
+              void reloadCompetitionKeys();
+            }}
           />
         ) : (
-          <KnockoutBracket
-            stages={stages}
-          />
+          <div className="grid gap-10">
+            {brackets.map(
+              (bracket) => (
+                <section
+                  key={
+                    bracket.competitionKey ??
+                    "UNASSIGNED"
+                  }
+                  className="grid gap-4"
+                >
+                  {bracket.competitionKey ? (
+                    <CompetitionKeyHeading
+                      competitionKey={
+                        bracket.competitionKey
+                      }
+                    />
+                  ) : keyedBrackets.length ? (
+                    <div className="w-fit rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-black text-muted">
+                      Outros confrontos
+                    </div>
+                  ) : null}
+
+                  <KnockoutBracket
+                    stages={
+                      bracket.stages
+                    }
+                  />
+                </section>
+              ),
+            )}
+          </div>
         )
-      ) : loading ? (
+      ) : loading ||
+        competitionKeysLoading ? (
         <LoadingCards count={5} />
       ) : error ? (
         <ErrorState
@@ -243,6 +377,10 @@ export default function StandingsPage() {
             </div>
           ) : null}
 
+          {competitionKeys?.length ? (
+            <CompetitionKeyLegend />
+          ) : null}
+
           <div className="grid gap-7">
             {groups.map(
               (group) => (
@@ -265,6 +403,9 @@ export default function StandingsPage() {
                       isExploring
                         ? undefined
                         : profile?.teamId
+                    }
+                    competitionKeyByTeamId={
+                      competitionKeyByTeamId
                     }
                   />
                 </section>
@@ -308,6 +449,209 @@ export default function StandingsPage() {
       )}
     </div>
   );
+}
+
+const COMPETITION_KEY_ORDER:
+  CompetitionKey[] = [
+    "GOLD",
+    "SILVER",
+    "BRONZE",
+  ];
+
+const COMPETITION_KEY_META: Record<
+  CompetitionKey,
+  {
+    label: string;
+    className: string;
+  }
+> = {
+  GOLD: {
+    label: "Chave Ouro",
+    className:
+      "border-amber/30 bg-amber/10 text-amber",
+  },
+  SILVER: {
+    label: "Chave Prata",
+    className:
+      "border-slate-300/25 bg-slate-300/10 text-slate-200",
+  },
+  BRONZE: {
+    label: "Chave Bronze",
+    className:
+      "border-orange-400/30 bg-orange-400/10 text-orange-300",
+  },
+};
+
+function CompetitionKeyLegend() {
+  return (
+    <div className="mb-5 flex flex-wrap gap-2">
+      {COMPETITION_KEY_ORDER.map(
+        (competitionKey) => {
+          const meta =
+            COMPETITION_KEY_META[
+              competitionKey
+            ];
+
+          return (
+            <span
+              key={
+                competitionKey
+              }
+              className={`rounded-full border px-3 py-1.5 text-xs font-black ${meta.className}`}
+            >
+              {meta.label}
+            </span>
+          );
+        },
+      )}
+    </div>
+  );
+}
+
+function CompetitionKeyHeading({
+  competitionKey,
+}: {
+  competitionKey: CompetitionKey;
+}) {
+  const meta =
+    COMPETITION_KEY_META[
+      competitionKey
+    ];
+
+  return (
+    <div
+      className={`inline-flex w-fit items-center rounded-full border px-4 py-2 text-sm font-black ${meta.className}`}
+    >
+      {meta.label}
+    </div>
+  );
+}
+
+function buildCompetitionKeyMap(
+  entries: CompetitionKeyEntry[],
+  matches: Match[],
+) {
+  const result:
+    Partial<
+      Record<
+        string,
+        CompetitionKey
+      >
+    > = {};
+
+  for (const entry of entries) {
+    result[
+      entry.teamId
+    ] = entry.key;
+  }
+
+  /*
+   * Complementa o mapa com o nome da fase do jogo quando a FPFS
+   * fornece a chave diretamente ali. Isso evita perder o segundo
+   * clube de tabelas que usam célula mesclada/rowspan para "Chave".
+   */
+  for (const match of matches) {
+    const key =
+      competitionKeyFromText(
+        match.phase,
+      );
+
+    if (!key) {
+      continue;
+    }
+
+    result[
+      match.homeTeam.id
+    ] = key;
+
+    result[
+      match.awayTeam.id
+    ] = key;
+  }
+
+  return result;
+}
+
+function competitionKeyForMatch(
+  match: Match,
+  keyByTeamId: Partial<
+    Record<
+      string,
+      CompetitionKey
+    >
+  >,
+): CompetitionKey | null {
+  const keyFromPhase =
+    competitionKeyFromText(
+      match.phase,
+    );
+
+  if (keyFromPhase) {
+    return keyFromPhase;
+  }
+
+  const homeKey =
+    keyByTeamId[
+      match.homeTeam.id
+    ];
+
+  const awayKey =
+    keyByTeamId[
+      match.awayTeam.id
+    ];
+
+  if (
+    homeKey &&
+    awayKey &&
+    homeKey === awayKey
+  ) {
+    return homeKey;
+  }
+
+  return (
+    homeKey ??
+    awayKey ??
+    null
+  );
+}
+
+function competitionKeyFromText(
+  value?: string | null,
+): CompetitionKey | null {
+  const normalized =
+    (value ?? "")
+      .normalize("NFD")
+      .replace(
+        /\p{M}/gu,
+        "",
+      )
+      .toLowerCase();
+
+  if (
+    normalized.includes(
+      "ouro",
+    )
+  ) {
+    return "GOLD";
+  }
+
+  if (
+    normalized.includes(
+      "prata",
+    )
+  ) {
+    return "SILVER";
+  }
+
+  if (
+    normalized.includes(
+      "bronze",
+    )
+  ) {
+    return "BRONZE";
+  }
+
+  return null;
 }
 
 function groupStandings(

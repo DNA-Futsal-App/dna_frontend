@@ -15,6 +15,8 @@ export function useApiData<T>(url: string) {
     useState("");
   const [loading, setLoading] =
     useState(true);
+  const [resolvedUrl, setResolvedUrl] =
+    useState<string | null>(null);
   const requestId =
     useRef(0);
 
@@ -61,6 +63,7 @@ export function useApiData<T>(url: string) {
         currentRequestId ===
         requestId.current
       ) {
+        setResolvedUrl(url);
         setLoading(false);
       }
     }
@@ -93,6 +96,7 @@ export function useApiData<T>(url: string) {
         );
       } finally {
         if (currentRequestId === requestId.current) {
+          setResolvedUrl(url);
           setLoading(false);
         }
       }
@@ -108,7 +112,9 @@ export function useApiData<T>(url: string) {
   return {
     data,
     error,
-    loading,
+    loading:
+      loading ||
+      resolvedUrl !== url,
     reload: load,
   };
 }

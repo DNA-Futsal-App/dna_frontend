@@ -2,6 +2,7 @@
 
 import {
   Compass,
+  LoaderCircle,
   RotateCcw,
   Search,
 } from "lucide-react";
@@ -89,7 +90,11 @@ export function useCompetitionBrowse() {
   );
 }
 
-export function CompetitionSearch() {
+export function CompetitionSearch({
+  loading = false,
+}: {
+  loading?: boolean;
+}) {
   const { profile } = useProfile();
   const {
     selection,
@@ -315,13 +320,30 @@ export function CompetitionSearch() {
           type="button"
           onClick={searchCompetition}
           disabled={
+            loading ||
             !divisionId ||
             !categoryId
           }
+          aria-busy={loading}
           className="btn-primary self-end"
         >
-          <Search className="size-4" />
-          Pesquisar
+          {loading ? (
+            <>
+              <LoaderCircle
+                className="size-4 animate-spin"
+                aria-hidden="true"
+              />
+              Carregando...
+            </>
+          ) : (
+            <>
+              <Search
+                className="size-4"
+                aria-hidden="true"
+              />
+              Pesquisar
+            </>
+          )}
         </button>
       </div>
 
