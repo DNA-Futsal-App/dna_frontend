@@ -80,12 +80,12 @@ const navigation: NavigationItem[] = [
     icon: Medal,
     mobile: true,
   },
-  {
-    href: "/app/noticias",
-    label: "Notícias",
-    icon: Newspaper,
-    mobile: false,
-  },
+  // {
+  //   href: "/app/noticias",
+  //   label: "Notícias",
+  //   icon: Newspaper,
+  //   mobile: false,
+  // },
   {
     href: "/app/premio/minha-inscricao",
     label: "Minha inscrição",
