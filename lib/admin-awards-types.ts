@@ -47,6 +47,7 @@ export type AdminAwardCandidate = {
   categoryId: number;
   teamId: string;
   teamName: string;
+  teamSourceName?: string | null;
   teamLogoUrl?: string | null;
   imageUrl?: string | null;
   active: boolean;
@@ -70,6 +71,7 @@ export type AdminAwardCoach = {
   coachName: string;
   teamId: string;
   teamName: string;
+  teamSourceName?: string | null;
   teamLogoUrl?: string | null;
   eventId: number;
   divisionId: number;
@@ -101,6 +103,7 @@ export type ImportAwardTeamResult = {
   categoryId: number;
   teamId: string;
   teamName: string;
+  teamSourceName?: string | null;
   athletesFound: number;
   coachesFound: number;
   created: number;
@@ -153,6 +156,7 @@ export type AdminAwardCandidateResult = {
   candidateName: string;
   teamId: string;
   teamName: string;
+  teamSourceName?: string | null;
   teamLogoUrl?: string | null;
   votes: number;
   percentage: number;
@@ -229,6 +233,7 @@ export type AdminAwardRegistration = {
   eventId: number;
   teamId: string;
   teamName: string;
+  teamSourceName?: string | null;
   submittedAt?: string | null;
   entries: AdminAwardRegistrationEntry[];
 };

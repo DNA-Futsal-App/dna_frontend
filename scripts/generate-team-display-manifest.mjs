@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { createLogoAssetIndex, findLocalLogos, imageUrl } from "./team-logo-assets.mjs";
 import path from "node:path";
 import zlib from "node:zlib";
 import crypto from "node:crypto";
@@ -356,7 +357,7 @@ function parseCellValue(body, type, strings) {
   return formulaValue(body);
 }
 
-function parseRows(entries, sheetPath, strings) {
+export function parseRows(entries, sheetPath, strings) {
   const xml = entries.get(sheetPath)?.toString("utf8") ?? "";
   const hyperlinks = sheetHyperlinks(entries, sheetPath, xml);
   const rows = [];
@@ -366,7 +367,7 @@ function parseRows(entries, sheetPath, strings) {
   while ((rowMatch = rowPattern.exec(xml))) {
     const rowNumber = Number.parseInt(/\br="(\d+)"/.exec(rowMatch[1])?.[1] ?? "0", 10);
     const cells = new Map();
-    const cellPattern = /<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+    const cellPattern = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cellMatch;
 
     while ((cellMatch = cellPattern.exec(rowMatch[2]))) {
@@ -375,10 +376,11 @@ function parseRows(entries, sheetPath, strings) {
       if (!reference) continue;
 
       const type = /\bt="([^"]+)"/.exec(attrs)?.[1] ?? "";
-      const value = parseCellValue(cellMatch[2], type, strings);
+      const body = cellMatch[2] ?? "";
+      const value = parseCellValue(body, type, strings);
       const formula =
         formulaValue(
-          cellMatch[2],
+          body,
         );
 
       cells.set(columnIndex(reference), {
@@ -434,84 +436,8 @@ function findHeader(rows) {
   return null;
 }
 
-async function walkFiles(directory) {
-  const result = [];
-  const entries = await fs.readdir(directory, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      result.push(...(await walkFiles(full)));
-    } else if (entry.isFile()) {
-      result.push(full);
-    }
-  }
-
-  return result;
-}
-
 function publicUrl(file) {
-  const relative = path.relative(publicRoot, file);
-  return `/${relative
-    .split(path.sep)
-    .map((segment) => encodeURIComponent(segment))
-    .join("/")}`;
-}
-
-async function createPublicAssetIndex() {
-  const files = await walkFiles(publicRoot);
-  const byBaseName = new Map();
-  const byRelative = new Map();
-
-  for (const file of files) {
-    const relative = path.relative(publicRoot, file).replaceAll(path.sep, "/");
-    byRelative.set(relative.toLowerCase(), file);
-
-    const base = path.basename(file).toLowerCase();
-    const matches = byBaseName.get(base) ?? [];
-    matches.push(file);
-    byBaseName.set(base, matches);
-  }
-
-  return { byBaseName, byRelative };
-}
-
-async function resolveLogo(rawValue, assetIndex) {
-  const raw = String(rawValue ?? "").trim();
-  if (!raw) return null;
-
-  if (/^https?:\/\//i.test(raw)) {
-    return raw;
-  }
-
-  if (raw.startsWith("/") && !raw.startsWith("//")) {
-    return raw;
-  }
-
-  const normalizedRelative = raw
-    .replace(/^public[\\/]/i, "")
-    .replaceAll("\\", "/")
-    .replace(/^\.\//, "");
-
-  const direct = assetIndex.byRelative.get(normalizedRelative.toLowerCase());
-  if (direct) {
-    return publicUrl(direct);
-  }
-
-  const byName = assetIndex.byBaseName.get(path.posix.basename(normalizedRelative).toLowerCase()) ?? [];
-  if (byName.length === 1) {
-    return publicUrl(byName[0]);
-  }
-
-  if (byName.length > 1) {
-    console.warn(
-      `[team-display] Logo ambíguo "${raw}" (${byName.length} arquivos com o mesmo nome).`,
-    );
-  } else {
-    console.warn(`[team-display] Logo não encontrado em public: "${raw}".`);
-  }
-
-  return null;
+  return '/' + path.relative(publicRoot, file).split(path.sep).map(encodeURIComponent).join('/');
 }
 
 async function workbookEntries(file, assetIndex) {
@@ -529,6 +455,8 @@ async function workbookEntries(file, assetIndex) {
     if (!header) continue;
 
     const embeddedImages = sheetEmbeddedImages(entries, sheetPath);
+    const context = rows.filter(row => row.rowNumber < header.rowNumber)
+      .flatMap(row => [...row.cells.values()].map(cell => cell.value)).join(' ');
 
     for (const row of rows) {
       if (row.rowNumber <= header.rowNumber) continue;
@@ -539,11 +467,7 @@ async function workbookEntries(file, assetIndex) {
       const sourceName = sourceCell?.value?.trim() ?? "";
       const displayName = displayCell?.value?.trim() ?? "";
 
-      const logoRaw =
-        logoCell?.hyperlink ||
-        logoCell?.formula ||
-        logoCell?.value ||
-        "";
+      const references = [logoCell?.value, logoCell?.formula, logoCell?.hyperlink].filter(Boolean);
 
       if (!sourceName) continue;
 
@@ -563,18 +487,17 @@ async function workbookEntries(file, assetIndex) {
               )
             : null;
 
-      const logoUrl =
-        embeddedLogoUrl ??
-        (await resolveLogo(
-          logoRaw,
-          assetIndex,
-        ));
+      const localUrls = references.flatMap(reference => findLocalLogos(reference, assetIndex, context));
+      const remoteUrls = references.map(imageUrl).filter(Boolean);
+      const logoUrls = [...new Set([embeddedLogoUrl, ...localUrls, ...remoteUrls].filter(Boolean))];
+      const logoUrl = logoUrls[0] ?? null;
 
       result.push({
         key,
         sourceName,
         displayName: displayName || sourceName,
         logoUrl,
+        logoUrls,
       });
     }
   }
@@ -676,12 +599,6 @@ function mergeEntries(entries) {
       continue;
     }
 
-    if (current.logoUrl && entry.logoUrl && current.logoUrl !== entry.logoUrl) {
-      console.warn(
-        `[team-display] Mais de um logo para "${entry.sourceName}"; mantendo ${current.logoUrl}.`,
-      );
-    }
-
     merged.set(entry.key, {
       ...current,
       displayName:
@@ -690,6 +607,7 @@ function mergeEntries(entries) {
           entry,
         ),
       logoUrl: current.logoUrl ?? entry.logoUrl,
+      logoUrls: [...new Set([...current.logoUrls, ...entry.logoUrls])],
     });
   }
 
@@ -716,12 +634,7 @@ async function main() {
     );
   }
 
-  await fs.rm(generatedAssetsRoot, {
-    recursive: true,
-    force: true,
-  });
-
-  const assetIndex = await createPublicAssetIndex();
+  const assetIndex = await createLogoAssetIndex(publicRoot);
   const collected = [];
   const usedWorkbooks = [];
   const ignoredWorkbooks = [];
@@ -789,6 +702,27 @@ async function main() {
   }
 
   const teams = mergeEntries(collected);
+  const aliases = JSON.parse(await fs.readFile(path.join(root, 'lib', 'team-logo-aliases.json'), 'utf8'));
+  const unresolved = [];
+  for (const team of teams) {
+    const explicitAlias = aliases[team.sourceName];
+    const lookupNames = explicitAlias ? [explicitAlias] : [team.displayName, team.sourceName];
+    const inferredLocal = lookupNames.flatMap(name => findLocalLogos(name, assetIndex));
+    const local = team.logoUrls.filter(url => url.startsWith('/'));
+    const remote = team.logoUrls.filter(url => !url.startsWith('/'));
+    team.logoUrls = [...new Set([...local, ...inferredLocal, ...remote])];
+    team.logoUrl = team.logoUrls[0] ?? null;
+    if (!team.logoUrl) unresolved.push({ sourceName: team.sourceName, displayName: team.displayName });
+  }
+  const report = {
+    total: teams.length,
+    local: teams.filter(team => team.logoUrl?.startsWith('/')).length,
+    remoteOnly: teams.filter(team => team.logoUrl && !team.logoUrl.startsWith('/')).map(team => team.sourceName),
+    unresolved,
+  };
+  await fs.mkdir(path.dirname(runtimeOutput), { recursive: true });
+  await fs.writeFile(path.join(path.dirname(runtimeOutput), 'team-logo-report.json'), JSON.stringify(report, null, 2) + '\n');
+  console.log('[team-display] Escudos: ' + report.local + ' locais, ' + report.remoteOnly.length + ' somente remotos, ' + unresolved.length + ' pendentes.');
 
   if (!teams.length) {
     const ignoredDetails =
@@ -840,7 +774,7 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   console.error("[team-display] Falha ao gerar manifesto:", error);
   process.exitCode = 1;
 });

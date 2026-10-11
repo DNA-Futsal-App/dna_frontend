@@ -1,9 +1,9 @@
-/* eslint-disable */
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { Shield } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { resolveLocalTeamLogo } from "@/lib/team-logo-resolver";
+import { useState } from "react";
+import { resolveTeamLogoSources } from "@/lib/team-logo-resolver";
 import type { Team } from "@/lib/types";
 
 type Size = "xs" | "sm" | "md" | "lg";
@@ -42,63 +42,11 @@ export function TeamMark({ team, size = "md" }: Props) {
   const upstreamSrc = approvedLogo(
     team.logoUrl,
   );
-  const [localSrc, setLocalSrc] =
-    useState<string | null>(null);
-
-  const logoLookupName =
-    team.sourceName ??
-    team.name;
-
-  useEffect(() => {
-    let active = true;
-
-    setLocalSrc(null);
-
-    void resolveLocalTeamLogo(
-      logoLookupName,
-      team.shortName,
-    )
-      .then((resolved) => {
-        if (active) {
-          setLocalSrc(resolved);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setLocalSrc(null);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [
-    logoLookupName,
-    team.shortName,
-  ]);
-
-  const sources = useMemo(
-    () =>
-      [
-        ...new Set(
-          [
-            preferredSrc,
-            localSrc,
-            upstreamSrc,
-          ].filter(
-            (
-              value,
-            ): value is string =>
-              Boolean(value),
-          ),
-        ),
-      ],
-    [
-      preferredSrc,
-      localSrc,
-      upstreamSrc,
-    ],
-  );
+  const sources = [...new Set([
+    preferredSrc,
+    ...resolveTeamLogoSources(team.sourceName ?? team.name, team.shortName),
+    upstreamSrc,
+  ].map(approvedLogo).filter((value): value is string => Boolean(value)))];
 
   return (
     <BadgeImage

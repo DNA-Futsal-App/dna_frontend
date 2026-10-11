@@ -90,3 +90,16 @@ docs/                     identidade visual
 ```
 
 Consulte [docs/PALETA-DE-CORES.md](docs/PALETA-DE-CORES.md) para os tokens e as regras de uso da identidade.
+
+## Escudos dos times
+
+A planilha em `public/team-names.xlsx` é processada antes de `npm run dev` e `npm run build`. O navegador usa o manifesto compilado, sem buscar um JSON por escudo nem adivinhar o clube por trechos do nome.
+
+- A coluna LOGO pode conter o nome do arquivo, um caminho relativo a `public` ou uma URL. Células vazias são preservadas pelo leitor XLSX.
+- Arquivos locais têm prioridade sobre hyperlinks. Acentos, espaços, sublinhados e diferenças de extensão são normalizados; referências com pasta precisam corresponder àquela pasta. Cópias do mesmo nome são ordenadas pelo contexto da aba e mantidas como alternativas.
+- Links de visualização do Drive são convertidos para miniaturas, como último recurso; dependem do acesso público ao arquivo. Os 118 nomes atuais têm alternativa local, incluindo a imagem do Itaquá obtida pelo link da planilha.
+- Quando o nome do arquivo não corresponde ao nome do time, cadastre uma associação explícita em [team-logo-aliases.json](lib/team-logo-aliases.json). A planilha continua tendo prioridade. Não associe clubes apenas por palavras parecidas.
+- [team-logo-report.json](lib/generated/team-logo-report.json) informa cobertura local, times com apenas URL remota e pendências. Os avisos de nomes curtos conflitantes indicam diferenças editoriais entre abas; não são erros de carregamento de imagens.
+- O componente compartilhado tenta as alternativas e a URL da API antes do ícone genérico. Os selects continuam somente com texto.
+
+Após editar a planilha ou adicionar imagens, reinicie `npm run dev`; em produção, gere e publique um novo build. Para verificar leitura do Excel, associações, arquivos de imagem e renderização inicial, execute `npm run logos:test`.

@@ -1,5 +1,7 @@
 "use client";
 
+import { TeamMark } from "@/components/team-mark";
+
 import type {
   AdminAwardCandidate,
   AdminAwardCoach,
@@ -706,7 +708,8 @@ function PositionsSection({
           >
             <div>
               <strong className="text-sm text-ivory">{candidate.name}</strong>
-              <small className="mt-1 block text-xs text-muted">
+              <small className="mt-1 flex items-center gap-2 text-xs text-muted">
+                <TeamMark size="xs" team={{ id: candidate.teamId, name: candidate.teamName, sourceName: candidate.teamSourceName, logoUrl: candidate.teamLogoUrl }} />
                 {candidate.teamName}
               </small>
             </div>
@@ -1040,7 +1043,8 @@ function CoachesSection({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <strong className="text-ivory">{coach.coachName}</strong>
-                    <small className="mt-1 block text-xs text-muted">
+                    <small className="mt-1 flex items-center gap-2 text-xs text-muted">
+                      <TeamMark size="sm" team={{ id: coach.teamId, name: coach.teamName, sourceName: coach.teamSourceName, logoUrl: coach.teamLogoUrl }} />
                       {coach.teamName}
                     </small>
                     {coach.userEmail ? (
