@@ -4,14 +4,10 @@ import { TeamMark } from "@/components/team-mark";
 
 import type {
   AdminAwardCandidate,
-  AdminAwardCoach,
   AdminAwardEdition,
   AdminAwardOverview,
-  CoachAdminAccessState,
-  CreateCoachInviteResult,
   ImportAwardTeamResult,
   ResetAwardVotingResult,
-  SyncAwardCoachesResult,
 } from "@/lib/admin-awards-types";
 import {
   ClientApiError,
@@ -26,12 +22,10 @@ import type {
 import {
   BarChart3,
   Check,
-  Clipboard,
   ClipboardCheck,
   LoaderCircle,
   LockKeyhole,
   RefreshCw,
-  Send,
   ShieldCheck,
   Trophy,
   UserRoundCheck,
@@ -41,7 +35,7 @@ import {
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-type Tab = "overview" | "coaches" | "control";
+type Tab = "overview" | "control";
 
 const positions = [
   { value: "GOLEIRO", label: "Goleiro" },
@@ -50,24 +44,10 @@ const positions = [
   { value: "PIVO", label: "Pivô" },
 ] as const;
 
-const accessLabels: Record<CoachAdminAccessState, string> = {
-  NOT_INVITED: "Sem convite",
-  INVITED: "Convite enviado",
-  RESERVED: "Cadastro iniciado",
-  RESERVATION_EXPIRED: "Cadastro expirou",
-  REGISTERED: "Cadastrado",
-  VOTED: "Votou",
-  EXPIRED: "Convite expirado",
-  REVOKED: "Convite revogado",
-  CLAIMED: "Convite utilizado",
-  INACTIVE: "Inativo",
-};
-
 export default function AwardAdminPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
   const [editionId, setEditionId] = useState("");
   const [overview, setOverview] = useState<AdminAwardOverview | null>(null);
-  const [coaches, setCoaches] = useState<AdminAwardCoach[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -87,17 +67,11 @@ export default function AwardAdminPage() {
     if (!quiet) setRefreshing(true);
 
     try {
-      const [nextOverview, nextCoaches] = await Promise.all([
-        clientApi<AdminAwardOverview>(
-          `/api/admin/awards/editions/${targetEditionId}/overview`,
-        ),
-        clientApi<AdminAwardCoach[]>(
-          `/api/admin/awards/editions/${targetEditionId}/coaches`,
-        ),
-      ]);
+      const nextOverview = await clientApi<AdminAwardOverview>(
+        `/api/admin/awards/editions/${targetEditionId}/overview`,
+      );
 
       setOverview(nextOverview);
-      setCoaches(nextCoaches);
     } catch (err) {
       setError(
         err instanceof Error
@@ -199,7 +173,6 @@ export default function AwardAdminPage() {
 
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: "overview", label: "Visão geral" },
-    { id: "coaches", label: "Treinadores" },
     { id: "control", label: "Controle" },
   ];
 
@@ -216,11 +189,18 @@ export default function AwardAdminPage() {
               Prêmio DNA Futsal
             </h1>
             <p className="mt-2 text-sm text-muted">
-              Snapshot, convites, adesão dos treinadores e controle da votação.
+              Credenciamento do júri técnico, inscrições e controle da votação.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <Link
+              href="/app/admin/premio-dna/juri-tecnico"
+              className="btn-primary"
+            >
+              <UserRoundCheck className="size-4" />
+              Júri técnico
+            </Link>
             <Link
               href="/app/admin/premio-dna/candidaturas"
               className="btn-ghost"
@@ -305,19 +285,6 @@ export default function AwardAdminPage() {
         <OverviewSection overview={overview} />
       ) : null}
 
-      {tab === "coaches" ? (
-        <CoachesSection
-          key={selectedEdition.id}
-          edition={selectedEdition}
-          coaches={coaches}
-          onChanged={async () => {
-            await loadEditionData(editionId);
-          }}
-          setError={setError}
-          flash={flash}
-        />
-      ) : null}
-
       {tab === "control" ? (
         <div className="grid gap-6">
           <RegistrationControlSection
@@ -373,7 +340,6 @@ function OverviewSection({
     { label: "Treinadores cadastrados", value: overview.votersRegistered },
     { label: "Votos registrados", value: overview.ballotsSubmitted },
     { label: "Votos pendentes", value: overview.ballotsPending },
-    { label: "Sem convite", value: overview.coachesNotInvited },
   ];
 
   return (
@@ -394,31 +360,6 @@ function OverviewSection({
         ))}
       </div>
 
-      <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
-        <h2 className="text-lg font-black">Funil dos treinadores</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-5">
-          <FunnelItem label="Sem convite" value={overview.coachesNotInvited} />
-          <FunnelItem label="Convidados" value={overview.coachesInvited} />
-          <FunnelItem label="Em cadastro" value={overview.coachesReserved} />
-          <FunnelItem label="Cadastrados" value={overview.coachesRegistered} />
-          <FunnelItem label="Votaram" value={overview.coachesVoted} />
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function FunnelItem({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-2xl bg-night/40 px-4 py-4">
-      <strong className="text-2xl font-black text-cyan">{value}</strong>
-      <small className="mt-1 block text-xs font-bold text-muted">{label}</small>
     </div>
   );
 }
@@ -744,380 +685,6 @@ function PositionsSection({
   );
 }
 
-function CoachesSection({
-  edition,
-  coaches,
-  onChanged,
-  setError,
-  flash,
-}: {
-  edition: AdminAwardEdition;
-  coaches: AdminAwardCoach[];
-  onChanged: () => Promise<void>;
-  setError: (message: string) => void;
-  flash: (message: string) => void;
-}) {
-  const [busyId, setBusyId] = useState("");
-  const [generated, setGenerated] = useState<{
-    coachName: string;
-    url: string;
-    expiresAt: string;
-  } | null>(null);
-  const [divisions, setDivisions] = useState<CatalogItem[]>([]);
-  const [categories, setCategories] = useState<CatalogCategory[]>([]);
-  const [divisionId, setDivisionId] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [syncing, setSyncing] = useState(false);
-
-  const selectedCategory =
-    categories.find((item) => String(item.id) === categoryId) ?? null;
-
-  useEffect(() => {
-    clientApi<CatalogItem[]>(
-      `/api/catalog/divisions?season=${edition.season}`,
-    )
-      .then(setDivisions)
-      .catch(() => setDivisions([]));
-  }, [edition.id, edition.season]);
-
-  useEffect(() => {
-    if (!divisionId) return;
-
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?season=${edition.season}&divisionId=${encodeURIComponent(
-        divisionId,
-      )}`,
-    )
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, [divisionId, edition.season]);
-
-  async function syncCoaches(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!selectedCategory || !divisionId || edition.status !== "DRAFT") return;
-
-    setSyncing(true);
-    setError("");
-
-    try {
-      const result = await clientApi<SyncAwardCoachesResult>(
-        `/api/admin/awards/editions/${edition.id}/coaches/sync`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            eventId: selectedCategory.eventId,
-            divisionId: Number(divisionId),
-            categoryId: Number(selectedCategory.id),
-          }),
-        },
-      );
-
-      flash(
-        `${result.coachesFound} treinador(es) sincronizado(s) em ${result.teamsScanned} time(s).`,
-      );
-      await onChanged();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível sincronizar os treinadores.",
-      );
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  async function generate(coach: AdminAwardCoach) {
-    setBusyId(coach.candidateId);
-    setError("");
-
-    try {
-      const result = await clientApi<CreateCoachInviteResult>(
-        "/api/admin/awards/coach-invites",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            editionId: edition.id,
-            coachCandidateId: coach.candidateId,
-          }),
-        },
-      );
-
-      setGenerated({
-        coachName: coach.coachName,
-        url: result.inviteUrl,
-        expiresAt: result.expiresAt,
-      });
-
-      flash(`Convite de ${coach.coachName} gerado.`);
-      await onChanged();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível gerar o convite.",
-      );
-    } finally {
-      setBusyId("");
-    }
-  }
-
-  async function revoke(coach: AdminAwardCoach) {
-    if (!coach.inviteId) return;
-
-    const confirmed = window.confirm(
-      `Revogar o convite atual de ${coach.coachName}?`,
-    );
-
-    if (!confirmed) return;
-
-    setBusyId(coach.candidateId);
-    setError("");
-
-    try {
-      await clientApi(
-        `/api/admin/awards/coach-invites/${coach.inviteId}/revoke`,
-        { method: "POST" },
-      );
-      flash(`Convite de ${coach.coachName} revogado.`);
-      await onChanged();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Não foi possível revogar o convite.",
-      );
-    } finally {
-      setBusyId("");
-    }
-  }
-
-  async function copyLink() {
-    if (!generated) return;
-
-    try {
-      await navigator.clipboard.writeText(generated.url);
-      flash("Link copiado para a área de transferência.");
-    } catch {
-      setError(
-        "Não foi possível copiar automaticamente. Selecione o link e copie manualmente.",
-      );
-    }
-  }
-
-  return (
-    <div className="grid gap-5">
-      <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <Users className="mt-1 size-6 text-cyan" />
-          <div>
-            <h2 className="text-xl font-black">Sincronizar treinadores</h2>
-            <p className="mt-1 text-sm leading-relaxed text-muted">
-              Escolha a divisão e a categoria. O sistema percorre todos os times
-              desse campeonato e traz somente os técnicos principais para a lista
-              de convites. Atletas não precisam ser importados pelo administrador.
-            </p>
-          </div>git apply dna_frontend_remove_individual_invites_partial_results_v2.patch
-        </div>
-
-        {edition.status !== "DRAFT" ? (
-          <p className="mt-5 rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-sm text-muted">
-            A sincronização de treinadores fica bloqueada depois que a votação é aberta.
-          </p>
-        ) : (
-          <form
-            onSubmit={syncCoaches}
-            className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
-          >
-            <label className="grid gap-1.5 text-sm font-bold">
-              Divisão
-              <select
-                className="field"
-                value={divisionId}
-                onChange={(event) => {
-                  setDivisionId(event.target.value);
-                  setCategoryId("");
-                  setCategories([]);
-                }}
-                required
-              >
-                <option value="">Selecione</option>
-                {divisions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-1.5 text-sm font-bold">
-              Categoria
-              <select
-                className="field"
-                value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
-                disabled={!divisionId}
-                required
-              >
-                <option value="">Selecione</option>
-                {categories.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              className="btn-primary"
-              disabled={syncing || !selectedCategory}
-            >
-              {syncing ? (
-                <LoaderCircle className="size-5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-5" />
-              )}
-              {syncing ? "Sincronizando..." : "Sincronizar técnicos"}
-            </button>
-          </form>
-        )}
-      </section>
-
-      {generated ? (
-        <section className="rounded-3xl border border-cyan/20 bg-cyan/6 p-5">
-          <div className="flex items-center gap-2 text-cyan">
-            <Send className="size-5" />
-            <strong>Link gerado para {generated.coachName}</strong>
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-muted">
-            Copie agora. Por segurança o backend guarda somente o hash do token
-            e este endereço completo não poderá ser recuperado depois.
-          </p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <input
-              className="field min-w-0 flex-1"
-              readOnly
-              value={generated.url}
-              onFocus={(event) => event.currentTarget.select()}
-            />
-            <button type="button" className="btn-primary" onClick={copyLink}>
-              <Clipboard className="size-4" />
-              Copiar
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-muted">
-            Expira em{" "}
-            {formatDate(generated.expiresAt, {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
-          </p>
-        </section>
-      ) : null}
-
-      <section className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">
-        <h2 className="text-xl font-black">Treinadores e convites</h2>
-        <p className="mt-1 text-sm text-muted">
-          Acompanhe convite, cadastro e voto por treinador.
-        </p>
-
-        <div className="mt-5 grid gap-3">
-          {coaches.map((coach) => {
-            const canGenerate = [
-              "NOT_INVITED",
-              "EXPIRED",
-              "REVOKED",
-              "RESERVATION_EXPIRED",
-            ].includes(coach.accessState);
-
-            const canRevoke =
-              Boolean(coach.inviteId) &&
-              ["INVITED", "RESERVED"].includes(coach.accessState);
-
-            return (
-              <div
-                key={coach.candidateId}
-                className="rounded-2xl border border-white/7 bg-night/35 p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <strong className="text-ivory">{coach.coachName}</strong>
-                    <small className="mt-1 flex items-center gap-2 text-xs text-muted">
-                      <TeamMark size="sm" team={{ id: coach.teamId, name: coach.teamName, sourceName: coach.teamSourceName, logoUrl: coach.teamLogoUrl }} />
-                      {coach.teamName}
-                    </small>
-                    {coach.userEmail ? (
-                      <small className="mt-1 block text-xs text-cyan">
-                        {coach.userName ?? "Conta vinculada"} • {coach.userEmail}
-                      </small>
-                    ) : null}
-                  </div>
-
-                  <AccessBadge state={coach.accessState} />
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {canGenerate ? (
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => void generate(coach)}
-                      disabled={busyId === coach.candidateId}
-                    >
-                      {busyId === coach.candidateId ? (
-                        <LoaderCircle className="size-4 animate-spin" />
-                      ) : (
-                        <Send className="size-4" />
-                      )}
-                      Gerar convite
-                    </button>
-                  ) : null}
-
-                  {canRevoke ? (
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      onClick={() => void revoke(coach)}
-                      disabled={busyId === coach.candidateId}
-                    >
-                      <XCircle className="size-4" />
-                      Revogar
-                    </button>
-                  ) : null}
-
-                  {coach.accessState === "INVITED" ? (
-                    <span className="self-center text-xs text-muted">
-                      O link completo não é recuperável. Revogue e gere outro
-                      apenas se necessário.
-                    </span>
-                  ) : null}
-
-                  {coach.ballotSubmittedAt ? (
-                    <span className="self-center text-xs text-muted">
-                      Voto em{" "}
-                      {formatDate(coach.ballotSubmittedAt, {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-
-          {!coaches.length ? (
-            <p className="py-8 text-center text-sm text-muted">
-              Nenhum técnico sincronizado ainda.
-            </p>
-          ) : null}
-        </div>
-      </section>
-    </div>
-  );
-}
-
 function RegistrationControlSection({
   edition,
   onChanged,
@@ -1437,9 +1004,8 @@ function VotingControlSection({
               <h2 className="text-xl font-black">Abrir votação</h2>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              O backend abre a edição quando as categorias de voto estão configuradas
-              e os treinadores da divisão/categoria já foram sincronizados. Os atletas
-              são carregados automaticamente durante a votação.
+              Configure o período em que os treinadores credenciados poderão votar.
+              Os atletas são carregados automaticamente durante a votação.
             </p>
 
             <form onSubmit={open} className="mt-5 grid gap-4">
@@ -1481,7 +1047,7 @@ function VotingControlSection({
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">
               Os times e atletas são consultados do catálogo esportivo durante a
-              votação. Você ainda pode acompanhar convites, cadastros e votos.
+              votação. Você pode acompanhar os treinadores credenciados no Júri técnico e os votos na apuração.
             </p>
             <button
               type="button"
@@ -1559,18 +1125,6 @@ function StatusBadge({
   return (
     <span className="inline-flex items-center rounded-full border border-white/10 bg-panel px-3 py-1.5 text-xs font-black uppercase tracking-wider text-cyan">
       {label}
-    </span>
-  );
-}
-
-function AccessBadge({
-  state,
-}: {
-  state: CoachAdminAccessState;
-}) {
-  return (
-    <span className="rounded-full border border-white/10 bg-panel px-3 py-1.5 text-xs font-black text-muted">
-      {accessLabels[state]}
     </span>
   );
 }

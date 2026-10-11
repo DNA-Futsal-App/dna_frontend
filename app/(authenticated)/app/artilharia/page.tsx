@@ -2,8 +2,10 @@
 
 import {
   Crown,
+  LoaderCircle,
   Target,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   EmptyState,
@@ -22,26 +24,77 @@ import {
 
 import type { TopScorer } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
+import { clientApi } from "@/lib/client-api";
+
+const PAGE_SIZE = 10;
+// SportsController accepts limit values from 1 through 500.
+const MAX_LIMIT = 500;
 
 export default function TopScorersPage() {
   const { activeEventId } =
     useCompetitionBrowse();
 
-  const dataUrl =
-    activeEventId != null
-      ? `/api/top-scorers?eventId=${encodeURIComponent(
-          String(activeEventId),
-        )}`
-      : "/api/top-scorers";
+  return <TopScorers key={activeEventId ?? "profile"} eventId={activeEventId} />;
+}
+
+function TopScorers({ eventId }: { eventId: number | null }) {
+  const dataUrl = `/api/top-scorers?limit=${PAGE_SIZE}${
+    eventId != null ? `&eventId=${encodeURIComponent(String(eventId))}` : ""
+  }`;
 
   const {
-    data,
+    data: initialData,
     loading,
     error,
     reload,
   } = useApiData<TopScorer[]>(
     dataUrl,
   );
+
+  const [expandedData, setExpandedData] = useState<TopScorer[] | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState("");
+  const [exhausted, setExhausted] = useState(false);
+  const pendingRequest = useRef<AbortController | null>(null);
+  const data = expandedData ?? initialData;
+  const canLoadMore = !exhausted && limit < MAX_LIMIT && (data?.length ?? 0) >= limit;
+
+  useEffect(() => () => pendingRequest.current?.abort(), []);
+
+  async function loadMore() {
+    if (!data || !canLoadMore || pendingRequest.current) return;
+
+    const controller = new AbortController();
+    pendingRequest.current = controller;
+    const nextLimit = Math.min(limit + PAGE_SIZE, MAX_LIMIT);
+    const params = new URLSearchParams({ limit: String(nextLimit) });
+    if (eventId != null) params.set("eventId", String(eventId));
+
+    setLoadingMore(true);
+    setMoreError("");
+    try {
+      const result = await clientApi<TopScorer[]>(`/api/top-scorers?${params}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+
+      // Each response contains the complete top N, not the next page.
+      // Replace the snapshot to retain the backend's ranking without duplicates.
+      setExpandedData(result);
+      setLimit(nextLimit);
+      setExhausted(result.length < nextLimit);
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      setMoreError(err instanceof Error ? err.message : "Não foi possível carregar mais atletas.");
+    } finally {
+      if (!controller.signal.aborted) {
+        pendingRequest.current = null;
+        setLoadingMore(false);
+      }
+    }
+  }
 
   const leader = data?.[0];
 
@@ -129,9 +182,27 @@ export default function TopScorersPage() {
             </section>
           ) : null}
 
-          <TopScorerList
-            scorers={data}
-          />
+          <div id="top-scorers-list" aria-busy={loadingMore}>
+            <TopScorerList scorers={data} />
+          </div>
+
+          <div className="mt-5 flex flex-col items-center gap-3">
+            {moreError ? (
+              <p className="text-center text-sm text-coral" role="alert">{moreError}</p>
+            ) : null}
+            {canLoadMore ? (
+              <button
+                type="button"
+                className="btn-ghost w-full sm:w-auto"
+                onClick={() => void loadMore()}
+                disabled={loadingMore}
+                aria-controls="top-scorers-list"
+              >
+                {loadingMore ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
+                {loadingMore ? "Carregando..." : "Ver mais"}
+              </button>
+            ) : null}
+          </div>
         </>
       )}
     </div>
