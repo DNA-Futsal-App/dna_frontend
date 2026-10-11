@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "teams:display-manifest": "node scripts/generate-team-display-manifest.mjs",
     "logos:manifest": "node scripts/generate-team-logo-manifest.mjs",
-    "logos:test": "node --test scripts/team-logos.test.mjs scripts/auto-match-team-logos.test.mjs scripts/team-display.test.mjs"
+    "logos:test": "node --test scripts/team-logos.test.mjs scripts/auto-match-team-logos.test.mjs scripts/team-display.test.mjs",
+    "knockout:test": "node --test scripts/knockout-bracket.test.mjs"
   },
   "dependencies": {
     "lucide-react": "1.31.0",
