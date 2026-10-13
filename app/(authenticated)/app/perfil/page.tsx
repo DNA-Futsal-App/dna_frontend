@@ -2,14 +2,17 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
   KeyRound,
   LoaderCircle,
+  LogOut,
   Save,
   ShieldCheck,
   Trophy,
+  Trash2,
 } from "lucide-react";
 import { ErrorState, LoadingCards } from "@/components/feedback";
 import { PageIntro } from "@/components/page-intro";
@@ -17,8 +20,10 @@ import { clientApi } from "@/lib/client-api";
 import type { CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useProfile } from "@/components/profile-context";
 import { CatalogCategory } from "@/lib/types";
+import { AccountDeletionDialog } from "@/components/account-deletion-dialog";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const {
     profile,
     loading,
@@ -34,6 +39,9 @@ export default function ProfilePage() {
   const [teamId, setTeamId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [deletionOpen, setDeletionOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const selectedCategoryId = categoryId ?? profile?.categoryId ?? "";
@@ -114,6 +122,7 @@ export default function ProfilePage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (deleting || loggingOut || saving) return;
     setSaving(true);
     setMessage("");
     setFormError("");
@@ -163,7 +172,7 @@ export default function ProfilePage() {
   }
 
   async function requestPasswordReset() {
-    if (!profile) return;
+    if (!profile || deleting || loggingOut || resetting) return;
     setResetting(true);
     setMessage("");
     setFormError("");
@@ -181,6 +190,17 @@ export default function ProfilePage() {
       );
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function logout() {
+    if (deleting || loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await clientApi<void>("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.replace("/entrar");
+      router.refresh();
     }
   }
 
@@ -383,7 +403,7 @@ export default function ProfilePage() {
           ) : null}
           <button
             className="btn-primary mt-5 w-full sm:w-auto"
-            disabled={saving}
+            disabled={saving || deleting || loggingOut}
           >
             {saving ? (
               <LoaderCircle className="size-5 animate-spin" />
@@ -418,7 +438,7 @@ export default function ProfilePage() {
               type="button"
               className="btn-secondary mt-4 w-full min-h-10! py-2! text-sm"
               onClick={requestPasswordReset}
-              disabled={resetting}
+              disabled={resetting || deleting || loggingOut}
             >
               {resetting ? (
                 <LoaderCircle className="size-4 animate-spin" />
@@ -426,8 +446,44 @@ export default function ProfilePage() {
               {resetting ? "Solicitando..." : "Enviar link por e-mail"}
             </button>
           </section>
+          <section className="surface rounded-2xl p-5">
+            <span className="inline-flex size-11 items-center justify-center rounded-xl bg-coral/10 text-coral">
+              <LogOut className="size-5" />
+            </span>
+            <h2 className="mt-4 font-black text-ivory">Encerrar sessão</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Saia da sua conta neste dispositivo.
+            </p>
+            <button
+              type="button"
+              className="btn-secondary mt-4 w-full min-h-10! py-2! text-sm"
+              onClick={logout}
+              disabled={loggingOut || deleting || saving || resetting}
+            >
+              {loggingOut ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <LogOut className="size-4" />
+              )}
+              {loggingOut ? "Saindo..." : "Sair da conta"}
+            </button>
+          </section>
+          <section className="surface rounded-2xl border border-coral/20 p-5">
+            <span className="inline-flex size-11 items-center justify-center rounded-xl bg-coral/10 text-coral">
+              <Trash2 className="size-5" aria-hidden="true" />
+            </span>
+            <h2 className="mt-4 font-black text-ivory">Excluir conta</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Agende a exclusão da sua conta. Seu acesso será bloqueado imediatamente e você terá 10 dias para cancelar.
+            </p>
+            <button type="button" className="btn-secondary mt-4 w-full min-h-10! border-coral/30! py-2! text-sm text-coral!"
+              disabled={saving || resetting || loggingOut || deleting} onClick={() => setDeletionOpen(true)}>
+              Excluir minha conta
+            </button>
+          </section>
         </aside>
       </div>
+      {deletionOpen && <AccountDeletionDialog onDismiss={() => setDeletionOpen(false)} onBusyChange={setDeleting} />}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { applyTeamDisplayOverrides } from "@/lib/team-display";
 import type { ApiProblem } from "@/lib/types";
+import { isSessionEnding, sessionRevision } from "@/lib/session-transition";
 
 export class ClientApiError extends Error {
   constructor(
@@ -26,6 +27,11 @@ export async function clientApi<T>(
   }
 
   const headers = new Headers(init?.headers);
+  const authRequest = url.startsWith("/api/auth/");
+  const revision = sessionRevision();
+  if (!authRequest && isSessionEnding()) {
+    throw new DOMException("Sessão sendo encerrada.", "AbortError");
+  }
 
   headers.set(
     "Accept",
@@ -46,10 +52,18 @@ export async function clientApi<T>(
     credentials: "same-origin",
   });
 
+  if (!authRequest && (isSessionEnding() || revision !== sessionRevision())) {
+    throw new DOMException("Solicitação anterior ao encerramento da sessão.", "AbortError");
+  }
+
   const data =
     response.status === 204
       ? null
       : await response.json().catch(() => null);
+
+  if (!authRequest && (isSessionEnding() || revision !== sessionRevision())) {
+    throw new DOMException("Solicitação anterior ao encerramento da sessão.", "AbortError");
+  }
 
   if (!response.ok) {
     const problem = (data ?? {}) as ApiProblem;

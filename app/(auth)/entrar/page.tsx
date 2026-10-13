@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { clientApi } from "@/lib/client-api";
+import { clientApi, ClientApiError } from "@/lib/client-api";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { clearDeletionNotice } from "@/lib/account-deletion";
 import type { CoachInviteInfo } from "@/lib/awards-types";
 
 export default function LoginPage() {
@@ -22,6 +24,11 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [inviteChecked, setInviteChecked] = useState(false);
   const [pendingCoachInvite, setPendingCoachInvite] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const pendingCredentials = useRef<{ login: string; password: string } | null>(null);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const submitting = useRef(false);
   const [error, setError] = useState(
     params.get("expired")
       ? "Sua sessão expirou. Entre novamente para continuar."
@@ -49,20 +56,28 @@ function LoginForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await login({ login: String(form.get("login") ?? ""), password: String(form.get("password") ?? "") });
+  }
+
+  async function login(credentials: { login: string; password: string }, confirmAccountDeletionCancellation = false) {
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError("");
-
-    const form = new FormData(event.currentTarget);
-
+    setNotice("");
     try {
       await clientApi("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({
-          login: form.get("login"),
-          password: form.get("password"),
-        }),
+        body: JSON.stringify({ ...credentials, confirmAccountDeletionCancellation }),
       });
-
+      pendingCredentials.current = null;
+      clearDeletionNotice();
+      // A confirmação de reativação leva à página inicial, conforme o fluxo da conta.
+      if (confirmAccountDeletionCancellation) {
+        window.location.replace("/app");
+        return;
+      }
       if (pendingCoachInvite) {
         await clientApi("/api/awards/coach-invite/claim", {
           method: "POST",
@@ -74,13 +89,38 @@ function LoginForm() {
 
       window.location.replace("/app");
     } catch (err) {
+      if (err instanceof ClientApiError && err.status === 403
+        && err.problem?.code === "ACCOUNT_PENDING_DELETION" && !confirmAccountDeletionCancellation) {
+        pendingCredentials.current = credentials;
+        if (passwordInput.current) passwordInput.current.value = "";
+        setConfirmationOpen(true);
+        return;
+      }
+      pendingCredentials.current = null;
+      setConfirmationOpen(false);
+      if (passwordInput.current) passwordInput.current.value = "";
+      if (err instanceof ClientApiError && err.problem?.code === "ACCOUNT_DELETION_CANCELLED_LOGIN_REQUIRED") {
+        clearDeletionNotice();
+      }
       setError(
-        err instanceof Error
+        confirmAccountDeletionCancellation && (!(err instanceof ClientApiError) || err.problem?.code === "BACKEND_UNAVAILABLE")
+          ? "Não foi possível confirmar o resultado. Tente entrar novamente; se a exclusão ainda estiver agendada, pediremos sua confirmação."
+          : err instanceof Error
           ? err.message
           : "Não foi possível entrar na sua conta.",
       );
+    } finally {
+      submitting.current = false;
       setLoading(false);
     }
+  }
+
+  function declineCancellation() {
+    if (submitting.current) return;
+    pendingCredentials.current = null;
+    setConfirmationOpen(false);
+    setError("");
+    setNotice("Você não confirmou o cancelamento. A exclusão continua agendada.");
   }
 
   return (
@@ -95,6 +135,8 @@ function LoginForm() {
           <input
             className="field"
             name="login"
+            maxLength={254}
+            disabled={loading || confirmationOpen}
             autoComplete="username"
             inputMode="email"
             required
@@ -105,11 +147,14 @@ function LoginForm() {
           Senha
           <span className="relative">
             <input
+              ref={passwordInput}
               className="field pr-12"
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
+              maxLength={72}
+              disabled={loading || confirmationOpen}
               placeholder="Sua senha"
             />
             <button
@@ -142,7 +187,8 @@ function LoginForm() {
             {error}
           </p>
         ) : null}
-        <button className="btn-primary mt-1 w-full" disabled={loading || !inviteChecked}>
+        {notice && <p role="status" className="rounded-xl bg-amber/10 p-3 text-sm text-amber">{notice}</p>}
+        <button className="btn-primary mt-1 w-full" disabled={loading || confirmationOpen || !inviteChecked}>
           {loading ? (
             <LoaderCircle className="size-5 animate-spin" />
           ) : (
@@ -151,6 +197,26 @@ function LoginForm() {
           {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
+      {confirmationOpen && (
+        <ConfirmationDialog titleId="cancel-deletion-title" descriptionId="cancel-deletion-description" busy={loading} onDismiss={declineCancellation}>
+          <h2 id="cancel-deletion-title" className="display-title text-2xl font-black">Cancelar a exclusão e entrar?</h2>
+          <p id="cancel-deletion-description" className="mt-3 text-sm leading-relaxed text-muted">
+            Sua conta tem uma exclusão agendada e ainda está dentro do prazo de 10 dias. Ao continuar, a exclusão será cancelada e você irá para a página inicial. Deseja continuar?
+          </p>
+          {loading && <p role="status" className="mt-4 text-sm text-muted">Cancelando a exclusão e entrando...</p>}
+          <div className="mt-6 flex flex-col gap-3">
+            <button type="button" className="btn-primary" disabled={loading} onClick={() => {
+              if (pendingCredentials.current) void login(pendingCredentials.current, true);
+            }}>
+              {loading && <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />}
+              {loading ? "Entrando..." : "Sim, cancelar exclusão e entrar"}
+            </button>
+            <button data-dialog-cancel type="button" className="btn-secondary" disabled={loading} onClick={declineCancellation}>
+              Não, manter exclusão e voltar
+            </button>
+          </div>
+        </ConfirmationDialog>
+      )}
       <p className="mt-6 text-center text-sm text-muted">
         Ainda não faz parte?{" "}
         <Link

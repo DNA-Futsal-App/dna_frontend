@@ -25,6 +25,7 @@ import {
 import type { TopScorer } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
 import { clientApi } from "@/lib/client-api";
+import { hasKnockoutScorers, topScorersUrl, type ScorerScope } from "@/lib/top-scorers-query";
 
 const PAGE_SIZE = 10;
 // SportsController accepts limit values from 1 through 500.
@@ -38,9 +39,65 @@ export default function TopScorersPage() {
 }
 
 function TopScorers({ eventId }: { eventId: number | null }) {
-  const dataUrl = `/api/top-scorers?limit=${PAGE_SIZE}${
-    eventId != null ? `&eventId=${encodeURIComponent(String(eventId))}` : ""
-  }`;
+  const [scope, setScope] = useState<ScorerScope>("general");
+  const { data: knockoutScorers, error: phasesError, loading: checkingPhases, reload: checkPhases } =
+    useApiData<TopScorer[]>(topScorersUrl(eventId, "knockout", 1));
+  const hasKnockout = hasKnockoutScorers(knockoutScorers);
+
+  return (
+    <div>
+      <PageIntro
+        eyebrow="Quem decide"
+        title="Artilharia"
+        description="Os goleadores da categoria, atualizados após a conclusão de cada jogo."
+      />
+      <CompetitionSearch />
+
+      {hasKnockout ? (
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className="inline-flex rounded-full border border-white/10 bg-ink/35 p-1" role="group" aria-label="Recorte da artilharia">
+            {([
+              { value: "general", label: "Geral" },
+              { value: "knockout", label: "Mata-mata" },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={scope === option.value}
+                aria-controls="scorer-ranking"
+                onClick={() => setScope(option.value)}
+                className={`min-h-10 rounded-full px-4 py-2 text-sm font-black transition ${
+                  scope === option.value ? "bg-cyan text-ink" : "text-muted hover:text-ivory"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted">
+            {scope === "knockout" ? "Gols registrados no mata-mata." : "Classificação geral de artilharia."}
+          </p>
+        </div>
+      ) : null}
+
+      {phasesError ? (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted" role="status">
+          Não foi possível verificar a artilharia do mata-mata.
+          <button type="button" className="font-bold text-cyan hover:underline" disabled={checkingPhases} onClick={checkPhases}>
+            Tentar novamente
+          </button>
+        </div>
+      ) : null}
+
+      <div id="scorer-ranking">
+        <ScorerRanking key={scope} eventId={eventId} scope={scope} />
+      </div>
+    </div>
+  );
+}
+
+function ScorerRanking({ eventId, scope }: { eventId: number | null; scope: ScorerScope }) {
+  const dataUrl = topScorersUrl(eventId, scope, PAGE_SIZE);
 
   const {
     data: initialData,
@@ -68,13 +125,11 @@ function TopScorers({ eventId }: { eventId: number | null }) {
     const controller = new AbortController();
     pendingRequest.current = controller;
     const nextLimit = Math.min(limit + PAGE_SIZE, MAX_LIMIT);
-    const params = new URLSearchParams({ limit: String(nextLimit) });
-    if (eventId != null) params.set("eventId", String(eventId));
 
     setLoadingMore(true);
     setMoreError("");
     try {
-      const result = await clientApi<TopScorer[]>(`/api/top-scorers?${params}`, {
+      const result = await clientApi<TopScorer[]>(topScorersUrl(eventId, scope, nextLimit), {
         cache: "no-store",
         signal: controller.signal,
       });
@@ -107,16 +162,6 @@ function TopScorers({ eventId }: { eventId: number | null }) {
 
   return (
     <div>
-      <PageIntro
-        eyebrow="Quem decide"
-        title="Artilharia"
-        description="Os goleadores da categoria, atualizados após a conclusão de cada jogo."
-      />
-
-      <CompetitionSearch
-        loading={loading}
-      />
-
       {loading ? (
         <LoadingCards count={5} />
       ) : error ? (
@@ -126,8 +171,8 @@ function TopScorers({ eventId }: { eventId: number | null }) {
         />
       ) : !data?.length ? (
         <EmptyState
-          title="Artilharia ainda vazia"
-          description="Os atletas aparecerão aqui assim que os primeiros gols forem registrados."
+          title={scope === "knockout" ? "Artilharia do mata-mata ainda vazia" : "Artilharia geral ainda vazia"}
+          description="Os atletas aparecerão aqui assim que os primeiros gols deste recorte forem registrados."
         />
       ) : (
         <>
@@ -136,7 +181,7 @@ function TopScorers({ eventId }: { eventId: number | null }) {
               <Crown className="absolute -right-4 -top-5 size-32 rotate-12 text-amber/6" />
 
               <p className="eyebrow !text-amber">
-                Líder da artilharia
+                {scope === "knockout" ? "Líder da artilharia do mata-mata" : "Líder da artilharia geral"}
               </p>
 
               <div className="relative mt-5 flex items-center gap-4">
@@ -176,8 +221,8 @@ function TopScorers({ eventId }: { eventId: number | null }) {
               <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-ink/35 px-3 py-2 text-xs font-bold text-muted">
                 <Target className="size-4 text-coral" />
 
-                {leader.goals ?? 0} gols
-                registrados na competição
+                {leader.goals ?? 0} gols{" "}
+                {scope === "knockout" ? "registrados no mata-mata" : "registrados na classificação geral"}
               </div>
             </section>
           ) : null}
