@@ -25,15 +25,24 @@ const TEAM_OBJECT_KEYS = new Set([
 const manifest =
   teamDisplayManifest as TeamDisplayManifest;
 
-const entriesByName =
-  new Map(
-    manifest.teams.map(
-      (entry) => [
-        entry.key,
-        entry,
-      ],
-    ),
-  );
+const entriesByName = new Map(
+  manifest.teams.map((entry) => [entry.key, entry]),
+);
+
+// Algumas células SITE FPFS incluem nomes alternativos separados por "|".
+// Um alias só é usado quando aponta para um único time.
+const aliasCandidates = new Map<string, TeamDisplayEntry | null>();
+for (const entry of manifest.teams) {
+  for (const alias of entry.sourceName.split("|")) {
+    const key = normalizeTeamName(alias);
+    if (!key || key === entry.key || entriesByName.has(key)) continue;
+    const previous = aliasCandidates.get(key);
+    aliasCandidates.set(key, previous === undefined || previous === entry ? entry : null);
+  }
+}
+for (const [key, entry] of aliasCandidates) {
+  if (entry) entriesByName.set(key, entry);
+}
 
 function normalizeTeamName(
   value?: string | null,

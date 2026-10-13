@@ -45,6 +45,7 @@ const GENERIC_WORDS = new Set([
 ]);
 
 let manifestPromise: Promise<TeamLogoManifest> | null = null;
+let manifestLoadedAt = 0;
 
 function normalizeWords(value?: string | null) {
   return (value ?? "")
@@ -121,9 +122,11 @@ function scoreLogoKey(logoKey: string, candidates: string[]) {
 }
 
 async function loadManifest(): Promise<TeamLogoManifest> {
-  if (!manifestPromise) {
+  const dev = process.env.NODE_ENV === "development";
+  if (!manifestPromise || (dev && Date.now() - manifestLoadedAt > 2_000)) {
+    manifestLoadedAt = Date.now();
     manifestPromise = fetch("/team-logo-manifest.json", {
-      cache: "force-cache",
+      cache: dev ? "no-store" : "force-cache",
     }).then(async (response) => {
       if (!response.ok) {
         throw new Error(
@@ -138,6 +141,9 @@ async function loadManifest(): Promise<TeamLogoManifest> {
       }
 
       return manifest;
+    }).catch((error) => {
+      manifestPromise = null;
+      throw error;
     });
   }
 
