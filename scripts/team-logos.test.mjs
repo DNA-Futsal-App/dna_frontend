@@ -35,7 +35,7 @@ test('Image preparation, catalog contract and mapping validation', async t => {
       assert.equal(inventory.length, 1);
       assert.equal(inventory[0].sources.length, 2);
       assetFile = path.join(root, 'public', inventory[0].logoPath.slice(1));
-      const meta = await sharp(assetFile).metadata();
+      const meta = await sharp(await fs.readFile(assetFile)).metadata();
       assert.equal(meta.width, 192);
       assert.equal(meta.height, 96);
       assert.equal(meta.hasAlpha, true);

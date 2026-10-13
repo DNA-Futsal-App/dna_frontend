@@ -6,6 +6,7 @@ type TeamDisplayEntry = {
   sourceName: string;
   displayName: string;
   logoUrl?: string | null;
+  logoUrls?: string[];
 };
 
 type TeamDisplayManifest = {
@@ -58,6 +59,20 @@ function normalizeTeamName(
       "",
     )
     .trim();
+}
+
+// Short names are accepted only when all entries agree on the club's primary logo.
+const entriesByDisplayName = new Map<string, TeamDisplayEntry | null>();
+for (const entry of manifest.teams) {
+  const key = normalizeTeamName(entry.displayName);
+  const previous = entriesByDisplayName.get(key);
+  entriesByDisplayName.set(key, previous === undefined ? entry
+    : previous && previous.logoUrl === entry.logoUrl ? previous : null);
+}
+
+export function getTeamDisplayEntry(name?: string | null): TeamDisplayEntry | null {
+  const key = normalizeTeamName(name);
+  return entriesByName.get(key) ?? entriesByDisplayName.get(key) ?? null;
 }
 
 function isRecord(
@@ -164,11 +179,7 @@ function transformValue(
           );
 
     const entry =
-      entriesByName.get(
-        normalizeTeamName(
-          sourceName,
-        ),
-      );
+      getTeamDisplayEntry(sourceName);
 
     if (entry) {
       transformed.sourceName =
@@ -211,17 +222,15 @@ function transformValue(
       continue;
     }
 
-    const entry =
-      entriesByName.get(
-        normalizeTeamName(
-          item,
-        ),
-      );
+    const sourceKey = key.replace(/Name$/i, 'SourceName');
+    const sourceName = typeof value[sourceKey] === 'string' ? String(value[sourceKey]) : item;
+    const entry = getTeamDisplayEntry(sourceName);
 
     if (!entry) {
       continue;
     }
 
+    transformed[sourceKey] = sourceName;
     transformed[key] =
       entry.displayName ||
       item;

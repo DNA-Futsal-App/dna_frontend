@@ -1,8 +1,6 @@
-type TeamLogoEntry = {
-  key: string;
-  path: string;
-};
+import { getTeamDisplayEntry } from '@/lib/team-display';
 
+<<<<<<< HEAD
 type TeamLogoManifest = {
   version: 1;
   logos: TeamLogoEntry[];
@@ -188,4 +186,11 @@ export async function resolveLocalTeamLogo(
   }
 
   return best.path;
+=======
+/** Resolved at build time: no per-badge fetch, fuzzy guessing or stale manifest cache. */
+export function resolveTeamLogoSources(name: string, shortName?: string | null): string[] {
+  const entry = getTeamDisplayEntry(name) ?? getTeamDisplayEntry(shortName);
+  if (!entry) return [];
+  return entry.logoUrls?.length ? entry.logoUrls : entry.logoUrl ? [entry.logoUrl] : [];
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 }

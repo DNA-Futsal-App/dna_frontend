@@ -52,709 +52,1627 @@
       "key": "aawimproguarulhos",
       "sourceName": "AA WIMPRO GUARULHOS",
       "displayName": "WIMPRO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Wimpro.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Wimpro.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Wimpro.png",
+        "/logos_times/BASE/A2/wimpro.png",
+        "https://drive.google.com/thumbnail?id=1fvGYRwpj-gY9wCQ16bRGI3J6uGFzItuS&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "abesccacapava",
       "sourceName": "ABESC/CAÇAPAVA",
       "displayName": "ADESC",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Abesc.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Abesc.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Abesc.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "acissaastrosfutsal",
       "sourceName": "ACISSA ASTROS FUTSAL",
       "displayName": "ASTROS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/4%20Astros.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/4%20Astros.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/4%20Astros.jpg",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/4%20Astros.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "actbolanopesaovicente",
       "sourceName": "A.C.T. BOLA NO PÉ SÃO VICENTE",
       "displayName": "BOLA NO PÉ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adbatebola",
       "sourceName": "A.D. BATEBOLA",
       "displayName": "BATEBOLA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/batebola.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/batebola.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/batebola.png",
+        "https://drive.google.com/thumbnail?id=1A1qqC3Dc8ziC6bsGkmEx29bQ8BUWONWb&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adcintermogi",
       "sourceName": "A.D.C. INTER MOGI",
       "displayName": "INTER MOGI",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/intermogi.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/intermogi.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/intermogi.png",
+        "https://drive.google.com/thumbnail?id=1bFVKAOH_aI66CmSJNwnJdH5ZHWAUgnbB&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adcmarvel",
       "sourceName": "ADC MARVEL",
       "displayName": "MARVEL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Marvel.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Marvel.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Marvel.png",
+        "https://drive.google.com/thumbnail?id=1FxibUHZsu7md2oWFm6-LjRwL05x5kCJp&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adcmercedesbenz",
       "sourceName": "ADC MERCEDES BENZ",
       "displayName": "MERCEDES",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Mercedes.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Mercedes.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Mercedes.png",
+        "https://drive.google.com/thumbnail?id=1EIyC0KV5soFwoZobvXbaWzIL8cohCFT9&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adcsaobernardofutsal",
       "sourceName": "ADC SÃO BERNARDO FUTSAL",
       "displayName": "SÃO BERNARDO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/adsaobernardo.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/adsaobernardo.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/adsaobernardo.png",
+        "https://drive.google.com/thumbnail?id=1qb9hrKe9kgELnF9kznOaFly5-9--M2vv&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adefcotia",
       "sourceName": "ADEF/COTIA",
       "displayName": "ADEF",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/ADEF.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/ADEF.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/ADEF.png",
+        "https://drive.google.com/thumbnail?id=1xi1yjXESh_YEfMwt4XQ5bneNeNxx6r5O&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adgalata",
       "sourceName": "A.D. GALATA",
       "displayName": "GALATA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/16%20Galata.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/16%20Galata.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/16%20Galata.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adindaiatuba",
       "sourceName": "A.D. INDAIATUBA",
       "displayName": "AD INDAIATUBA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/AD_Indaiatuba.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/AD_Indaiatuba.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/AD_Indaiatuba.png",
+        "https://drive.google.com/thumbnail?id=1CosO2sewrZ85RIZl1LknujOGzbo4Hveb&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "adsuzano",
       "sourceName": "A.D. SUZANO",
       "displayName": "AD SUZANO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png",
+        "/logos_times/BASE/A2/adsuzano.png",
+        "https://drive.google.com/thumbnail?id=1311o-pCBXcliKkDRoexFW8vcaV_Jfjzs&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "aecincriveiscidadetiradentesincriveisfutsal",
       "sourceName": "A. E. C. INCRÍVEIS CIDADE TIRADENTES | INCRÍVEIS FUTSAL",
       "displayName": "INCRÍVEIS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Incriveis.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Incriveis.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Incriveis.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "aecompanysports",
       "sourceName": "A.E. COMPANY SPORTS",
       "displayName": "COMPANY SPORTS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/9%20Company%20Sports.jpeg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/9%20Company%20Sports.jpeg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/9%20Company%20Sports.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "aefriburgo",
       "sourceName": "AE FRIBURGO",
       "displayName": "FRIBURGO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Friburgo.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Friburgo.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Friburgo.png",
+        "/logos_times/BASE/A3/GRUPO%20B/Friburgo.png",
+        "https://drive.google.com/thumbnail?id=1oCn2n1XbE6IqM8bHuVgTdcUJDWZ3PDvD&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoamigosdecamilopoliscamilopolisfutsal",
       "sourceName": "ASSOCIAÇÃO AMIGOS DE CAMILOPOLIS | CAMILÓPOLIS FUTSAL",
       "displayName": "CAMILÓPOLIS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/camilopolis.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/camilopolis.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/camilopolis.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoatleticabancodobrasil",
       "sourceName": "ASSOCIAÇÃO ATLÉTICA BANCO DO BRASIL",
       "displayName": "AABB",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/aabb.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/aabb.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/aabb.png",
+        "https://drive.google.com/thumbnail?id=1VjrN7xwi09AX2Lf8JITQ5J-HjFx-p58x&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoatleticabotucatuense",
       "sourceName": "ASSOCIAÇÃO ATLÉTICA BOTUCATUENSE",
       "displayName": "BOTUCATUENSE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/botucatuense.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/botucatuense.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/botucatuense.png",
+        "https://drive.google.com/thumbnail?id=1R6kwV3ZWE2iLQE6aaZH_zft8YH5sx7n_&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoatleticaflamengo",
       "sourceName": "ASSOCIACAO ATLETICA FLAMENGO",
       "displayName": "FLAMENGO GRU",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/flamengo_guarulhos.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/flamengo_guarulhos.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/flamengo_guarulhos.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaocontraataquepaulistaacap",
       "sourceName": "ASSOCIAÇÃO CONTRA ATAQUE PAULISTA - ACAP",
       "displayName": "ACAP",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/5%20ACAP.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/5%20ACAP.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/5%20ACAP.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/5%20ACAP.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivadoabcdmescsaobernardo",
       "sourceName": "ASSOCIAÇÃO DESPORTIVA DO ABCD - MESC SÃO BERNARDO",
       "displayName": "MESC",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/logotipo-mesc.webp"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/logotipo-mesc.webp",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/logotipo-mesc.webp",
+        "https://drive.google.com/thumbnail?id=1KRlfRDc1nhUiUOtcQJMslKHG6pfvui8W&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivaeculturallazuliadclazuli",
       "sourceName": "ASSOCIACAO DESPORTIVA E CULTURAL LAZULI | A.D.C. LAZULI",
       "displayName": "LAZULI",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/lazuli.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/lazuli.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/lazuli.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivanandograna",
       "sourceName": "ASSOCIAÇÃO DESPORTIVA NANDO GRANA",
       "displayName": "NANDO GRANA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Nando_Grana.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Nando_Grana.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Nando_Grana.png",
+        "https://drive.google.com/thumbnail?id=1Zg8JeRyc9Ih0PeoSvHme-lv5Vd9bHsTR&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivaolimpikativo",
       "sourceName": "ASSOCIAÇÃO DESPORTIVA OLIMPIK | ATIVO",
       "displayName": "OLIMPIK",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Olimpik.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Olimpik.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Olimpik.png",
+        "/logos_times/BASE/A3/GRUPO%20B/Olimpik.png",
+        "https://drive.google.com/thumbnail?id=1QFkz6a7T1Oee8JcQNtKeIeWsl5-LRI5q&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivaprudenteadprudente",
       "sourceName": "ASSOCIAÇÃO DESPORTIVA PRUDENTE | A.D. PRUDENTE",
       "displayName": "AD PRUDENTE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/adprudente.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/adprudente.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/adprudente.png",
+        "https://drive.google.com/thumbnail?id=1ar5Jf48URl5C1BVu_KjNCIZgAQyj7w0o&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivasantoandrefutsal",
       "sourceName": "ASSOCIAÇÃO DESPORTIVA SANTO ANDRE FUTSAL",
       "displayName": "AD SANTO ANDRÉ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/ad_santo_andre.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/ad_santo_andre.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/ad_santo_andre.png",
+        "/logos_times/BASE/A2/adsantoandre.png",
+        "https://drive.google.com/thumbnail?id=1eSsMp4XNWhBA1Tsser-cMICx5uRXrvxT&sz=w256",
+        "https://drive.google.com/thumbnail?id=1jNAahWD1TeRId8NSiAO-M6itZWfnsPxW&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaodesportivasfadsuzano",
       "sourceName": "ASSOCIACAO DESPORTIVA S.F. | A.D. SUZANO",
       "displayName": "AD SUZANO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/AD%20_Suzano.png",
+        "/logos_times/BASE/A2/adsuzano.png",
+        "https://drive.google.com/thumbnail?id=1311o-pCBXcliKkDRoexFW8vcaV_Jfjzs&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivacapaobonitoaecapaobonito",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA CAPÃO BONITO | A.E. CAPÃO BONITO",
       "displayName": "CAPÃO BONITO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/CAPAO.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/CAPAO.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/CAPAO.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivacentrodetreinamentobolanope",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA CENTRO DE TREINAMENTO BOLA NO PÉ",
       "displayName": "BOLA NO PÉ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Bola_no_Pe.png",
+        "https://drive.google.com/thumbnail?id=1vIS7V4d_Ou7qQU_9oLCIboZjCKvuLTwk&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivaculturalvmanegeritaquerac13",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA CULTURAL VMANEGER ITAQUERA C13",
       "displayName": "C13",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/9%20C13.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/9%20C13.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/9%20C13.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/9%20C13.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivadiscipulosdofutebol",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA DISCIPULOS DO FUTEBOL",
       "displayName": "DISCÍPULOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Discipulos.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Discipulos.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Discipulos.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivafriburgoaefriburgo",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA FRIBURGO | AE FRIBURGO",
       "displayName": "FRIBURGO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/Friburgo.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/Friburgo.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/Friburgo.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Friburgo.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivafutmax",
       "sourceName": "ASSOCIAçãO ESPORTIVA FUTMAX",
       "displayName": "CAAS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Caas.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Caas.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Caas.png",
+        "/logos_times/BASE/A3/GRUPO%20C/Caas.png",
+        "https://drive.google.com/thumbnail?id=1DycaqFceQxX1zGimY946whasTB1o43T8&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivametropole",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA METROPoLE",
       "displayName": "METRÓPOLE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/Metropole.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/Metropole.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/Metropole.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivaraposasdalesteaeraposadaleste",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA RAPOSAS DA LESTE | A.E. RAPOSA DA LESTE",
       "displayName": "RAPOSAS DA LESTE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/6%20Raposas%20Futsal.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/6%20Raposas%20Futsal.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/6%20Raposas%20Futsal.jpeg",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/6%20Raposas%20Futsal.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoesportivariverdobelemriverdobelem",
       "sourceName": "ASSOCIAÇÃO ESPORTIVA RIVER DO BELÉM | RIVER DO BELÉM",
       "displayName": "RIVER DO BELÉM",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/River_do_Belem.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/River_do_Belem.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/River_do_Belem.png",
+        "/logos_times/BASE/A2/riverdobelem.png",
+        "https://drive.google.com/thumbnail?id=1sjYmlVU4WL9W3D__tq7xx6Ww_6scEmV5&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaomoradoresjardimliderznfuriafs",
       "sourceName": "ASSOCIAÇÃO MORADORES JARDIM LÍDER Z/N - FÚRIA F.S.",
       "displayName": "FÚRIA FS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/8%20Furia_FS.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/8%20Furia_FS.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/8%20Furia_FS.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaopaulistafutebolclubemooca",
       "sourceName": "ASSOCIAÇÃO PAULISTA FUTEBOL CLUBE MOOCA",
       "displayName": "PAULISTA MOOOCA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Paulista_Mooca.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Paulista_Mooca.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Paulista_Mooca.png",
+        "https://drive.google.com/thumbnail?id=1GQzGl7cx8aMsYauE3vwh4yCdHZwtNTqM&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaopequenomestreapequenomestre",
       "sourceName": "ASSOCIAÇÃO PEQUENO MESTRE | A. PEQUENO MESTRE",
       "displayName": "PEQUENO MESTRE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/pequenomestre.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/pequenomestre.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/pequenomestre.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaoportuguesadedesportos",
       "sourceName": "ASSOCIAÇÃO PORTUGUESA DE DESPORTOS",
       "displayName": "PORTUGUESA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Portuguesa.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Portuguesa.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Portuguesa.png",
+        "https://drive.google.com/thumbnail?id=1TEpQsBf4gBdRZywdhs7WvIMhHua7LZR-&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "associacaosorocabanadefutsalasfmagnu",
       "sourceName": "ASSOCIAÇÃO SOROCABANA DE FUTSAL - ASF/MAGNU",
       "displayName": "ASF / MAGNUS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/ASF_Magnus.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/ASF_Magnus.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/ASF_Magnus.png",
+        "https://drive.google.com/thumbnail?id=1Eb7Rd_d3btAiTJKHshq7jeTQGNZGLMD1&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "auniaomaua",
       "sourceName": "A. UNIÃO MAUÁ",
       "displayName": "UNIÃO MAUÁ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Uniao_Maua.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Uniao_Maua.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Uniao_Maua.png",
+        "/logos_times/BASE/A3/GRUPO%20C/Uniao_Maua.png",
+        "https://drive.google.com/thumbnail?id=1P4ZoYWR03xiRbFwJ6UFthfQOs4HUc_py&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "cajuventus",
       "sourceName": "C.A. JUVENTUS",
       "displayName": "JUVENTUS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/CA_Juventus_logo.svg.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/CA_Juventus_logo.svg.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/CA_Juventus_logo.svg.png",
+        "/logos_times/BASE/A1/juventus.png",
+        "https://drive.google.com/thumbnail?id=1BcKzikuL5khe8STNmq68_ceKGutFJq3D&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "camisa10fca",
       "sourceName": "CAMISA 10 F.C. A",
       "displayName": "CAMISA 10",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Camisa_10.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Camisa_10.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Camisa_10.png",
+        "https://drive.google.com/thumbnail?id=1bzhO4zA_l_4O0HsVD5pfxNAIt7Krq3hv&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "camisa10fcb",
       "sourceName": "CAMISA 10 F.C. B",
       "displayName": "CAMISA 10 B",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/11%20Camisa_10%20B.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/11%20Camisa_10%20B.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/11%20Camisa_10%20B.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "catabucajrs",
       "sourceName": "C.A. TABUCA JRS",
       "displayName": "TABUCA JRS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Tabuca_Juniors.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Tabuca_Juniors.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Tabuca_Juniors.png",
+        "https://drive.google.com/thumbnail?id=12zV8yHJhMX1SeDNP-mmKkmCnYR2zaK-w&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ccdetatui",
       "sourceName": "C.C. DE TATUí",
       "displayName": "TATUÍ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/2%20Tatui.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/2%20Tatui.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/2%20Tatui.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "chutefutsal",
       "sourceName": "CHUTE FUTSAL",
       "displayName": "CHUTE FUTSAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Chute_Futsal.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Chute_Futsal.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Chute_Futsal.png",
+        "https://drive.google.com/thumbnail?id=1V8ye-DGfC3wP_nz2GK_quFj0OkdwbyDx&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "clubeatleticoypirangacaypiranga",
       "sourceName": "CLUBE ATLÉTICO YPIRANGA | C.A. YPIRANGA",
       "displayName": "YPIRANGA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Ypiranga.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Ypiranga.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Ypiranga.png",
+        "https://drive.google.com/thumbnail?id=1aXHuJVrqKvTZo0WXieBH-wrHjx7lMiPh&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "clubebatalha",
       "sourceName": "CLUBE BATALHA",
       "displayName": "BATALHA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Batalha.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Batalha.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Batalha.png",
+        "https://drive.google.com/thumbnail?id=1MnkYpt1h8u1YBgA_u4r0nqZEwWNez7tT&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "clubedacomunidadefarialimakiloukuravilaindustrial",
       "sourceName": "CLUBE DA COMUNIDADE FARIA LIMA - KILOUKURA VILA INDUSTRIAL",
       "displayName": "KILOUKURA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Kiloukura.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Kiloukura.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Kiloukura.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "clubeesportivodapenhacepenha",
       "sourceName": "CLUBE ESPORTIVO DA PENHA - CE PENHA",
       "displayName": "PENHA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/penha.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/penha.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/penha.png",
+        "https://drive.google.com/thumbnail?id=1-raF_y-iWaGUJ25xuPU9L2h0p3acetqx&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "coloradocaieirasfutebolclubeltdacoloradocaieirasfc",
       "sourceName": "COLORADO CAIEIRAS FUTEBOL CLUBE LTDA - COLORADO CAIEIRAS FC",
       "displayName": "COLORADO CAIEIRAS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/coloradocaieiras.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/coloradocaieiras.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/coloradocaieiras.png",
+        "https://drive.google.com/thumbnail?id=1ddWk_SvDCVwbZEgoe-aF34IK8MVArFGk&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ctcvilaema",
       "sourceName": "CTC VILA EMA",
       "displayName": "CTC VILA EMA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/CTC_Vila_Ema.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/CTC_Vila_Ema.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/CTC_Vila_Ema.png",
+        "/logos_times/BASE/A3/GRUPO%20A/ctc_vila_ema.png",
+        "https://drive.google.com/thumbnail?id=1AcOb10fLWawL0_Z-7mPZdHgjJLHy4Qh6&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "desportivosorocaba",
       "sourceName": "DESPORTIVO SOROCABA",
       "displayName": "DESP. SOROCABA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/desportivo_sorocaba.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/desportivo_sorocaba.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/desportivo_sorocaba.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "escoladefutsalatleticomangalotltdaefatleticomangalot",
       "sourceName": "ESCOLA DE FUTSAL ATLÉTICO MANGALOT LTDA | EF ATLÉTICO MANGALOT",
       "displayName": "ATLÉTICO MANGALOT",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Atletico%20Mangalot.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Atletico%20Mangalot.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Atletico%20Mangalot.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "esporteclubepraiagrande",
       "sourceName": "ESPORTE CLUBE PRAIA GRANDE",
       "displayName": "PRAIA GRANDE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/praiagrande.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/praiagrande.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/praiagrande.png",
+        "https://drive.google.com/thumbnail?id=172ZH0TUvv1n3TF2uJfyWMQMnZaRzgRsR&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "faeosascoaudax",
       "sourceName": "FAE/OSASCO/AUDAX",
       "displayName": "AUDAX",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Audax_Osasco.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Audax_Osasco.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Audax_Osasco.png",
+        "/logos_times/BASE/A1/audax.png",
+        "https://drive.google.com/thumbnail?id=1AP0L3H3xepU7CnKqyHymQNjCmYe9VTBU&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ferroviariapindafutsalsemelp",
       "sourceName": "FERROVIÁRIA/PINDA FUTSAL/SEMELP",
       "displayName": "PINDA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Ferrovia%CC%81ria.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Ferrovia%CC%81ria.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Ferrovia%CC%81ria.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "gdr7desetembro",
       "sourceName": "G.D.R. 7 DE SETEMBRO",
       "displayName": "7 DE SETEMBRO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/7_de_setembro.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/7_de_setembro.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/7_de_setembro.png",
+        "https://drive.google.com/thumbnail?id=1es4PXFmWGmTlZImjMGDHiaAOq_Pts9DG&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "grgremetal",
       "sourceName": "GR GREMETAL",
       "displayName": "GREMETAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/gremetal.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/gremetal.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/gremetal.png",
+        "https://drive.google.com/thumbnail?id=1PNweRSrNFvG6umnIcRTY587UxQb2bIly&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "guaianazesevy",
       "sourceName": "GUAIANAZES/EVY",
       "displayName": "GUAIANAZES",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Guaianases.jpg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/Guaianases.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/Guaianases.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "guarulhensetbctranportes",
       "sourceName": "GUARULHENSE/TBC TRANPORTES",
       "displayName": "GUARULHENSE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/14%20Guarulhense.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/guarulhense.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/guarulhense.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/14%20Guarulhense.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "impactofc",
       "sourceName": "IMPACTO F.C.",
       "displayName": "IMPACTO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/impacto.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/impacto.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/impacto.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "instbonsdebola",
       "sourceName": "INST. BONS DE BOLA",
       "displayName": "BONS DE BOLA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Bons%20de%20Bola.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Bons%20de%20Bola.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Bons%20de%20Bola.png",
+        "https://drive.google.com/thumbnail?id=1_iZg6FcLYvhR4livPZWC9fnLe1ud-iyj&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "institutof9",
       "sourceName": "INSTITUTO F9+",
       "displayName": "F9 TABOÃO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/13%20F9%20Taboao.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/13%20F9%20Taboao.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/13%20F9%20Taboao.jpeg",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/13%20F9%20Taboao.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "institutofamiliafutsalinstfamiliafadenplorena",
       "sourceName": "INSTITUTO FAMÍLIA FUTSAL | INST. FAMÍLIA/FADENP LORENA",
       "displayName": "FAMÍLIA LORENA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/2%20Ins%20Familia%20Lorena.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/2%20Ins%20Familia%20Lorena.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/2%20Ins%20Familia%20Lorena.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/2%20Ins%20Familia%20Lorena.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "itaquafutsal",
       "sourceName": "ITAQUÁ FUTSAL",
       "displayName": "ITAQUÁ",
-      "logoUrl": null
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/ITAQUA.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/ITAQUA.png",
+        "https://drive.google.com/thumbnail?id=1ghie03mifkqlrNNCaLclSDYs1epvcQM4&sz=w256"
+      ]
     },
     {
       "key": "itaquerensefutsal",
       "sourceName": "ITAQUERENSE FUTSAL",
       "displayName": "ITAQUERENSE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/7%20Itaquerense.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/7%20Itaquerense.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/7%20Itaquerense.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "jabaquaraatleticoclube",
       "sourceName": "JABAQUARA ATLÉTICO CLUBE",
       "displayName": "JABAQUARA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/16%20Jabaquara.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/16%20Jabaquara.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/16%20Jabaquara.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "jacareialiancafutsalser",
       "sourceName": "JACAREÍ/ALIANÇA FUTSAL/SER",
       "displayName": "ALIANÇA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/alianca_jacarei.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/alianca_jacarei.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/alianca_jacarei.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "jubafutsal",
       "sourceName": "JUBA FUTSAL",
       "displayName": "JUBA",
-      "logoUrl": null
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/618310300_17907635100328701_1962963643787462475_n.jpg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/618310300_17907635100328701_1962963643787462475_n.jpg"
+      ]
     },
     {
       "key": "lausannepaulistafca",
       "sourceName": "LAUSANNE PAULISTA FC - A",
       "displayName": "LAUSANNE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Lausanne_Paulista.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Lausanne_Paulista.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Lausanne_Paulista.png",
+        "/logos_times/BASE/A1/lausanne.png",
+        "https://drive.google.com/thumbnail?id=1kXQWfqkNCvyhvgmvwcz66fGhwEFZsq4f&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "lausannepaulistafcb",
       "sourceName": "LAUSANNE PAULISTA FC - B",
       "displayName": "LAUSANNE B",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/lausanneb.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/lausanneb.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/lausanneb.png",
+        "https://drive.google.com/thumbnail?id=1boB6Qo9dgqGptDYta7SJoHn63YCa8nRP&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "lifesportsgestaoesportivaltdamx7diadema",
       "sourceName": "LIFESPORTS GESTAO ESPORTIVA LTDA | MX7 DIADEMA",
       "displayName": "MX7 DIADEMA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/mx7_diadema.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/mx7_diadema.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/mx7_diadema.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A2/MX7_Diadema.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligaamadoradeitapevidefutsal",
       "sourceName": "LIGA AMADORA DE ITAPEVI DE FUTSAL",
       "displayName": "ITAPEVI",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/12%20Itapevi.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/itapevi.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/itapevi.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/12%20Itapevi.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligaatibaiaensedefuitsallafs",
       "sourceName": "LIGA ATIBAIAENSE DE FUITSAL - LAFS",
       "displayName": "ATIBAIA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/4%20Atibaia%20Futsa.jpg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/4%20Atibaia%20Futsa.jpg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/4%20Atibaia%20Futsa.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligadesportivaclassistapontodeencontrofutsal",
       "sourceName": "LIGA DESPORTIVA CLASSISTA PONTO DE ENCONTRO FUTSAL",
       "displayName": "PONTO DE ENCONTRO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/12%20Ponto_de_Encontro.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/12%20Ponto_de_Encontro.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/12%20Ponto_de_Encontro.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligalestevikselevadores",
       "sourceName": "LIGA LESTE/VIKS ELEVADORES",
       "displayName": "LIGA LESTE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/liga_leste.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/liga_leste.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/liga_leste.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligasancaetanensedefs",
       "sourceName": "LIGA SANCAETANENSE DE F.S.",
       "displayName": "LIGA SÃO CAETANO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Liga%20Sao%20Caetano.jpg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Liga%20Sao%20Caetano.jpg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Liga%20Sao%20Caetano.jpg",
+        "https://drive.google.com/thumbnail?id=1C6O9Hn8n9MF6HIVIhf1yOewUEg6qC5Fo&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligasebastianensedefutsallisfutssaosebastiao",
       "sourceName": "LIGA SEBASTIANENSE DE FUTSAL | LISFUTS/SÃO SEBASTIÃO",
       "displayName": "LISFUTS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/lisfuts.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/lisfuts.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/lisfuts.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ligasorocabanadefuteboldesalao",
       "sourceName": "LIGA SOROCABANA DE FUTEBOL DE SALÃO",
       "displayName": "KGB FUTSAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/1%20KGB.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/kgb.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/kgb.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "metalurgicosdejundiai",
       "sourceName": "METALÚRGICOS DE JUNDIAÍ",
       "displayName": "METALÚRGICOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Metalurgicos.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Metalurgicos.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Metalurgicos.png",
+        "https://drive.google.com/thumbnail?id=18zEXrzgGrEB_YnzxBUi6wyFDSE2Gv9UU&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "mogidascruzesesporteclubemogidascruzesec",
       "sourceName": "MOGI DAS CRUZES ESPORTE CLUBE - MOGI DAS CRUZES EC",
       "displayName": "MOGI EC",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/3%20Mogi_EC.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/3%20Mogi_EC.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/3%20Mogi_EC.png",
+        "https://drive.google.com/thumbnail?id=1K1FCTjyed8L0NdYZCGnK0ti7BYqWgozu&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "mx7diadema",
       "sourceName": "MX7 DIADEMA",
       "displayName": "MX7 DIADEMA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/MX7_Diadema.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/MX7_Diadema.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/MX7_Diadema.png",
+        "/logos_times/BASE/A3/GRUPO%20A/mx7_diadema.png",
+        "https://drive.google.com/thumbnail?id=1NPALFm-zBBNPh2iF4fztyC7V3tolPPVf&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "nacionalatleticoclube",
       "sourceName": "NACIONAL ATLÉTICO CLUBE",
       "displayName": "NACIONAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/7%20NACIONAL-ACADEMY.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/7%20NACIONAL-ACADEMY.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/7%20NACIONAL-ACADEMY.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "napolesports",
       "sourceName": "NAPOLE SPORTS",
       "displayName": "NAPOLE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/10%20Napole.jpeg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/10%20Napole.jpeg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/10%20Napole.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "ocianpraiaclube",
       "sourceName": "OCIAN PRAIA CLUBE",
       "displayName": "OCIAN",
-      "logoUrl": null
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/logo-c8ebc47b.jpg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/logo-c8ebc47b.jpg",
+        "https://drive.google.com/thumbnail?id=1scO8SHaZC7FjinRJ526zCjomrQssqq1Z&sz=w256"
+      ]
     },
     {
       "key": "olebrasilsocietyquadraesportivaltdameolebrasilsociety",
       "sourceName": "OLE BRASIL SOCIETY QUADRA ESPORTIVA LTDA ME - OLE BRASIL SOCIETY",
       "displayName": "PUMAS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Pumas.jpeg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Pumas.jpeg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Pumas.jpeg",
+        "https://drive.google.com/thumbnail?id=1eqk1tdM_SRj6shu5ceMhMSulWZCG3J_E&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "pequeninosdeperus",
       "sourceName": "PEQUENINOS DE PERUS",
       "displayName": "PEQUENINOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/6%20Pequeninos.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/6%20Pequeninos.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/6%20Pequeninos.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "primeirodemaiofutebolclube",
       "sourceName": "PRIMEIRO DE MAIO FUTEBOL CLUBE",
       "displayName": "PRIMEIRO DE MAIO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/primeirodemaio.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/primeirodemaio.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/primeirodemaio.png",
+        "https://drive.google.com/thumbnail?id=1l9PWhPXeubP9mVLUTfflDl2Dx4MjE472&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "prosperehortolandia",
       "sourceName": "PROSPERE / HORTOLANDIA",
       "displayName": "HORTOLÂNDIA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/hortolandia.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/hortolandia.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/hortolandia.png",
+        "/logos_times/BASE/A3/GRUPO%20C/3%20Hortolandia.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/3%20Hortolandia.png",
+        "https://drive.google.com/thumbnail?id=1ojlP7FogxGDQR3xiTwt7MtUb7_LX-sCA&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "prosperehortolandiab",
       "sourceName": "PROSPERE / HORTOLANDIA - B",
       "displayName": "HORTOLÂNDIA B",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/3%20Hortolandia.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/3%20Hortolandia.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/3%20Hortolandia.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/3%20Hortolandia.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "pulofutsalcampinas",
       "sourceName": "PULO FUTSAL CAMPINAS",
       "displayName": "PULO FUTSAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Pulo_Futsal.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Pulo_Futsal.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Pulo_Futsal.png",
+        "/logos_times/BASE/A2/pulofutsal.png",
+        "https://drive.google.com/thumbnail?id=1vU-mZb9Pr6DCoQd91T-3EmakR1ixI2NL&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "r7futsal",
       "sourceName": "R7 FUTSAL",
       "displayName": "R7 FUTSAL",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/R7%20Futsal.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/R7%20Futsal.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/R7%20Futsal.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "resiliencefutsal",
       "sourceName": "RESILIENCE FUTSAL",
       "displayName": "RESILIENCE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/8%20Resiliense.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/8%20Resiliense.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/8%20Resiliense.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "rosanegraipasurefutsal",
       "sourceName": "ROSA NEGRA/IPASURE FUTSAL",
       "displayName": "ROSA NEGRA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/5%20Rosa_Negra.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20C/5%20Rosa_Negra.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20C/5%20Rosa_Negra.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/5%20Rosa_Negra.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "rsoccer",
       "sourceName": "RSOCCER",
       "displayName": "RSOCCER",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/10%20Rsoccer%20CFA.jpg"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/10%20Rsoccer%20CFA.jpg",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/10%20Rsoccer%20CFA.jpg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "santoandrefutebolclubesantoandrefutsal",
       "sourceName": "SANTO ANDRE FUTEBOL CLUBE | SANTO ANDRÉ FUTSAL",
       "displayName": "SANTO ANDRÉ FC",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/safc.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/safc.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/safc.png",
+        "https://drive.google.com/thumbnail?id=1uLzaT3iupeSh0J6W5S3MvfllH9Cg44Cs&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "santoandrefutsal",
       "sourceName": "SANTO ANDRÉ FUTSAL",
       "displayName": "SANTO ANDRÉ FC",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Santo_Andre_Futsal.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Santo_Andre_Futsal.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Santo_Andre_Futsal.png",
+        "https://drive.google.com/thumbnail?id=1BdR7w1QMWizLwxqU4BblfFs8q43Go1UP&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "santosfc",
       "sourceName": "SANTOS FC",
       "displayName": "SANTOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Santos_Logo.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Santos_Logo.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Santos_Logo.png",
+        "/logos_times/BASE/A1/santos.png",
+        "https://drive.google.com/thumbnail?id=1XCFUbgB7c3TqVDQyZ8MPpfXCpZ-cfKNn&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "saocaetanofcrsfc",
       "sourceName": "SÃO CAETANO FC - RSFC",
       "displayName": "SÃO CAETANO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/RS_Sa%CC%83o_Caetano.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/RS_Sa%CC%83o_Caetano.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/RS_Sa%CC%83o_Caetano.png",
+        "https://drive.google.com/thumbnail?id=19gd9yNESLfnY6tze1GLFALFOhreLbNxS&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "saojosefutsal",
       "sourceName": "SÃO JOSÉ FUTSAL",
       "displayName": "SÃO JOSÉ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A1/saojosefutsal.png"
+=======
+      "logoUrl": "/logos_times/BASE/A1/saojosefutsal.png",
+      "logoUrls": [
+        "/logos_times/BASE/A1/saojosefutsal.png",
+        "https://drive.google.com/thumbnail?id=1yMoloDnE5P2VekQp9hmQ_RZN0rj-2G0M&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "saopaulofca",
       "sourceName": "SÃO PAULO FC - A",
       "displayName": "SÃO PAULO",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png",
+        "/logos_times/BASE/A1/saopaulo.png",
+        "https://drive.google.com/thumbnail?id=18IWdMbW1lGSBZPl4T8FNdxV4MoJ7PgOP&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "saopaulofcb",
       "sourceName": "SÃO PAULO FC - B",
       "displayName": "SÃO PAULO B",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Sa%CC%83o_Paulo.png",
+        "/logos_times/BASE/A2/saopaulob.png",
+        "https://drive.google.com/thumbnail?id=18IWdMbW1lGSBZPl4T8FNdxV4MoJ7PgOP&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "sccorinthianspaulistapta",
       "sourceName": "S.C. CORINTHIANS PAULISTA PTA.",
       "displayName": "CORINTHIANS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Corinthians_logo.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Corinthians_logo.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Corinthians_logo.png",
+        "/logos_times/BASE/A1/corinthians.png",
+        "https://drive.google.com/thumbnail?id=1n91FU-n5ctRNWDH85SIpYhGpNsp_ZdUw&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "selecionadosfutsal",
       "sourceName": "SELECIONADOS FUTSAL",
       "displayName": "SELECIONADOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/selecionados.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/selecionados.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/selecionados.png",
+        "/logos_times/BASE/A3/GRUPO%20B/Selecionados.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "selecionadosfutsala3",
       "sourceName": "SELECIONADOS FUTSAL - A3",
       "displayName": "SELECIONADOS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/Selecionados.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/selecionados.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/selecionados.png",
+        "/logos_times/BASE/A3/GRUPO%20B/Selecionados.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "sepalmeiras",
       "sourceName": "SE PALMEIRAS",
       "displayName": "PALMEIRAS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Palmeiras_logo.svg.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Palmeiras_logo.svg.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Palmeiras_logo.svg.png",
+        "/logos_times/BASE/A1/palmeiras.png",
+        "https://drive.google.com/thumbnail?id=1urgvoorwN9HYNGcvac1uGiDm3q5R0OqQ&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "sercaieiras",
       "sourceName": "S.E.R. CAIEIRAS",
       "displayName": "CAIEIRAS",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Caieiras%20(1).png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Caieiras%20(1).png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Caieiras%20(1).png",
+        "https://drive.google.com/thumbnail?id=1rXyfJpB8EmFQvJAYHorDZF93XCAT_MWU&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "sportbenficademogidascruzes",
       "sourceName": "SPORT BENFICA DE MOGI DAS CRUZES",
       "displayName": "BENFICA",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Benfica.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A2/Benfica.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A2/Benfica.png",
+        "https://drive.google.com/thumbnail?id=1stqp72k7jBtV0RQd59q4qit8wL8Dhfup&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "sportingclubpaulinense",
       "sourceName": "SPORTING CLUB PAULINENSE",
       "displayName": "PAULINENSE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/1%20Paulinense.png"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20B/1%20Paulinense.png",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20B/1%20Paulinense.png",
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20B/1%20Paulinense.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "stadiumfutsal",
       "sourceName": "STADIUM FUTSAL",
       "displayName": "STADIUM",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A2/stadium.png"
+=======
+      "logoUrl": "/logos_times/BASE/A2/stadium.png",
+      "logoUrls": [
+        "/logos_times/BASE/A2/stadium.png",
+        "https://drive.google.com/thumbnail?id=1y4p22FhC246OG4bMfJiXpuYUH8uEzMt_&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "taubatefutsal",
       "sourceName": "TAUBATÉ FUTSAL",
       "displayName": "TAUBATÉ",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Taubate%CC%81.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Taubate%CC%81.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Taubate%CC%81.png",
+        "/logos_times/BASE/A2/taubate.png",
+        "https://drive.google.com/thumbnail?id=1KGGJHspKkprVUsVShQtsVOcPAf9Pf_Xm&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "uniaord",
       "sourceName": "UNIÃO RD",
       "displayName": "UNIÃO RD",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Unia%CC%83o%20RD.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A1/Unia%CC%83o%20RD.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A1/Unia%CC%83o%20RD.png",
+        "https://drive.google.com/thumbnail?id=1CZQQoBs5qLi51wJibIPJshWU7fwA3DdK&sz=w256"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "unilestepontodeencontro",
       "sourceName": "UNILESTE / PONTO DE ENCONTRO",
       "displayName": "UNILESTE",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/unileste.jpeg"
+=======
+      "logoUrl": "/logos_times/BASE/A3/GRUPO%20A/unileste.jpeg",
+      "logoUrls": [
+        "/logos_times/BASE/A3/GRUPO%20A/unileste.jpeg"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     },
     {
       "key": "vemcomigogerandofrutoscfaf",
       "sourceName": "VEM COMIGO GERANDO FRUTOS - CFAF",
       "displayName": "CFAF",
+<<<<<<< HEAD
       "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/14%20CFAF.png"
+=======
+      "logoUrl": "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/14%20CFAF.png",
+      "logoUrls": [
+        "/logos_times/INICIA%C3%87%C3%83O/A3/GRUPO%20A/14%20CFAF.png"
+      ]
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     }
   ]
 }

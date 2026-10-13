@@ -26,6 +26,7 @@ import { initials } from "@/lib/client-api";
 import { ProfileProvider, useProfile } from "@/components/profile-context";
 import { CompetitionBrowseProvider } from "@/components/competition-search";
 import { clientApi } from "@/lib/client-api";
+import { isSessionEnding, listenForSessionEnd } from "@/lib/session-transition";
 import type {
   AwardRegistrationResponse,
 } from "@/lib/award-registration-types";
@@ -163,7 +164,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     let running = false;
 
     async function checkAwardProcessing() {
-      if (running) {
+      if (running || isSessionEnding()) {
         return;
       }
 
@@ -325,10 +326,12 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const mobileNavigation = navigationItems.filter((item) => item.mobile);
 
   useEffect(() => {
-    const handleExpired = () => router.replace("/entrar?expired=1");
+    const handleExpired = () => { if (!isSessionEnding()) router.replace("/entrar?expired=1"); };
     window.addEventListener("dna:session-expired", handleExpired);
     return () => window.removeEventListener("dna:session-expired", handleExpired);
   }, [router]);
+
+  useEffect(listenForSessionEnd, []);
 
   async function logout() {
 

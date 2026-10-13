@@ -15,7 +15,7 @@ export function AwardFpfsSignature({
       aria-label="Federação Paulista de Futsal"
     >
       <span
-        className={`relative grid shrink-0 place-items-center rounded-xl bg-white p-1.5 ${
+        className={`relative grid shrink-0 place-items-center rounded-xl p-1.5 ${
           compact ? "size-10" : "size-13"
         }`}
       >

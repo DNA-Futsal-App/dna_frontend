@@ -162,16 +162,48 @@ export async function createLoginResponse(response: Response) {
 }
 
 export async function loginWithBackend(payload: unknown) {
-  try {
-    return await createLoginResponse(
-      await callBackend("/api/v1/auth/login", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    );
-  } catch {
-    return unavailableResponse();
+  const input = payload as {
+    login?: string;
+    password?: string;
+    confirmAccountDeletionCancellation?: boolean;
+  } | null;
+  if (!input || typeof input.login !== "string" || !input.login.trim()
+    || input.login.length > 254 || typeof input.password !== "string"
+    || !input.password || input.password.length > 72) {
+    return NextResponse.json({ code: "INVALID_INPUT", detail: "Informe seu e-mail ou telefone e sua senha." }, { status: 400 });
   }
+  const credentials = { login: input.login, password: input.password };
+  const login = () => callBackend("/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+  let cancellationCompleted = false;
+  try {
+    let response = await login();
+    if (response.status === 403 && input.confirmAccountDeletionCancellation === true) {
+      const problem = await response.clone().json().catch(() => null) as ApiProblem | null;
+      if (problem?.code === "ACCOUNT_PENDING_DELETION") {
+        const cancellation = await callBackend("/api/v1/auth/account-deletion/cancel", {
+          method: "POST",
+          body: JSON.stringify({ login: input.login, currentPassword: input.password }),
+        });
+        if (cancellation.status !== 204) return toNextResponse(cancellation);
+        cancellationCompleted = true;
+        response = await login();
+        if (!response.ok) return cancellationLoginRequiredResponse();
+      }
+    }
+    return await createLoginResponse(response);
+  } catch {
+    return cancellationCompleted ? cancellationLoginRequiredResponse() : unavailableResponse();
+  }
+}
+
+function cancellationLoginRequiredResponse() {
+  return NextResponse.json({
+    code: "ACCOUNT_DELETION_CANCELLED_LOGIN_REQUIRED",
+    detail: "A exclusão foi cancelada, mas não foi possível entrar. Faça login novamente.",
+  }, { status: 503 });
 }
 
 async function refreshSession(refreshToken: string) {
@@ -197,6 +229,7 @@ export async function proxyAuthenticated(
   request: NextRequest,
   path: string,
   init: FetchInit = {},
+  options: { preserveCredentialErrors?: boolean } = {},
 ) {
   const accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -212,11 +245,17 @@ export async function proxyAuthenticated(
     if (accessToken) {
       response = await authorizedCall(path, accessToken, init);
 
+      if (options.preserveCredentialErrors && await isCredentialError(response)) {
+        return toNextResponse(response);
+      }
+
       if (response.status === 401 && refreshToken) {
         auth = await refreshSession(refreshToken);
 
         if (auth) {
           response = await authorizedCall(path, auth.accessToken, init);
+        } else if (options.preserveCredentialErrors) {
+          return sessionRequiredResponse();
         }
       }
     } else {
@@ -230,13 +269,18 @@ export async function proxyAuthenticated(
       response = await authorizedCall(path, auth.accessToken, init);
     }
 
+    if (options.preserveCredentialErrors && response.status === 401
+      && !(await isCredentialError(response))) {
+      return sessionRequiredResponse();
+    }
+
     const nextResponse = await toNextResponse(response);
 
     if (auth) {
       setSessionCookies(nextResponse, auth);
     }
 
-    if (response.status === 401 && !auth) {
+    if (response.status === 401 && !auth && !options.preserveCredentialErrors) {
       clearSessionCookies(nextResponse);
     }
 
@@ -244,6 +288,26 @@ export async function proxyAuthenticated(
   } catch {
     return unavailableResponse();
   }
+}
+
+async function isCredentialError(response: Response) {
+  if (response.status !== 401) return false;
+  const problem = await response.clone().json().catch(() => null) as ApiProblem | null;
+  return problem?.code === "INVALID_CREDENTIALS";
+}
+
+export async function requestAccountDeletion(request: NextRequest, currentPassword: string) {
+  if (isDemoRequest(request)) {
+    return NextResponse.json({ code: "DEMO_UNAVAILABLE", detail: "A exclusão de conta não está disponível no modo demonstração." }, { status: 403 });
+  }
+  const response = await proxyAuthenticated(request, "/api/v1/auth/account-deletion", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword }),
+    timeoutMs: 60_000,
+  }, { preserveCredentialErrors: true });
+  if (response.status === 202) clearSessionCookies(response);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
 
 export async function authenticatedBatch(

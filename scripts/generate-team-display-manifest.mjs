@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { createLogoAssetIndex, findLocalLogos, imageUrl } from "./team-logo-assets.mjs";
 import path from "node:path";
 import zlib from "node:zlib";
 import crypto from "node:crypto";
@@ -398,7 +399,7 @@ function parseCellValue(body, type, strings) {
   return formulaValue(body);
 }
 
-function parseRows(entries, sheetPath, strings) {
+export function parseRows(entries, sheetPath, strings) {
   const xml = entries.get(sheetPath)?.toString("utf8") ?? "";
   const hyperlinks = sheetHyperlinks(entries, sheetPath, xml);
   const rows = [];
@@ -408,8 +409,11 @@ function parseRows(entries, sheetPath, strings) {
   while ((rowMatch = rowPattern.exec(xml))) {
     const rowNumber = Number.parseInt(/\br="(\d+)"/.exec(rowMatch[1])?.[1] ?? "0", 10);
     const cells = new Map();
+<<<<<<< HEAD
     // Células vazias podem vir como <c r="C3"/>. Elas não podem consumir
     // a próxima célula (por exemplo D3, que contém o nome do escudo).
+=======
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     const cellPattern = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cellMatch;
 
@@ -479,23 +483,8 @@ function findHeader(rows) {
   return null;
 }
 
-async function walkFiles(directory) {
-  const result = [];
-  const entries = await fs.readdir(directory, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      result.push(...(await walkFiles(full)));
-    } else if (entry.isFile()) {
-      result.push(full);
-    }
-  }
-
-  return result;
-}
-
 function publicUrl(file) {
+<<<<<<< HEAD
   const relative = path.relative(publicRoot, file);
   return `/${relative
     .split(path.sep)
@@ -614,6 +603,9 @@ async function resolveLogo(rawValue, assetIndex, sheetName) {
   }
 
   return null;
+=======
+  return '/' + path.relative(publicRoot, file).split(path.sep).map(encodeURIComponent).join('/');
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 }
 
 function resolveLogoByTeamName(sourceName, displayName, assetIndex, sheetName) {
@@ -700,8 +692,14 @@ async function workbookEntries(file, assetIndex) {
       continue;
     }
 
+<<<<<<< HEAD
     const embeddedImages = sheetEmbeddedImages(entries, sheet.path);
     const startCount = result.length;
+=======
+    const embeddedImages = sheetEmbeddedImages(entries, sheetPath);
+    const context = rows.filter(row => row.rowNumber < header.rowNumber)
+      .flatMap(row => [...row.cells.values()].map(cell => cell.value)).join(' ');
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
     for (const row of rows) {
       if (row.rowNumber <= header.rowNumber) continue;
@@ -712,11 +710,15 @@ async function workbookEntries(file, assetIndex) {
       const sourceName = sourceCell?.value?.trim() ?? "";
       const displayName = displayCell?.value?.trim() ?? "";
 
+<<<<<<< HEAD
       const logoRaw =
         logoCell?.value ||
         logoCell?.formula ||
         logoCell?.hyperlink ||
         "";
+=======
+      const references = [logoCell?.value, logoCell?.formula, logoCell?.hyperlink].filter(Boolean);
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
       if (!sourceName) continue;
 
@@ -736,6 +738,7 @@ async function workbookEntries(file, assetIndex) {
               )
             : null;
 
+<<<<<<< HEAD
       const logoUrl =
         embeddedLogoUrl ??
         (await resolveLogo(
@@ -744,12 +747,19 @@ async function workbookEntries(file, assetIndex) {
           sheet.name,
         )) ??
         resolveLogoByTeamName(sourceName, displayName, assetIndex, sheet.name);
+=======
+      const localUrls = references.flatMap(reference => findLocalLogos(reference, assetIndex, context));
+      const remoteUrls = references.map(imageUrl).filter(Boolean);
+      const logoUrls = [...new Set([embeddedLogoUrl, ...localUrls, ...remoteUrls].filter(Boolean))];
+      const logoUrl = logoUrls[0] ?? null;
+>>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
       result.push({
         key,
         sourceName,
         displayName: displayName || sourceName,
         logoUrl,
+        logoUrls,
       });
     }
 
@@ -857,12 +867,6 @@ function mergeEntries(entries) {
       continue;
     }
 
-    if (current.logoUrl && entry.logoUrl && current.logoUrl !== entry.logoUrl) {
-      console.warn(
-        `[team-display] Mais de um logo para "${entry.sourceName}"; mantendo ${current.logoUrl}.`,
-      );
-    }
-
     merged.set(entry.key, {
       ...current,
       displayName:
@@ -871,6 +875,7 @@ function mergeEntries(entries) {
           entry,
         ),
       logoUrl: current.logoUrl ?? entry.logoUrl,
+      logoUrls: [...new Set([...current.logoUrls, ...entry.logoUrls])],
     });
   }
 
@@ -897,12 +902,7 @@ async function main() {
     );
   }
 
-  await fs.rm(generatedAssetsRoot, {
-    recursive: true,
-    force: true,
-  });
-
-  const assetIndex = await createPublicAssetIndex();
+  const assetIndex = await createLogoAssetIndex(publicRoot);
   const collected = [];
   const usedWorkbooks = [];
   const usedSheets = [];
@@ -980,6 +980,27 @@ async function main() {
   }
 
   const teams = mergeEntries(collected);
+  const aliases = JSON.parse(await fs.readFile(path.join(root, 'lib', 'team-logo-aliases.json'), 'utf8'));
+  const unresolved = [];
+  for (const team of teams) {
+    const explicitAlias = aliases[team.sourceName];
+    const lookupNames = explicitAlias ? [explicitAlias] : [team.displayName, team.sourceName];
+    const inferredLocal = lookupNames.flatMap(name => findLocalLogos(name, assetIndex));
+    const local = team.logoUrls.filter(url => url.startsWith('/'));
+    const remote = team.logoUrls.filter(url => !url.startsWith('/'));
+    team.logoUrls = [...new Set([...local, ...inferredLocal, ...remote])];
+    team.logoUrl = team.logoUrls[0] ?? null;
+    if (!team.logoUrl) unresolved.push({ sourceName: team.sourceName, displayName: team.displayName });
+  }
+  const report = {
+    total: teams.length,
+    local: teams.filter(team => team.logoUrl?.startsWith('/')).length,
+    remoteOnly: teams.filter(team => team.logoUrl && !team.logoUrl.startsWith('/')).map(team => team.sourceName),
+    unresolved,
+  };
+  await fs.mkdir(path.dirname(runtimeOutput), { recursive: true });
+  await fs.writeFile(path.join(path.dirname(runtimeOutput), 'team-logo-report.json'), JSON.stringify(report, null, 2) + '\n');
+  console.log('[team-display] Escudos: ' + report.local + ' locais, ' + report.remoteOnly.length + ' somente remotos, ' + unresolved.length + ' pendentes.');
 
   if (!teams.length) {
     const ignoredDetails =
@@ -1041,7 +1062,7 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   console.error("[team-display] Falha ao gerar manifesto:", error);
   process.exitCode = 1;
 });

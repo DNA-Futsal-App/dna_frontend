@@ -1,5 +1,6 @@
 import {
   CalendarDays,
+  Shield,
   Trophy,
 } from "lucide-react";
 
@@ -28,11 +29,13 @@ type KnockoutTie = {
   ];
   matches: Match[];
   complete: boolean;
+  sourceTieKeys?: string[];
 };
 
 type KnockoutTeam = {
   team: Team;
   score: number | null;
+  pending?: boolean;
 };
 
 type StageDefinition = {
@@ -121,7 +124,7 @@ export function buildKnockoutStages(
     );
   }
 
-  const ordered =
+  const published =
     STAGES
       .filter((stage) =>
         stages.has(stage.key),
@@ -137,6 +140,8 @@ export function buildKnockoutStages(
         (stage) =>
           stage.ties.length > 0,
       );
+
+  const ordered = completeUpcomingStages(published);
 
   for (
     let index = 1;
@@ -177,6 +182,100 @@ export function buildKnockoutStages(
   }
 
   return ordered;
+}
+
+function completeUpcomingStages(published: KnockoutStage[]): KnockoutStage[] {
+  const stages = new Map(published.map((stage) => [stage.key, stage]));
+
+  for (let index = 0; index < STAGES.length - 1; index++) {
+    const previous = stages.get(STAGES[index].key);
+    if (!previous) continue;
+
+    const definition = STAGES[index + 1];
+    const next = stages.get(definition.key);
+    const claimed = new Set<string>();
+    // Published pairings are authoritative, even if their feeders are not adjacent.
+    const targets = (next?.ties ?? []).map((tie) => {
+      const sources = previous.ties.filter((source) => tiesShareTeam(source, tie));
+      sources.forEach((source) => claimed.add(source.key));
+      return { tie, sources };
+    });
+
+    for (const target of targets) {
+      if (target.sources.length !== 1) continue;
+      const sourceIndex = previous.ties.indexOf(target.sources[0]);
+      const partner = previous.ties[sourceIndex ^ 1];
+      if (partner && !claimed.has(partner.key)) {
+        target.sources.push(partner);
+        claimed.add(partner.key);
+      }
+    }
+
+    // A scheduled game may still have unnamed participants. Reuse that card
+    // (and its date) in the remaining bracket slot rather than duplicating it.
+    const unassigned = previous.ties.filter((source) => !claimed.has(source.key));
+    for (const target of targets) {
+      while (target.sources.length < 2 && unassigned.length) {
+        const source = unassigned.shift()!;
+        target.sources.push(source);
+        claimed.add(source.key);
+      }
+    }
+
+    const ties: KnockoutTie[] = targets.map(({ tie, sources }) => {
+      const qualifiers = sources.map((source) => qualifiedTeam(source, next))
+        .filter((team): team is Team => team != null);
+      const missing = qualifiers.filter((team) => !tieHasTeam(tie, team.id));
+      return {
+        ...tie,
+        sourceTieKeys: sources.map((source) => source.key),
+        teams: tie.teams.map((item) => {
+          if (!item.pending || !missing.length) return item;
+          return { team: missing.shift()!, score: item.score };
+        }) as KnockoutTie['teams'],
+      };
+    });
+
+    // The same adjacent feeder pairs used by the bracket's connectors define
+    // unpublished games. Keep the feeder keys so a partial round cannot move
+    // an unrelated tie onto the only visible next-round card.
+    const remaining = previous.ties.filter((source) => !claimed.has(source.key));
+    for (let sourceIndex = 0; sourceIndex < remaining.length; sourceIndex += 2) {
+      const sources = remaining.slice(sourceIndex, sourceIndex + 2);
+      const qualifiers = sources.map((source) => qualifiedTeam(source, next));
+      if (!qualifiers.some(Boolean)) continue;
+
+      const key = `upcoming:${definition.key}:${sources.map((source) => source.key).join(';')}`;
+      const participant = (slot: number): KnockoutTeam => {
+        const team = qualifiers[slot];
+        return team ? { team, score: null } : {
+          team: { id: `${key}:pending:${slot}`, name: 'a definir' },
+          score: null,
+          pending: true,
+        };
+      };
+      ties.push({
+        key,
+        teams: [participant(0), participant(1)],
+        matches: [],
+        complete: false,
+        sourceTieKeys: sources.map((source) => source.key),
+      });
+    }
+
+    if (ties.length) stages.set(definition.key, { ...definition, ties });
+  }
+
+  return STAGES.flatMap((definition) => {
+    const stage = stages.get(definition.key);
+    return stage ? [stage] : [];
+  });
+}
+
+function qualifiedTeam(tie: KnockoutTie, nextStage?: KnockoutStage): Team | null {
+  const confirmedId = advancedTeamId(tie, nextStage);
+  return tie.teams.find((item) => !item.pending && item.team.id === confirmedId)?.team
+    ?? winnerOfTie(tie)?.team ?? null;
 }
 
 export function KnockoutBracket({
@@ -677,33 +776,49 @@ function TieCard({
 
   return (
     <article
-      className={`h-full overflow-hidden rounded-2xl bg-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] ${
+      className={`grid h-full grid-rows-[auto_minmax(0,1fr)_1px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-white shadow-[0_16px_36px_rgba(0,0,0,0.24)] ${
         hasWinner
           ? "border-2 border-cyan/45"
           : "border border-slate-200"
       }`}
     >
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold text-slate-500">
-        <span>
+        <span className="inline-flex min-w-0 items-center gap-1 truncate">
+          <CalendarDays className="size-3 shrink-0" />
           {tie.matches.length > 1
-            ? `${tie.matches.length} jogos`
-            : matchLabel(
+            ? aggregateDates(
+                tie.matches,
+              )
+            : matchDate(
                 tie.matches[0],
               )}
         </span>
 
-        <span
-          className={
-            hasWinner
-              ? "font-black text-cyan-700"
-              : ""
-          }
-        >
-          {hasWinner
-            ? "Classificado definido"
-            : tie.complete
-              ? "Encerrado"
-              : "Em disputa"}
+        <span className="inline-flex shrink-0 items-center gap-2">
+          {tie.matches.some(
+            (match) =>
+              match.walkover,
+          ) ? (
+            <strong className="text-amber-600">
+              W.O.
+            </strong>
+          ) : null}
+
+          <span
+            className={
+              hasWinner
+                ? "font-black text-cyan-700"
+                : ""
+            }
+          >
+            {hasWinner
+              ? "Classificado definido"
+              : tie.complete
+                ? "Encerrado"
+                : !tie.matches.length
+                  ? "Aguardando jogo"
+                  : "Em disputa"}
+          </span>
         </span>
       </div>
 
@@ -735,27 +850,6 @@ function TieCard({
         }
       />
 
-      <div className="flex items-center justify-between gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
-        <span className="inline-flex items-center gap-1">
-          <CalendarDays className="size-3" />
-          {tie.matches.length > 1
-            ? aggregateDates(
-                tie.matches,
-              )
-            : matchDate(
-                tie.matches[0],
-              )}
-        </span>
-
-        {tie.matches.some(
-          (match) =>
-            match.walkover,
-        ) ? (
-          <strong className="text-amber-600">
-            W.O.
-          </strong>
-        ) : null}
-      </div>
     </article>
   );
 }
@@ -771,7 +865,7 @@ function TeamRow({
 }) {
   return (
     <div
-      className={`flex min-h-[54px] items-center gap-3 px-3 py-2.5 transition ${
+      className={`flex min-h-0 items-center gap-3 px-3 py-2 transition ${
         winner
           ? "bg-gradient-to-r from-cyan/22 via-cyan/10 to-white"
           : eliminated
@@ -779,10 +873,13 @@ function TeamRow({
             : "bg-white"
       }`}
     >
-      <TeamMark
-        team={item.team}
-        size="sm"
-      />
+      {item.pending ? (
+        <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-400">
+          <Shield className="size-4" />
+        </span>
+      ) : (
+        <TeamMark team={item.team} size="sm" />
+      )}
 
       <span className="min-w-0 flex-1">
         <span
@@ -1051,6 +1148,14 @@ function destinationForTie(
   sourceCount: number,
   targetTies: KnockoutTie[],
 ) {
+  if (targetTies.some((tie) => tie.sourceTieKeys != null)) {
+    const targetIndex = targetTies.findIndex((tie) => tie.sourceTieKeys?.includes(sourceTie.key));
+    return {
+      targetIndex,
+      confirmed: targetIndex >= 0 && tiesShareTeam(sourceTie, targetTies[targetIndex]),
+    };
+  }
+
   const exactTargetIndex =
     targetTies.findIndex(
       (targetTie) =>
@@ -1357,6 +1462,7 @@ function tieHasTeam(
 ) {
   return tie.teams.some(
     (item) =>
+      !item.pending &&
       item.team.id ===
       teamId,
   );
@@ -1446,6 +1552,7 @@ function buildTie(
     teams: [
       {
         team: first,
+        pending: isPendingTeam(first),
         score:
           aggregateScore(
             first.id,
@@ -1454,6 +1561,7 @@ function buildTie(
       },
       {
         team: second,
+        pending: isPendingTeam(second),
         score:
           aggregateScore(
             second.id,
@@ -1480,12 +1588,17 @@ function buildTie(
       games.length > 0 &&
       games.every(
         (game) =>
+          (game.status === "FINISHED" || game.walkover) &&
           game.homeScore !=
             null &&
           game.awayScore !=
             null,
       ),
   };
+}
+
+function isPendingTeam(team: Team) {
+  return !team.id || ['a definir', 'definir', 'tbd'].includes(normalize(team.name));
 }
 
 function aggregateScore(
@@ -1635,14 +1748,6 @@ function matchSortValue(
   ].join("|");
 }
 
-function matchLabel(
-  match?: Match,
-) {
-  return match?.id
-    ? `Partida ${match.id}`
-    : "Confronto";
-}
-
 function matchDate(
   match?: Match,
 ) {
@@ -1650,7 +1755,10 @@ function matchDate(
     match?.scheduledDate;
 
   if (!value) {
-    return "Data a definir";
+    const scheduledAt = match?.scheduledAt ? new Date(match.scheduledAt) : null;
+    return scheduledAt && !Number.isNaN(scheduledAt.getTime())
+      ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }).format(scheduledAt)
+      : "a definir";
   }
 
   const [
@@ -1683,12 +1791,14 @@ function aggregateDates(
 
   return values.length
     ? values.join(" • ")
-    : "Datas a definir";
+    : "a definir";
 }
 
 function winnerOfTie(
   tie: KnockoutTie,
 ) {
+  if (!tie.complete || tie.teams.some((item) => item.pending)) return null;
+
   const [
     first,
     second,
