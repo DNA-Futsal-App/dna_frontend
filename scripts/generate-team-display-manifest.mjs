@@ -170,48 +170,6 @@ function relationshipTargets(entries, sourcePath) {
   return result;
 }
 
-function workbookSheets(entries) {
-  const workbookPath = "xl/workbook.xml";
-  const workbookXml = entries.get(workbookPath)?.toString("utf8");
-
-  if (!workbookXml) {
-    throw new Error("Arquivo XLSX inválido: xl/workbook.xml não encontrado.");
-  }
-
-  const relationships = relationshipTargets(entries, workbookPath);
-  const sheets = [];
-  const sheetPattern = /<sheet\b([^>]*?)\/?>(?:<\/sheet>)?/g;
-  let sheetMatch;
-
-  while ((sheetMatch = sheetPattern.exec(workbookXml))) {
-    const attrs = sheetMatch[1];
-    const name = decodeXml(/\bname="([^"]+)"/.exec(attrs)?.[1] ?? "");
-    const relationshipId = /\br:id="([^"]+)"/.exec(attrs)?.[1];
-    const state = /\bstate="([^"]+)"/.exec(attrs)?.[1] ?? "visible";
-    const relationship = relationshipId
-      ? relationships.get(relationshipId)
-      : null;
-
-    if (!name || !relationship || relationship.external || !relationship.path) {
-      throw new Error(
-        `Arquivo XLSX inválido: não foi possível localizar a aba "${name || relationshipId || "sem nome"}".`,
-      );
-    }
-
-    if (!/\/worksheet$/i.test(relationship.type)) {
-      continue;
-    }
-
-    sheets.push({ name, path: relationship.path, state });
-  }
-
-  if (!sheets.length) {
-    throw new Error("Arquivo XLSX inválido: nenhuma aba de planilha foi encontrada.");
-  }
-
-  return sheets;
-}
-
 function sheetEmbeddedImages(entries, sheetPath) {
   const sheetXml = entries.get(sheetPath)?.toString("utf8") ?? "";
   const sheetRelationships = relationshipTargets(entries, sheetPath);
@@ -409,11 +367,6 @@ export function parseRows(entries, sheetPath, strings) {
   while ((rowMatch = rowPattern.exec(xml))) {
     const rowNumber = Number.parseInt(/\br="(\d+)"/.exec(rowMatch[1])?.[1] ?? "0", 10);
     const cells = new Map();
-<<<<<<< HEAD
-    // Células vazias podem vir como <c r="C3"/>. Elas não podem consumir
-    // a próxima célula (por exemplo D3, que contém o nome do escudo).
-=======
->>>>>>> d175d581e233419909a365d70935cde8cd81b27d
     const cellPattern = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
     let cellMatch;
 
@@ -484,222 +437,26 @@ function findHeader(rows) {
 }
 
 function publicUrl(file) {
-<<<<<<< HEAD
-  const relative = path.relative(publicRoot, file);
-  return `/${relative
-    .split(path.sep)
-    .map((segment) => encodeURIComponent(segment))
-    .join("/")}`;
-}
-
-async function createPublicAssetIndex() {
-  const files = await walkFiles(publicRoot);
-  const byBaseName = new Map();
-  const byRelative = new Map();
-  const byStem = new Map();
-  const byTeamName = new Map();
-  const localFiles = [];
-
-  for (const file of files) {
-    const relative = path.relative(publicRoot, file).replaceAll(path.sep, "/");
-    byRelative.set(relative.toLowerCase(), file);
-
-    if (!/\.(png|jpe?g|webp|gif|avif|svg)$/i.test(file)) continue;
-
-    const base = path.basename(file).toLowerCase();
-    const matches = byBaseName.get(base) ?? [];
-    matches.push(file);
-    byBaseName.set(base, matches);
-
-    if (relative.startsWith("logos_times/")) {
-      localFiles.push(file);
-      const fileStem = path.basename(file, path.extname(file));
-      const stem = normalize(fileStem.replace(/\s*\(\d+\)$/, ""));
-      const normalizedMatches = byStem.get(stem) ?? [];
-      normalizedMatches.push(file);
-      byStem.set(stem, normalizedMatches);
-
-      // Nas divisões A3 os nomes dos arquivos costumam começar com o
-      // número do time no grupo, como "9 C13.png".
-      const teamKey = normalize(fileStem.replace(/^\d+\s+/, ""));
-      if (teamKey) {
-        const teamMatches = byTeamName.get(teamKey) ?? [];
-        teamMatches.push(file);
-        byTeamName.set(teamKey, teamMatches);
-      }
-    }
-  }
-
-  return { byBaseName, byRelative, byStem, byTeamName, localFiles };
-}
-
-function isInSheet(file, sheetName) {
-  const sheetMatch = /^(.*)\s+(A\d+)$/i.exec(sheetName);
-  if (!sheetMatch) return false;
-
-  const segments = path.relative(publicRoot, file).split(path.sep);
-  return (
-    segments[0]?.toLowerCase() === "logos_times" &&
-    normalize(segments[1]) === normalize(sheetMatch[1]) &&
-    segments[2]?.toLowerCase() === sheetMatch[2].toLowerCase()
-  );
-}
-
-function chooseLogoFile(files, sheetName) {
-  if (files.length === 1) return files[0];
-  if (!files.length) return null;
-
-  const scoped = files.filter((file) => isInSheet(file, sheetName));
-
-  return scoped.length === 1 ? scoped[0] : null;
-}
-
-async function resolveLogo(rawValue, assetIndex, sheetName) {
-  const raw = String(rawValue ?? "").trim();
-  if (!raw) return null;
-
-  if (/^https?:\/\//i.test(raw)) {
-    // O hyperlink do Excel frequentemente abre uma página do Drive; a URL
-    // /view não entrega bytes de imagem para uma tag <img>.
-    if (/^https?:\/\/drive\.google\.com\/file\/d\/[^/]+\/view/i.test(raw)) {
-      return null;
-    }
-    return raw;
-  }
-
-  const normalizedRelative = raw
-    .replace(/^\//, "")
-    .replace(/^public[\\/]/i, "")
-    .replaceAll("\\", "/")
-    .replace(/^\.\//, "");
-
-  const direct = assetIndex.byRelative.get(normalizedRelative.toLowerCase());
-  if (direct) {
-    return publicUrl(direct);
-  }
-
-  const byName = assetIndex.byBaseName.get(path.posix.basename(normalizedRelative).toLowerCase()) ?? [];
-  const exact = chooseLogoFile(byName, sheetName);
-  if (exact) {
-    return publicUrl(exact);
-  }
-
-  const stem = normalize(
-    path.posix.basename(normalizedRelative, path.posix.extname(normalizedRelative))
-      .replace(/\s*\(\d+\)$/, ""),
-  );
-  const byStem = assetIndex.byStem.get(stem) ?? [];
-  const normalized = chooseLogoFile(byStem, sheetName);
-  if (normalized) {
-    return publicUrl(normalized);
-  }
-
-  if (byName.length > 1 || byStem.length > 1) {
-    console.warn(
-      `[team-display] Logo ambíguo "${raw}" na aba "${sheetName}"; informe o caminho relativo ao public.`,
-    );
-  } else {
-    console.warn(`[team-display] Logo não encontrado em public: "${raw}" (aba "${sheetName}").`);
-  }
-
-  return null;
-=======
   return '/' + path.relative(publicRoot, file).split(path.sep).map(encodeURIComponent).join('/');
->>>>>>> d175d581e233419909a365d70935cde8cd81b27d
-}
-
-function resolveLogoByTeamName(sourceName, displayName, assetIndex, sheetName) {
-  const names = [displayName, sourceName, ...sourceName.split("|")];
-
-  for (const name of names) {
-    const key = normalize(name);
-    if (!key) continue;
-
-    const file = chooseLogoFile(assetIndex.byTeamName.get(key) ?? [], sheetName);
-    if (file) return publicUrl(file);
-  }
-
-  const generic = new Set([
-    "a", "e", "b", "c", "ac", "ad", "ae", "adc", "fc", "sc", "se",
-    "da", "de", "do", "das", "dos", "clube", "associacao", "atletica",
-    "atletico", "esportiva", "esportivo", "desportiva", "desportivo",
-    "futebol", "futsal", "sport", "sports", "liga", "instituto", "grupo",
-    "logo", "escola", "sociedade",
-  ]);
-  const words = (value) => value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter((word) => word.length >= 3 && !generic.has(word));
-  const teamWords = new Set(words(`${displayName} ${sourceName}`));
-  const candidates = assetIndex.localFiles
-    .filter((file) => isInSheet(file, sheetName))
-    .map((file) => {
-      const stem = path.basename(file, path.extname(file)).replace(/^\d+\s+/, "");
-      const common = words(stem).filter((word) => teamWords.has(word));
-      return {
-        file,
-        score: common.reduce((sum, word) => sum + word.length, 0),
-      };
-    })
-    .filter((candidate) => candidate.score >= 3)
-    .sort((left, right) => right.score - left.score);
-
-  if (candidates.length && candidates[0].score > (candidates[1]?.score ?? 0)) {
-    return publicUrl(candidates[0].file);
-  }
-
-  // Último recurso para um único erro de digitação em um nome longo,
-  // sempre limitado à mesma aba para não associar clubes diferentes.
-  const oneCharacterApart = (left, right) => {
-    if (left.length !== right.length || left.length < 7) return false;
-    let differences = 0;
-    for (let index = 0; index < left.length; index++) {
-      if (left[index] !== right[index] && ++differences > 1) return false;
-    }
-    return differences === 1;
-  };
-  const close = assetIndex.localFiles.filter((file) => {
-    if (!isInSheet(file, sheetName)) return false;
-    const stem = path.basename(file, path.extname(file)).replace(/^\d+\s+/, "");
-    return words(stem).some((fileWord) =>
-      [...teamWords].some((teamWord) => oneCharacterApart(fileWord, teamWord)),
-    );
-  });
-  if (close.length === 1) return publicUrl(close[0]);
-
-  return null;
 }
 
 async function workbookEntries(file, assetIndex) {
   const buffer = await fs.readFile(file);
   const entries = readZipEntries(buffer);
   const strings = sharedStrings(entries);
-  const sheets = workbookSheets(entries);
+  const sheets = [...entries.keys()]
+    .filter((name) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(name))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   const result = [];
-  const sheetSummary = [];
 
-  for (const sheet of sheets) {
-    const rows = parseRows(entries, sheet.path, strings);
+  for (const sheetPath of sheets) {
+    const rows = parseRows(entries, sheetPath, strings);
     const header = findHeader(rows);
-    if (!header) {
-      sheetSummary.push({ ...sheet, rows: 0, status: "ignored" });
-      console.warn(
-        `[team-display] Aba "${sheet.name}" ignorada: ` +
-          'as colunas "site fpsf/fpfs", "nome curto app" e "logo" não foram encontradas.',
-      );
-      continue;
-    }
+    if (!header) continue;
 
-<<<<<<< HEAD
-    const embeddedImages = sheetEmbeddedImages(entries, sheet.path);
-    const startCount = result.length;
-=======
     const embeddedImages = sheetEmbeddedImages(entries, sheetPath);
     const context = rows.filter(row => row.rowNumber < header.rowNumber)
       .flatMap(row => [...row.cells.values()].map(cell => cell.value)).join(' ');
->>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
     for (const row of rows) {
       if (row.rowNumber <= header.rowNumber) continue;
@@ -710,15 +467,7 @@ async function workbookEntries(file, assetIndex) {
       const sourceName = sourceCell?.value?.trim() ?? "";
       const displayName = displayCell?.value?.trim() ?? "";
 
-<<<<<<< HEAD
-      const logoRaw =
-        logoCell?.value ||
-        logoCell?.formula ||
-        logoCell?.hyperlink ||
-        "";
-=======
       const references = [logoCell?.value, logoCell?.formula, logoCell?.hyperlink].filter(Boolean);
->>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
       if (!sourceName) continue;
 
@@ -738,21 +487,10 @@ async function workbookEntries(file, assetIndex) {
               )
             : null;
 
-<<<<<<< HEAD
-      const logoUrl =
-        embeddedLogoUrl ??
-        (await resolveLogo(
-          logoRaw,
-          assetIndex,
-          sheet.name,
-        )) ??
-        resolveLogoByTeamName(sourceName, displayName, assetIndex, sheet.name);
-=======
       const localUrls = references.flatMap(reference => findLocalLogos(reference, assetIndex, context));
       const remoteUrls = references.map(imageUrl).filter(Boolean);
       const logoUrls = [...new Set([embeddedLogoUrl, ...localUrls, ...remoteUrls].filter(Boolean))];
       const logoUrl = logoUrls[0] ?? null;
->>>>>>> d175d581e233419909a365d70935cde8cd81b27d
 
       result.push({
         key,
@@ -762,15 +500,9 @@ async function workbookEntries(file, assetIndex) {
         logoUrls,
       });
     }
-
-    const rowCount = result.length - startCount;
-    sheetSummary.push({ ...sheet, rows: rowCount, status: "indexed" });
-    console.log(
-      `[team-display] Aba "${sheet.name}"${sheet.state === "hidden" ? " (oculta)" : ""}: ${rowCount} time(s) indexado(s).`,
-    );
   }
 
-  return { entries: result, sheets: sheetSummary };
+  return result;
 }
 
 function chooseDisplayName(current, entry) {
@@ -905,7 +637,6 @@ async function main() {
   const assetIndex = await createLogoAssetIndex(publicRoot);
   const collected = [];
   const usedWorkbooks = [];
-  const usedSheets = [];
   const ignoredWorkbooks = [];
 
   for (const workbook of workbooks) {
@@ -934,13 +665,13 @@ async function main() {
         continue;
       }
 
-      const workbookData =
+      const entries =
         await workbookEntries(
           workbook,
           assetIndex,
         );
 
-      if (!workbookData.entries.length) {
+      if (!entries.length) {
         console.warn(
           `[team-display] Ignorando "${workbookName}": ` +
             'as colunas "site fpsf/fpfs", "nome curto app" e "logo" não foram encontradas.',
@@ -952,16 +683,7 @@ async function main() {
         workbookName,
       );
       collected.push(
-        ...workbookData.entries,
-      );
-      usedSheets.push(
-        ...workbookData.sheets.map((sheet) => ({
-          workbook: workbookName,
-          name: sheet.name,
-          state: sheet.state,
-          rows: sheet.rows,
-          status: sheet.status,
-        })),
+        ...entries,
       );
     } catch (error) {
       const message =
@@ -1018,7 +740,6 @@ async function main() {
   const manifest = {
     version: 1,
     sourceFiles: usedWorkbooks,
-    sourceSheets: usedSheets,
     teams,
   };
 
@@ -1051,15 +772,6 @@ async function main() {
   console.log(
     `[team-display] ${teams.length} times indexados a partir de ${usedWorkbooks.join(", ")}.`,
   );
-  const withoutLogo = teams.filter((team) => !team.logoUrl);
-  console.log(
-    `[team-display] ${teams.length - withoutLogo.length} times com logo da planilha ou dos arquivos locais.`,
-  );
-  if (withoutLogo.length) {
-    console.warn(
-      `[team-display] Sem logo local (${withoutLogo.length}): ${withoutLogo.map((team) => team.displayName).join(", ")}.`,
-    );
-  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
