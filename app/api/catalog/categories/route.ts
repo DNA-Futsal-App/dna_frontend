@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
     season,
     divisionId,
   });
+  const title = params.get("title");
+  if (title) query.set("title", title);
 
   return proxyPublic(
     `/api/v1/public/catalog/categories?${query}`,

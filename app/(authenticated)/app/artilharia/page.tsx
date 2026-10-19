@@ -23,6 +23,7 @@ import {
 } from "@/components/competition-search";
 
 import type { TopScorer } from "@/lib/types";
+import type { CompetitionStructure } from "@/lib/competition-structure";
 import { useApiData } from "@/lib/use-api-data";
 import { clientApi } from "@/lib/client-api";
 import { hasKnockoutScorers, topScorersUrl, type ScorerScope } from "@/lib/top-scorers-query";
@@ -32,16 +33,29 @@ const PAGE_SIZE = 10;
 const MAX_LIMIT = 500;
 
 export default function TopScorersPage() {
-  const { activeEventId } =
-    useCompetitionBrowse();
-
-  return <TopScorers key={activeEventId ?? "profile"} eventId={activeEventId} />;
+  const { activeEventId, stage } = useCompetitionBrowse();
+  return <TopScorers key={`${activeEventId ?? "profile"}:${stage}`} eventId={activeEventId} stage={stage} />;
 }
 
-function TopScorers({ eventId }: { eventId: number | null }) {
+function TopScorers({ eventId, stage }: { eventId: number | null; stage: string }) {
+  const { data: structure } = useApiData<CompetitionStructure>(
+    eventId != null ? `/api/sports/structure?eventId=${eventId}` : null,
+  );
+  const [selectedPhase, setSelectedPhase] = useState(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("phase") ?? "");
+  function choosePhase(value: string) {
+    setSelectedPhase(value);
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set("phase", value);
+    else url.searchParams.delete("phase");
+    window.history.replaceState(null, "", url.toString());
+  }
+  const phases = structure?.stages.find((item) => item.id === stage)?.phases
+    .filter((item) => item.hasScorers) ?? [];
+  const phase = phases.some((item) => item.name === selectedPhase) ? selectedPhase : "";
   const [scope, setScope] = useState<ScorerScope>("general");
   const { data: knockoutScorers, error: phasesError, loading: checkingPhases, reload: checkPhases } =
-    useApiData<TopScorer[]>(topScorersUrl(eventId, "knockout", 1));
+    useApiData<TopScorer[]>(topScorersUrl(eventId, "knockout", 1, phase, eventId != null && stage === "UNIAO" ? stage : undefined));
   const hasKnockout = hasKnockoutScorers(knockoutScorers);
 
   return (
@@ -52,8 +66,16 @@ function TopScorers({ eventId }: { eventId: number | null }) {
         description="Os goleadores da categoria, atualizados após a conclusão de cada jogo."
       />
       <CompetitionSearch />
+      {stage === "UNIAO" ? (
+        <label className="mb-5 grid max-w-sm gap-1 text-xs text-muted">Fase com artilharia oficial
+          <select className="field" value={phase} onChange={(event) => choosePhase(event.target.value)}>
+            <option value="">Todas as fases disponíveis</option>
+            {phases.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+          </select>
+        </label>
+      ) : null}
 
-      {hasKnockout ? (
+      {hasKnockout && stage !== "UNIAO" ? (
         <div className="mb-5 flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-full border border-white/10 bg-ink/35 p-1" role="group" aria-label="Recorte da artilharia">
             {([
@@ -90,14 +112,17 @@ function TopScorers({ eventId }: { eventId: number | null }) {
       ) : null}
 
       <div id="scorer-ranking">
-        <ScorerRanking key={scope} eventId={eventId} scope={scope} />
+        <ScorerRanking key={`${scope}:${phase}:${stage}`} eventId={eventId} scope={scope}
+          phase={phase} stage={stage} />
       </div>
     </div>
   );
 }
 
-function ScorerRanking({ eventId, scope }: { eventId: number | null; scope: ScorerScope }) {
-  const dataUrl = topScorersUrl(eventId, scope, PAGE_SIZE);
+function ScorerRanking({ eventId, scope, phase, stage }: {
+  eventId: number | null; scope: ScorerScope; phase: string; stage: string;
+}) {
+  const dataUrl = topScorersUrl(eventId, scope, PAGE_SIZE, phase, eventId != null && stage === "UNIAO" ? stage : undefined);
 
   const {
     data: initialData,
@@ -129,7 +154,7 @@ function ScorerRanking({ eventId, scope }: { eventId: number | null; scope: Scor
     setLoadingMore(true);
     setMoreError("");
     try {
-      const result = await clientApi<TopScorer[]>(topScorersUrl(eventId, scope, nextLimit), {
+      const result = await clientApi<TopScorer[]>(topScorersUrl(eventId, scope, nextLimit, phase, eventId != null && stage === "UNIAO" ? stage : undefined), {
         cache: "no-store",
         signal: controller.signal,
       });

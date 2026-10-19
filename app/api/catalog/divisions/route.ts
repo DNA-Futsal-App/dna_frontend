@@ -13,9 +13,8 @@ export async function GET(request: NextRequest) {
     ]);
   }
 
-  return proxyPublic(
-    `/api/v1/public/catalog/divisions?season=${encodeURIComponent(
-      season,
-    )}`,
-  );
+  const query = new URLSearchParams({ season });
+  const title = request.nextUrl.searchParams.get("title");
+  if (title) query.set("title", title);
+  return proxyPublic(`/api/v1/public/catalog/divisions?${query}`);
 }

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { clientApi } from "@/lib/client-api";
 
-export function useApiData<T>(url: string) {
+export function useApiData<T>(url: string | null) {
   const [data, setData] =
     useState<T | null>(null);
   const [error, setError] =
@@ -21,6 +21,7 @@ export function useApiData<T>(url: string) {
     useRef(0);
 
   const load = useCallback(async () => {
+    if (!url) return;
     const currentRequestId =
       ++requestId.current;
 
@@ -70,11 +71,13 @@ export function useApiData<T>(url: string) {
   }, [url]);
 
   useEffect(() => {
+    if (!url) return;
+    const requestUrl = url;
     const currentRequestId = ++requestId.current;
 
     async function loadInitialData() {
       try {
-        const result = await clientApi<T>(url, {
+        const result = await clientApi<T>(requestUrl, {
           cache: "no-store",
         });
 
@@ -96,7 +99,7 @@ export function useApiData<T>(url: string) {
         );
       } finally {
         if (currentRequestId === requestId.current) {
-          setResolvedUrl(url);
+          setResolvedUrl(requestUrl);
           setLoading(false);
         }
       }

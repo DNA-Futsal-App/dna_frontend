@@ -75,10 +75,8 @@ export type Standing = {
   technicalIndex?: number | null;
 };
 
-export type CompetitionKey =
-  | "GOLD"
-  | "SILVER"
-  | "BRONZE";
+/** Official phase-specific knockout bracket, including future names. */
+export type CompetitionKey = string;
 
 export type CompetitionKeyEntry = {
   teamId: string;

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -15,6 +16,8 @@ import {
 } from "react";
 
 import { useProfile } from "@/components/profile-context";
+import type { CompetitionStage, CompetitionStructure } from "@/lib/competition-structure";
+import { useApiData } from "@/lib/use-api-data";
 import { clientApi } from "@/lib/client-api";
 import type {
   CatalogCategory,
@@ -33,6 +36,8 @@ type CompetitionBrowseContextValue = {
   selection: BrowsedCompetition | null;
   activeEventId: number | null;
   isExploring: boolean;
+  stage: CompetitionStage;
+  selectStage: (value: CompetitionStage) => void;
   selectCompetition: (
     competition: BrowsedCompetition,
   ) => void;
@@ -44,6 +49,8 @@ const CompetitionBrowseContext =
     selection: null,
     activeEventId: null,
     isExploring: false,
+    stage: "PAULISTA",
+    selectStage: () => undefined,
     selectCompetition: () => undefined,
     clearCompetition: () => undefined,
   });
@@ -56,6 +63,31 @@ export function CompetitionBrowseProvider({
   const { profile } = useProfile();
   const [selection, setSelection] =
     useState<BrowsedCompetition | null>(null);
+  const [stage, setStage] = useState<CompetitionStage>("PAULISTA");
+
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem("dna:competition-selection");
+    const id = new URLSearchParams(window.location.search).get("eventId");
+    if (raw && id) {
+      try {
+        const stored = JSON.parse(raw) as BrowsedCompetition;
+        if (Number(id) === stored.eventId) Promise.resolve().then(() => setSelection(stored));
+      } catch { /* corrupted transient selection; leave user's profile alone */ }
+    }
+    const saved = new URLSearchParams(window.location.search).get("stage")
+      ?? window.sessionStorage.getItem("dna:competition-stage");
+    if (saved === "UNIAO") Promise.resolve().then(() => setStage("UNIAO"));
+  }, []);
+
+  const selectStage = useCallback((value: CompetitionStage) => {
+    setStage(value);
+    window.sessionStorage.setItem("dna:competition-stage", value);
+    const url = new URL(window.location.href);
+    url.searchParams.set("stage", value);
+    url.searchParams.delete("phase");
+    url.searchParams.delete("group");
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -65,13 +97,32 @@ export function CompetitionBrowseProvider({
         profile?.eventId ??
         null,
       isExploring: selection != null,
-      selectCompetition: setSelection,
-      clearCompetition: () =>
-        setSelection(null),
+      stage,
+      selectStage,
+      selectCompetition: (competition: BrowsedCompetition) => {
+        setSelection(competition);
+        window.sessionStorage.setItem("dna:competition-selection", JSON.stringify(competition));
+        const url = new URL(window.location.href);
+        url.searchParams.set("eventId", String(competition.eventId));
+        url.searchParams.delete("phase");
+        url.searchParams.delete("group");
+        window.history.replaceState(null, "", url.toString());
+      },
+      clearCompetition: () => {
+        setSelection(null);
+        window.sessionStorage.removeItem("dna:competition-selection");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("eventId");
+        url.searchParams.delete("phase");
+        url.searchParams.delete("group");
+        window.history.replaceState(null, "", url.toString());
+      },
     }),
     [
       profile?.eventId,
       selection,
+      stage,
+      selectStage,
     ],
   );
 
@@ -101,6 +152,8 @@ export function CompetitionSearch({
     isExploring,
     selectCompetition,
     clearCompetition,
+    stage,
+    selectStage,
   } = useCompetitionBrowse();
 
   const [divisions, setDivisions] =
@@ -117,6 +170,21 @@ export function CompetitionSearch({
   ] = useState<string | null>(null);
   const [formError, setFormError] =
     useState("");
+  const [officialTitle, setOfficialTitle] = useState("Paulista");
+  // The Union is usually a stage inside the Paulista event, not a separate title.
+  // Do not query divisions for a title before the FPFS lists it officially.
+  const { data: officialTitles } = useApiData<CatalogItem[]>(
+    "/api/catalog/titles?season=2026",
+  );
+  const independentTitle = officialTitles?.find((item) =>
+    item.name.trim().normalize("NFD").replace(/\p{M}/gu, "")
+      .toLocaleLowerCase("pt-BR").replace(/\s+/g, " ") === "torneio uniao de clubes"
+  );
+  const { activeEventId } = useCompetitionBrowse();
+  const { data: structure } = useApiData<CompetitionStructure>(
+    activeEventId != null ? `/api/sports/structure?eventId=${activeEventId}` : null,
+  );
+  const hasUnion = structure?.stages.some((item) => item.id === "UNIAO") ?? false;
 
   const divisionId =
     draftDivisionId ??
@@ -134,7 +202,8 @@ export function CompetitionSearch({
     let active = true;
 
     clientApi<CatalogItem[]>(
-      "/api/catalog/divisions",
+      officialTitle === "Paulista" ? "/api/catalog/divisions" :
+        `/api/catalog/divisions?title=${encodeURIComponent(officialTitle)}`,
     )
       .then((result) => {
         if (active) {
@@ -150,7 +219,7 @@ export function CompetitionSearch({
     return () => {
       active = false;
     };
-  }, []);
+  }, [officialTitle]);
 
   useEffect(() => {
     if (!divisionId) {
@@ -160,9 +229,7 @@ export function CompetitionSearch({
     let active = true;
 
     clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(
-        divisionId,
-      )}`,
+      `/api/catalog/categories?divisionId=${encodeURIComponent(divisionId)}&title=${encodeURIComponent(officialTitle)}`,
     )
       .then((result) => {
         if (active) {
@@ -178,7 +245,7 @@ export function CompetitionSearch({
     return () => {
       active = false;
     };
-  }, [divisionId]);
+  }, [divisionId, officialTitle]);
 
   function searchCompetition() {
     const division =
@@ -204,6 +271,8 @@ export function CompetitionSearch({
 
     setFormError("");
 
+    // A different event may not publish the same Union structure.
+    selectStage(officialTitle === "Paulista" ? "PAULISTA" : "UNIAO");
     selectCompetition({
       eventId: category.eventId,
       divisionId: String(
@@ -219,6 +288,7 @@ export function CompetitionSearch({
 
   function resetCompetition() {
     clearCompetition();
+    selectStage("PAULISTA");
     setDraftDivisionId(null);
     setDraftCategoryId(null);
     setFormError("");
@@ -250,6 +320,30 @@ export function CompetitionSearch({
         ) : null}
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Etapa da competição">
+        <button type="button" onClick={() => selectStage("PAULISTA")}
+          className={stage === "PAULISTA" ? "btn-primary" : "btn-ghost"}>
+          Campeonato Paulista
+        </button>
+        <button type="button" onClick={() => selectStage("UNIAO")}
+          disabled={!hasUnion}
+          title={!hasUnion ? "Ainda não há fases do União publicadas neste evento" : undefined}
+          className={stage === "UNIAO" ? "btn-primary" : "btn-ghost"}>
+          Torneio União
+        </button>
+      </div>
+      {independentTitle ? (
+        <label className="mt-4 grid max-w-sm gap-1.5 text-xs font-bold text-muted">
+          Título oficial
+          <select className="field" value={officialTitle} onChange={(event) => {
+            setOfficialTitle(event.target.value);
+            setDraftDivisionId(""); setDraftCategoryId(""); setCategories([]);
+          }}>
+            <option value="Paulista">Campeonato Paulista</option>
+            <option value={independentTitle.name}>{independentTitle.name} (título independente)</option>
+          </select>
+        </label>
+      ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
         <label className="grid gap-1.5 text-xs font-bold text-muted">
           Divisão

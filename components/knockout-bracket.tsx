@@ -96,6 +96,7 @@ const CHAMPION_WIDTH = 220;
 
 export function buildKnockoutStages(
   matches: Match[],
+  strict = false,
 ): KnockoutStage[] {
   const stages =
     new Map<
@@ -141,7 +142,10 @@ export function buildKnockoutStages(
           stage.ties.length > 0,
       );
 
-  const ordered = completeUpcomingStages(published);
+  // Union brackets may depend on aggregate results across categories.
+  // Never synthesize unpublished matches when the official pairing is unknown.
+  const ordered = strict ? published : completeUpcomingStages(published);
+  if (strict) return ordered;
 
   for (
     let index = 1;
@@ -280,8 +284,10 @@ function qualifiedTeam(tie: KnockoutTie, nextStage?: KnockoutStage): Team | null
 
 export function KnockoutBracket({
   stages,
+  inferWinner = true,
 }: {
   stages: KnockoutStage[];
+  inferWinner?: boolean;
 }) {
   if (!stages.length) {
     return null;
@@ -609,6 +615,7 @@ export function KnockoutBracket({
                       }}
                     >
                       <TieCard
+                        inferWinner={inferWinner}
                         tie={tie}
                         advancedTeamId={
                           advancedTeamId(
@@ -755,21 +762,18 @@ function ChampionConnector({
 function TieCard({
   tie,
   advancedTeamId,
+  inferWinner = true,
 }: {
   tie: KnockoutTie;
   advancedTeamId: string | null;
+  inferWinner?: boolean;
 }) {
   const [
     first,
     second,
   ] = tie.teams;
 
-  const winner =
-    advancedTeamId ??
-    winnerOfTie(
-      tie,
-    )?.team.id ??
-    null;
+  const winner = advancedTeamId ?? (inferWinner ? winnerOfTie(tie)?.team.id : null);
 
   const hasWinner =
     winner != null;
@@ -1694,12 +1698,7 @@ function stageForPhase(
     return STAGES[2];
   }
 
-  if (
-    value === "final" ||
-    value.endsWith(
-      " final",
-    )
-  ) {
+  if (/\bfinal\b/.test(value)) {
     return STAGES[3];
   }
 

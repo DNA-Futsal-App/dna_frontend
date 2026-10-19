@@ -30,6 +30,8 @@ import type {
   Standing,
 } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
+import { officialMatchBracket } from "@/lib/competition-structure";
+import type { CompetitionStructure } from "@/lib/competition-structure";
 
 type StandingsView =
   | "STANDINGS"
@@ -41,7 +43,31 @@ export default function StandingsPage() {
   const {
     activeEventId,
     isExploring,
+    stage,
   } = useCompetitionBrowse();
+  const [selectedPhase, setSelectedPhase] = useState(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("phase") ?? "");
+  const [selectedGroup, setSelectedGroup] = useState(() =>
+    typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("group") ?? "");
+  function chooseFilter(name: "phase" | "group", value: string) {
+    if (name === "phase") { setSelectedPhase(value); setSelectedGroup(""); }
+    else setSelectedGroup(value);
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set(name, value);
+    else url.searchParams.delete(name);
+    if (name === "phase") url.searchParams.delete("group");
+    window.history.replaceState(null, "", url.toString());
+  }
+  const { data: structure } = useApiData<CompetitionStructure>(
+    activeEventId != null ? `/api/sports/structure?eventId=${activeEventId}` : null,
+  );
+  const stageStructure = structure?.stages.find((item) => item.id === stage);
+  const validPhase = stageStructure?.phases.some((item) => item.name === selectedPhase)
+    ? selectedPhase : "";
+  const availableGroups = stageStructure?.phases
+    .filter((item) => !validPhase || item.name === validPhase)
+    .flatMap((item) => item.groups) ?? [];
+  const validGroup = availableGroups.includes(selectedGroup) ? selectedGroup : "";
 
   const [tabState, setTabState] =
     useState<{
@@ -52,19 +78,16 @@ export default function StandingsPage() {
       view: "STANDINGS",
     });
 
-  const standingsUrl =
-    activeEventId != null
-      ? `/api/standings?eventId=${encodeURIComponent(
-          String(activeEventId),
-        )}`
-      : "/api/standings";
+  const standingsParams = new URLSearchParams();
+  if (activeEventId != null) standingsParams.set("eventId", String(activeEventId));
+  if (activeEventId != null) standingsParams.set("stage", stage);
+  if (validPhase) standingsParams.set("phase", validPhase);
+  if (validGroup) standingsParams.set("group", validGroup);
+  const standingsUrl = `/api/standings?${standingsParams}`;
 
-  const matchesUrl =
-    activeEventId != null
-      ? `/api/matches?eventId=${encodeURIComponent(
-          String(activeEventId),
-        )}`
-      : "/api/matches";
+  const matchesUrl = activeEventId != null
+    ? `/api/matches?eventId=${encodeURIComponent(String(activeEventId))}&stage=${stage}`
+    : "/api/matches";
 
   const competitionKeysUrl =
     activeEventId != null
@@ -109,11 +132,8 @@ export default function StandingsPage() {
         ]
       : [];
 
-  const competitionKeyByTeamId =
-    buildCompetitionKeyMap(
-      competitionKeys ?? [],
-      knockoutMatches,
-    );
+  const competitionKeyByTeamId = stage === "UNIAO" ? {}
+    : buildCompetitionKeyMap(competitionKeys ?? [], knockoutMatches);
 
   const classifiedMatches =
     knockoutMatches.map(
@@ -128,7 +148,9 @@ export default function StandingsPage() {
     );
 
   const keyedBrackets =
-    COMPETITION_KEY_ORDER
+    Array.from(new Set(classifiedMatches.map((item) => item.competitionKey)
+      .filter((value): value is string => value != null)))
+      .sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }))
       .map(
         (competitionKey) => ({
           competitionKey,
@@ -140,10 +162,8 @@ export default function StandingsPage() {
                     item.competitionKey ===
                     competitionKey,
                 )
-                .map(
-                  (item) =>
-                    item.match,
-                ),
+                .map((item) => item.match),
+              stage === "UNIAO",
             ),
         }),
       )
@@ -161,10 +181,8 @@ export default function StandingsPage() {
             item.competitionKey ==
             null,
         )
-        .map(
-          (item) =>
-            item.match,
-        ),
+        .map((item) => item.match),
+      stage === "UNIAO",
     );
 
   const brackets =
@@ -204,10 +222,7 @@ export default function StandingsPage() {
       ? "KNOCKOUT"
       : "STANDINGS";
 
-  const groups =
-    groupStandings(
-      data ?? [],
-    );
+  const groups = groupStandings(data ?? [], stage === "UNIAO");
 
   const classificationPhase =
     data?.find(
@@ -229,12 +244,32 @@ export default function StandingsPage() {
   return (
     <div>
       <PageIntro
-        eyebrow="Campeonato Paulista"
+        eyebrow={stage === "UNIAO" ? "Torneio União" : "Campeonato Paulista"}
         title="Classificação"
         description="Veja a classificação final da fase de pontos e, quando houver mata-mata, acompanhe também o chaveamento."
       />
 
       <CompetitionSearch />
+      {stageStructure ? (
+        <div className="mb-5 flex flex-wrap gap-3">
+          <label className="grid gap-1 text-xs text-muted">Fase
+            <select className="field" value={validPhase} onChange={(event) => {
+              chooseFilter("phase", event.target.value);
+            }}>
+              <option value="">Todas as fases</option>
+              {stageStructure.phases.filter((item) => item.hasStandings).map((item) =>
+                <option key={item.name} value={item.name}>{item.name}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs text-muted">Grupo / chave
+            <select className="field" value={validGroup} onChange={(event) => chooseFilter("group", event.target.value)}>
+              <option value="">Todos os grupos</option>
+              {Array.from(new Set(availableGroups)).map((group) =>
+                <option key={group} value={group}>{group}</option>)}
+            </select>
+          </label>
+        </div>
+      ) : null}
 
       {hasKnockout ? (
         <div className="mb-6 inline-flex rounded-xl border border-white/8 bg-panel p-1">
@@ -316,11 +351,7 @@ export default function StandingsPage() {
                     </div>
                   ) : null}
 
-                  <KnockoutBracket
-                    stages={
-                      bracket.stages
-                    }
-                  />
+                  <KnockoutBracket stages={bracket.stages} inferWinner={stage !== "UNIAO"} />
                 </section>
               ),
             )}
@@ -347,7 +378,7 @@ export default function StandingsPage() {
                 <div className="space-y-2">
                   <p>
                     <strong className="text-cyan">
-                      Fase classificatória encerrada.
+                      {stage === "UNIAO" ? "Classificação publicada pela FPFS." : "Fase classificatória encerrada."}
                     </strong>{" "}
                     Esta é a classificação final da fase de pontos, com todos os times retornados para a categoria.
                   </p>
@@ -377,7 +408,7 @@ export default function StandingsPage() {
             </div>
           ) : null}
 
-          {competitionKeys?.length ? (
+          {stage === "PAULISTA" && competitionKeys?.length ? (
             <CompetitionKeyLegend />
           ) : null}
 
@@ -451,20 +482,15 @@ export default function StandingsPage() {
   );
 }
 
-const COMPETITION_KEY_ORDER:
-  CompetitionKey[] = [
-    "GOLD",
-    "SILVER",
-    "BRONZE",
-  ];
+const COMPETITION_KEY_ORDER: CompetitionKey[] = ["GOLD", "SILVER", "BRONZE"];
 
-const COMPETITION_KEY_META: Record<
+const COMPETITION_KEY_META: Partial<Record<
   CompetitionKey,
   {
     label: string;
     className: string;
   }
-> = {
+>> = {
   GOLD: {
     label: "Chave Ouro",
     className:
@@ -487,10 +513,10 @@ function CompetitionKeyLegend() {
     <div className="mb-5 flex flex-wrap gap-2">
       {COMPETITION_KEY_ORDER.map(
         (competitionKey) => {
-          const meta =
-            COMPETITION_KEY_META[
-              competitionKey
-            ];
+          const meta = COMPETITION_KEY_META[competitionKey] ?? {
+            label: competitionKey,
+            className: "border-white/15 bg-white/5 text-ivory",
+          };
 
           return (
             <span
@@ -513,10 +539,10 @@ function CompetitionKeyHeading({
 }: {
   competitionKey: CompetitionKey;
 }) {
-  const meta =
-    COMPETITION_KEY_META[
-      competitionKey
-    ];
+  const meta = COMPETITION_KEY_META[competitionKey] ?? {
+    label: competitionKey,
+    className: "border-white/15 bg-white/5 text-ivory",
+  };
 
   return (
     <div
@@ -572,90 +598,24 @@ function buildCompetitionKeyMap(
   return result;
 }
 
-function competitionKeyForMatch(
-  match: Match,
-  keyByTeamId: Partial<
-    Record<
-      string,
-      CompetitionKey
-    >
-  >,
-): CompetitionKey | null {
-  const keyFromPhase =
-    competitionKeyFromText(
-      match.phase,
-    );
-
-  if (keyFromPhase) {
-    return keyFromPhase;
-  }
-
-  const homeKey =
-    keyByTeamId[
-      match.homeTeam.id
-    ];
-
-  const awayKey =
-    keyByTeamId[
-      match.awayTeam.id
-    ];
-
-  if (
-    homeKey &&
-    awayKey &&
-    homeKey === awayKey
-  ) {
-    return homeKey;
-  }
-
-  return (
-    homeKey ??
-    awayKey ??
-    null
-  );
+function competitionKeyForMatch(match: Match, _keyByTeamId: Partial<Record<string, CompetitionKey>>): CompetitionKey | null {
+  // A team's classification bracket is not proof of the knockout tie's bracket.
+  return competitionKeyFromText(match.phase);
 }
 
-function competitionKeyFromText(
-  value?: string | null,
-): CompetitionKey | null {
-  const normalized =
-    (value ?? "")
-      .normalize("NFD")
-      .replace(
-        /\p{M}/gu,
-        "",
-      )
-      .toLowerCase();
-
-  if (
-    normalized.includes(
-      "ouro",
-    )
-  ) {
-    return "GOLD";
-  }
-
-  if (
-    normalized.includes(
-      "prata",
-    )
-  ) {
-    return "SILVER";
-  }
-
-  if (
-    normalized.includes(
-      "bronze",
-    )
-  ) {
-    return "BRONZE";
-  }
-
-  return null;
+function competitionKeyFromText(value?: string | null): CompetitionKey | null {
+  const official = officialMatchBracket(value);
+  if (!official) return null;
+  const key = official.slice("Chave ".length).trim();
+  if (key === "ouro") return "GOLD";
+  if (key === "prata") return "SILVER";
+  if (key === "bronze") return "BRONZE";
+  return official;
 }
 
 function groupStandings(
   standings: Standing[],
+  splitPhases = false,
 ) {
   const groups =
     new Map<

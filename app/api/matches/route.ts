@@ -12,8 +12,8 @@ export async function GET(
       ? `?${searchParams}`
       : "";
 
-  return proxyAuthenticated(
-    request,
-    `/api/v1/matches${suffix}`,
-  );
+  const stage = request.nextUrl.searchParams.get("stage");
+  const eventId = request.nextUrl.searchParams.get("eventId");
+  const path = stage && eventId ? "/api/v1/sports/matches" : "/api/v1/matches";
+  return proxyAuthenticated(request, `${path}${suffix}`);
 }

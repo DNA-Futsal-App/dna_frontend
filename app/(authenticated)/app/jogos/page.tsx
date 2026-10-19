@@ -39,7 +39,7 @@ function Matches() {
   const searchParams =
     useSearchParams();
 
-  const { activeEventId } =
+  const { activeEventId, stage } =
     useCompetitionBrowse();
 
   const initialTab =
@@ -55,14 +55,19 @@ function Matches() {
     >(initialTab);
 
   const [selectedPhase, setSelectedPhase] =
-    useState<string | null>(null);
+    useState<string | null>(searchParams.get("phase"));
 
-  const matchesUrl =
-    activeEventId != null
-      ? `/api/matches?eventId=${encodeURIComponent(
-          String(activeEventId),
-        )}`
-      : "/api/matches";
+  function choosePhase(value: string | null) {
+    setSelectedPhase(value);
+    const url = new URL(window.location.href);
+    if (value) url.searchParams.set("phase", value);
+    else url.searchParams.delete("phase");
+    window.history.replaceState(null, "", url.toString());
+  }
+
+  const matchesUrl = activeEventId != null
+    ? `/api/matches?eventId=${encodeURIComponent(String(activeEventId))}&stage=${stage}`
+    : "/api/matches";
 
   const {
     data,
@@ -114,9 +119,7 @@ function Matches() {
             ? data.pendingResults
             : data.upcoming;
 
-      if (!selectedPhase) {
-        return source;
-      }
+      if (!selectedPhase || !phases.includes(selectedPhase)) return source;
 
       return source.filter(
         (match) =>
@@ -127,6 +130,7 @@ function Matches() {
       data,
       tab,
       selectedPhase,
+      phases,
     ]);
 
   if (loading) {
@@ -214,9 +218,7 @@ function Matches() {
               selectedPhase === null
             }
             onClick={() =>
-              setSelectedPhase(
-                null,
-              )
+              choosePhase(null)
             }
           >
             Todas
@@ -231,9 +233,7 @@ function Matches() {
                   phase
                 }
                 onClick={() =>
-                  setSelectedPhase(
-                    phase,
-                  )
+                  choosePhase(phase)
                 }
               >
                 {phase}

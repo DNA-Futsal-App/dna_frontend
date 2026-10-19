@@ -8,6 +8,8 @@ export function topScorersUrl(
   eventId: number | null,
   scope: ScorerScope,
   limit: number,
+  phase?: string,
+  stage?: string,
 ) {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -16,6 +18,8 @@ export function topScorersUrl(
         ? "GENERAL"
         : "KNOCKOUT",
   });
+  if (phase) params.set("phase", phase);
+  if (stage) params.set("stage", stage);
 
   if (eventId != null) {
     params.set(
