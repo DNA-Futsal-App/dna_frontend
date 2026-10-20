@@ -1,12 +1,8 @@
-/* eslint-disable */
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  publishAwardNotice,
-  watchAwardProcessing,
-} from "@/lib/award-processing";
+import { publishAwardNotice, watchAwardProcessing } from "@/lib/award-processing";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -25,7 +21,6 @@ import { clientApi } from "@/lib/client-api";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
 import type {
   AwardContestCategory,
-  AwardGender,
   AwardRegistrationContext,
   AwardRegistrationEntryResponse,
   AwardRegistrationResponse,
@@ -78,17 +73,12 @@ export default function AwardRegistrationPage() {
   const [teamId, setTeamId] = useState("");
   const [entries, setEntries] = useState<MediaEntry[]>([makeEntry(1)]);
   const nextEntry = useRef(2);
+  const profileDefaultsApplied = useRef(false);
 
   const [draft, setDraft] = useState<AwardRegistrationResponse | null>(null);
-  const [finished, setFinished] = useState<AwardRegistrationResponse | null>(
-    null,
-  );
-
-  const [gender, setGender] =
-    useState<AwardGender | "">("");
+  const [finished, setFinished] = useState<AwardRegistrationResponse | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   const locked = Boolean(draft);
 
@@ -102,61 +92,69 @@ export default function AwardRegistrationPage() {
             : "Não foi possível carregar as regras da inscrição.",
         ),
       );
+
+    clientApi<CatalogItem[]>("/api/catalog/divisions")
+      .then(setDivisions)
+      .catch(() => setDivisions([]));
   }, []);
 
-  const selectedDivisionId = divisionId;
+  const selectedDivisionId =
+    divisionId;
 
-  const selectedCategoryId = categoryId;
+  const selectedCategoryId =
+    categoryId;
 
-  const selectedTeamId = teamId;
+  const selectedTeamId =
+    teamId;
 
-  useEffect(() => {
-    if (!gender) {
-      return;
-    }
-
-    let active =
-      true;
-
-    clientApi<CatalogItem[]>(
-      `/api/awards/registrations/catalog/divisions?gender=${encodeURIComponent(
-        gender,
-      )}`,
-    )
-      .then((result) => {
-        if (active) {
-          setDivisions(
-            result,
-          );
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setDivisions([]);
-        }
-      });
-
-    return () => {
-      active =
-        false;
-    };
-  }, [gender]);
+  const router = useRouter();
 
   useEffect(() => {
     if (
-      !gender ||
-      !divisionId
+      !profile ||
+      profileDefaultsApplied.current
     ) {
       return;
     }
 
-    let active =
+    profileDefaultsApplied.current =
       true;
 
+    setDivisionId(
+      profile.divisionId
+        ? String(
+          profile.divisionId,
+        )
+        : "",
+    );
+
+    setCategoryId(
+      profile.categoryId
+        ? String(
+          profile.categoryId,
+        )
+        : "",
+    );
+
+    setTeamId(
+      profile.teamId
+        ? String(
+          profile.teamId,
+        )
+        : "",
+    );
+  }, [profile]);
+
+  useEffect(() => {
+    if (!divisionId) {
+      setCategories([]);
+      return;
+    }
+
+    let active = true;
+
     clientApi<CatalogCategory[]>(
-      `/api/awards/registrations/catalog/categories?gender=${encodeURIComponent(
-        gender,
-      )}&divisionId=${encodeURIComponent(
+      `/api/catalog/categories?divisionId=${encodeURIComponent(
         divisionId,
       )}`,
     )
@@ -174,16 +172,27 @@ export default function AwardRegistrationPage() {
       });
 
     return () => {
-      active =
-        false;
+      active = false;
     };
-  }, [
-    gender,
-    divisionId,
-  ]);
+  }, [divisionId]);
+
+  useEffect(() => {
+    if (!selectedDivisionId) return;
+
+    let active = true;
+    clientApi<CatalogCategory[]>(
+      `/api/catalog/categories?divisionId=${encodeURIComponent(selectedDivisionId)}`,
+    )
+      .then((result) => active && setCategories(result))
+      .catch(() => active && setCategories([]));
+
+    return () => {
+      active = false;
+    };
+  }, [selectedDivisionId]);
 
   const sportsCategory = categories.find(
-    (item) => String(item.id) === selectedCategoryId,
+    (item) => String(item.id) === String(selectedCategoryId),
   );
   const eventId = sportsCategory?.eventId ?? null;
 
@@ -196,11 +205,15 @@ export default function AwardRegistrationPage() {
     let active = true;
 
     clientApi<Team[]>(
-      `/api/catalog/teams?eventId=${encodeURIComponent(String(eventId))}`,
+      `/api/catalog/teams?eventId=${encodeURIComponent(
+        String(eventId),
+      )}`,
     )
       .then((result) => {
         if (active) {
-          setTeams(result);
+          setTeams(
+            result,
+          );
         }
       })
       .catch(() => {
@@ -254,21 +267,13 @@ export default function AwardRegistrationPage() {
   }
 
   function validate() {
-    if (!gender) {
-      throw new Error(
-        "Selecione o gênero do Atleta.",
-      );
-    }
-    if (!athleteName.trim()) throw new Error("Informe o nome do Atleta.");
-    if (!isValidCpf(cpf))
-      throw new Error("Informe um CPF válido do Representante.");
+    if (!athleteName.trim()) throw new Error("Informe o nome do atleta.");
+    if (!isValidCpf(cpf)) throw new Error("Informe um CPF válido do representante.");
     if (!selectedDivisionId || !selectedCategoryId || !selectedTeamId) {
-      throw new Error("Selecione divisão, categoria e time do Atleta.");
+      throw new Error("Selecione divisão, categoria e time do atleta.");
     }
     if (!profile?.childInstagram) {
-      throw new Error(
-        "O Instagram do Atleta precisa estar preenchido no perfil.",
-      );
+      throw new Error("O Instagram do atleta precisa estar preenchido no perfil.");
     }
 
     const chosen = entries.map((entry) => entry.contestCategory);
@@ -282,14 +287,10 @@ export default function AwardRegistrationPage() {
     for (const entry of entries) {
       if (entry.sourceType === "LINK") {
         if (!isValidHttpsUrl(entry.externalUrl)) {
-          throw new Error(
-            "Informe um link HTTPS válido para cada vídeo externo.",
-          );
+          throw new Error("Informe um link HTTPS válido para cada vídeo externo.");
         }
       } else if (!entry.file || !entry.fileInfo || entry.fileError) {
-        throw new Error(
-          "Selecione um vídeo válido para cada categoria com upload.",
-        );
+        throw new Error("Selecione um vídeo válido para cada categoria com upload.");
       }
     }
   }
@@ -300,45 +301,17 @@ export default function AwardRegistrationPage() {
       {
         method: "POST",
         body: JSON.stringify({
-          athleteName:
-            athleteName.trim(),
-
-          representativeCpf:
-            digitsOnly(
-              cpf,
-            ),
-
-          gender,
-
-          divisionId:
-            Number(
-              selectedDivisionId,
-            ),
-
-          categoryId:
-            Number(
-              selectedCategoryId,
-            ),
-
-          teamId:
-            selectedTeamId,
-
-          entries:
-            entries.map(
-              (entry) => ({
-                contestCategory:
-                  entry.contestCategory,
-
-                sourceType:
-                  entry.sourceType,
-
-                externalUrl:
-                  entry.sourceType ===
-                    "LINK"
-                    ? entry.externalUrl.trim()
-                    : null,
-              }),
-            ),
+          athleteName: athleteName.trim(),
+          representativeCpf: digitsOnly(cpf),
+          divisionId: Number(selectedDivisionId),
+          categoryId: Number(selectedCategoryId),
+          teamId: selectedTeamId,
+          entries: entries.map((entry) => ({
+            contestCategory: entry.contestCategory,
+            sourceType: entry.sourceType,
+            externalUrl:
+              entry.sourceType === "LINK" ? entry.externalUrl.trim() : null,
+          })),
         }),
       },
     );
@@ -374,21 +347,18 @@ export default function AwardRegistrationPage() {
           {
             method: "POST",
 
-            body: JSON.stringify({
-              sizeBytes:
-                localEntry.file.size,
+            body:
+              JSON.stringify({
+                sizeBytes:
+                  localEntry.file.size,
 
-              contentType:
-                localEntry.file.type ||
-                "application/octet-stream",
-            }),
+                contentType:
+                  localEntry.file.type ||
+                  "application/octet-stream",
+              }),
           },
         );
 
-      /*
-       * Upload direto:
-       * browser -> Oracle.
-       */
       await uploadToOracle(
         ticket.uploadUrl,
         localEntry.file,
@@ -401,30 +371,17 @@ export default function AwardRegistrationPage() {
             },
           ),
       );
-
-      /*
-       * Isto agora deve responder 202 rapidamente.
-       *
-       * FFmpeg acontecerá no servidor depois.
-       */
-      await clientApi<AwardRegistrationEntryResponse>(
+      await clientApi(
         `/api/awards/registrations/${registration.id}/entries/${backendEntry.id}/complete-upload`,
         {
           method: "POST",
         },
       );
 
-      patchEntry(
-        localEntry.localId,
-        {
-          processing: false,
-          uploadProgress: 100,
-        },
-      );
-
       return backendEntry.id;
 
     } catch (err) {
+
       patchEntry(
         localEntry.localId,
         {
@@ -441,23 +398,16 @@ export default function AwardRegistrationPage() {
     }
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
-    if (!context || !profile || submitting) {
-      return;
-    }
-
-    if (!context.registrationsOpen) {
-      setError("O período de inscrições do Prêmio Legacy está encerrado.");
-      return;
-    }
-
-    const form = new FormData(event.currentTarget);
-    if (form.get("juryTermsAccepted") !== "on") {
-      setError(
-        "Você precisa aceitar o Termo de Ciência, Aceite e Confidencialidade.",
-      );
+    if (
+      !context ||
+      !profile ||
+      submitting
+    ) {
       return;
     }
 
@@ -468,103 +418,70 @@ export default function AwardRegistrationPage() {
         validate();
       }
 
-      setSubmitting(true);
-
-      const registration = draft ?? (await createDraft());
-
-      const backendEntries = new Map(
-        registration.entries.map((entry) => [entry.contestCategory, entry]),
+      setSubmitting(
+        true,
       );
-      const uploadJobs =
-        entries
-          .filter(
-            (entry) =>
-              entry.sourceType ===
-              "UPLOAD" &&
-              Boolean(
-                entry.contestCategory,
-              ),
-          )
-          .map(
-            async (localEntry) => {
-              const backendEntry =
-                backendEntries.get(
-                  localEntry.contestCategory as AwardContestCategory,
-                );
 
-              if (!backendEntry) {
-                throw new Error(
-                  "Categoria de mídia não encontrada no rascunho.",
-                );
-              }
+      const registration =
+        draft ??
+        (
+          await createDraft()
+        );
 
-              if (
-                backendEntry.mediaStatus ===
-                "READY"
-              ) {
-                return null;
-              }
+      const backendEntries =
+        new Map(
+          registration.entries.map(
+            (entry) => [
+              entry.contestCategory,
+              entry,
+            ],
+          ),
+        );
 
-              return uploadOne(
-                registration,
-                localEntry,
-                backendEntry,
-              );
-            },
+      const processingEntryIds:
+        string[] = [];
+
+      for (
+        const localEntry
+        of entries
+      ) {
+        if (
+          localEntry.sourceType !==
+          "UPLOAD" ||
+          !localEntry.contestCategory
+        ) {
+          continue;
+        }
+
+        const backendEntry =
+          backendEntries.get(
+            localEntry.contestCategory,
           );
 
-      const uploadResults =
-        await Promise.allSettled(
-          uploadJobs,
-        );
+        if (!backendEntry) {
+          throw new Error(
+            "Categoria de mídia não encontrada no rascunho.",
+          );
+        }
 
-      const processingEntryIds =
-        uploadResults.flatMap(
-          (result) =>
-            result.status ===
-              "fulfilled" &&
-              result.value
-              ? [result.value]
-              : [],
-        );
+        if (
+          backendEntry.mediaStatus ===
+          "READY"
+        ) {
+          continue;
+        }
 
-      const failedUploads =
-        uploadResults.filter(
-          (result) =>
-            result.status ===
-            "rejected",
-        );
+        const entryId =
+          await uploadOne(
+            registration,
+            localEntry,
+            backendEntry,
+          );
 
-      if (
-        processingEntryIds.length >
-        0
-      ) {
-        watchAwardProcessing({
-          registrationId:
-            registration.id,
-
-          registrationNumber:
-            registration.registrationNumber,
-
-          entryIds:
-            processingEntryIds,
-        });
-      }
-
-      if (
-        failedUploads.length >
-        0
-      ) {
-        throw new Error(
-          `${failedUploads.length} vídeo(s) não puderam ser enviados. `
-          + "Os demais vídeos recebidos continuarão sendo processados.",
+        processingEntryIds.push(
+          entryId,
         );
       }
-
-      /*
-       * Nenhum UPLOAD:
-       * significa que tudo foi LINK.
-       */
       if (
         processingEntryIds.length ===
         0
@@ -572,14 +489,12 @@ export default function AwardRegistrationPage() {
         await clientApi<AwardRegistrationResponse>(
           `/api/awards/registrations/${registration.id}/submit`,
           {
-            method:
-              "POST",
+            method: "POST",
           },
         );
 
         publishAwardNotice({
-          type:
-            "success",
+          type: "success",
 
           message:
             `Inscrição #${String(
@@ -596,20 +511,22 @@ export default function AwardRegistrationPage() {
 
         return;
       }
+      watchAwardProcessing({
+        registrationId:
+          registration.id,
 
-      /*
-       * Todos os arquivos chegaram na Oracle
-       * e o backend aceitou o processamento.
-       *
-       * Daqui para frente o navegador
-       * não é mais necessário.
-       */
+        registrationNumber:
+          registration.registrationNumber,
+
+        entryIds:
+          processingEntryIds,
+      });
+
       publishAwardNotice({
-        type:
-          "info",
+        type: "info",
 
         message:
-          "Recebemos seus vídeos. "
+          "Recebemos sua inscrição e seus vídeos. "
           + "Você pode continuar usando o app enquanto finalizamos o processamento.",
       });
 
@@ -617,52 +534,18 @@ export default function AwardRegistrationPage() {
         "/app",
       );
 
-
-      if (processingEntryIds.length === 0) {
-        await clientApi<AwardRegistrationResponse>(
-          `/api/awards/registrations/${registration.id}/submit`,
-          {
-            method: "POST",
-          },
-        );
-
-        publishAwardNotice({
-          type: "success",
-
-          message: `Inscrição #${String(
-            registration.registrationNumber,
-          ).padStart(6, "0")} confirmada com sucesso!`,
-        });
-
-        router.replace("/app");
-
-        return;
-      }
-      watchAwardProcessing({
-        registrationId: registration.id,
-
-        registrationNumber: registration.registrationNumber,
-
-        entryIds: processingEntryIds,
-      });
-
-      publishAwardNotice({
-        type: "info",
-
-        message:
-          "Recebemos sua inscrição e seus vídeos. " +
-          "Você pode continuar usando o app enquanto finalizamos o processamento.",
-      });
-
-      router.replace("/app");
     } catch (err) {
+
       setError(
         err instanceof Error
           ? err.message
           : "Não foi possível enviar a inscrição.",
       );
+
     } finally {
-      setSubmitting(false);
+      setSubmitting(
+        false,
+      );
     }
   }
 
@@ -674,46 +557,16 @@ export default function AwardRegistrationPage() {
     );
   }
 
-  if (!context.registrationsOpen) {
-    return (
-      <section className="surface mx-auto max-w-2xl rounded-[1.75rem] p-6 sm:p-8">
-        <AlertTriangle className="size-10 text-amber" />
-        <p className="eyebrow mt-5">Prêmio Legacy</p>
-        <h1 className="display-title mt-2 text-4xl font-black">
-          Inscrições encerradas.
-        </h1>
-        <p className="mt-4 text-sm leading-relaxed text-muted">
-          O período de candidaturas está fechado. As inscrições já realizadas
-          permanecem disponíveis para consulta, mas não podem ser alteradas
-          enquanto o período estiver encerrado.
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link href="/app/premio/minha-inscricao" className="btn-primary">
-            Ver minha inscrição
-          </Link>
-          <Link href="/app" className="btn-ghost">
-            Voltar ao aplicativo
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
   if (!profile.childInstagram) {
     return (
       <section className="surface mx-auto max-w-2xl rounded-[1.75rem] p-6 sm:p-8">
         <AlertTriangle className="size-10 text-amber" />
         <p className="eyebrow mt-5">Prêmio Legacy</p>
-        <h1 className="display-title mt-2 text-4xl font-black">
-          Complete o perfil do Atleta.
-        </h1>
+        <h1 className="display-title mt-2 text-4xl font-black">Complete o perfil do atleta.</h1>
         <p className="mt-4 text-sm leading-relaxed text-muted">
-          O Instagram do Atleta será usado para identificar a inscrição e
-          precisa estar preenchido antes de continuar.
+          O Instagram do atleta será usado para identificar a inscrição e precisa estar preenchido antes de continuar.
         </p>
-        <Link href="/app/perfil" className="btn-primary mt-6">
-          Ir para meu perfil
-        </Link>
+        <Link href="/app/perfil" className="btn-primary mt-6">Ir para meu perfil</Link>
       </section>
     );
   }
@@ -723,25 +576,25 @@ export default function AwardRegistrationPage() {
       <section className="surface mx-auto max-w-2xl rounded-[1.75rem] p-6 text-center sm:p-9">
         <CheckCircle2 className="mx-auto size-14 text-cyan" />
         <p className="eyebrow mt-5 justify-center">Inscrição registrada</p>
-        <h1 className="display-title mt-3 text-4xl font-black sm:text-5xl">
-          Atleta inscrito!
-        </h1>
+        <h1 className="display-title mt-3 text-4xl font-black sm:text-5xl">Atleta inscrito!</h1>
         <p className="mt-4 text-muted">
-          Número da inscrição:{" "}
-          <strong className="text-ivory">
-            #{String(finished.registrationNumber).padStart(6, "0")}
-          </strong>
+          Número da inscrição: <strong className="text-ivory">#{String(finished.registrationNumber).padStart(6, "0")}</strong>
         </p>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Os vídeos permanecem vinculados a esta inscrição e poderão ser
-          substituídos enquanto o período estiver aberto.
+          Os vídeos permanecem vinculados a esta inscrição e poderão ser substituídos enquanto o período estiver aberto.
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/app/premio/minha-inscricao" className="btn-primary">
+          <Link
+            href="/app/premio/minha-inscricao"
+            className="btn-primary"
+          >
             Ver minha inscrição
           </Link>
 
-          <Link href="/app" className="btn-ghost">
+          <Link
+            href="/app"
+            className="btn-ghost"
+          >
             Voltar ao aplicativo
           </Link>
         </div>
@@ -753,67 +606,36 @@ export default function AwardRegistrationPage() {
     <div className="mx-auto max-w-4xl">
       <header className="mb-7">
         <p className="eyebrow">Prêmio Legacy</p>
-        <h1 className="display-title mt-2 text-4xl font-black leading-none sm:text-5xl">
-          Inscrição do Atleta.
-        </h1>
+        <h1 className="display-title mt-2 text-4xl font-black leading-none sm:text-5xl">Inscrição do atleta.</h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-          Informe os dados do Atleta, escolha a(s) categoria(s) de premiação 
-          em que deseja concorrer e envie o vídeo do lance correspondente (link ou arquivo).
-          Você pode concorrer em qualquer categoria que desejar, inclusive em todas, desde que faça o upload de 1 (um) vídeo para cada uma.
+          Informe os dados do atleta, escolha de uma a quatro categorias e envie um link ou vídeo para cada uma.
         </p>
       </header>
 
       {draft ? (
         <div className="mb-5 rounded-2xl border border-amber/20 bg-amber/5 p-4 text-sm text-muted">
-          <strong className="text-amber">
-            Rascunho #{String(draft.registrationNumber).padStart(6, "0")}
-          </strong>
-          <p className="mt-1">
-            Os dados principais foram reservados. Se um upload falhar, tente
-            novamente sem gerar outra inscrição.
-          </p>
+          <strong className="text-amber">Rascunho #{String(draft.registrationNumber).padStart(6, "0")}</strong>
+          <p className="mt-1">Os dados principais foram reservados. Se um upload falhar, tente novamente sem gerar outra inscrição.</p>
         </div>
       ) : null}
 
       <form onSubmit={submit} className="grid gap-5">
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
-          <h2 className="text-lg font-black text-ivory">
-            Atleta e Representante
-          </h2>
+          <h2 className="text-lg font-black text-ivory">Atleta e representante</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold">
-              Nome completo do Atleta
-              <input
-                className="field"
-                value={athleteName}
-                onChange={(e) => setAthleteName(e.target.value)}
-                maxLength={150}
-                required
-                disabled={locked}
-                placeholder="Nome do Atleta"
-              />
+              Nome completo do atleta
+              <input className="field" value={athleteName} onChange={(e) => setAthleteName(e.target.value)} maxLength={150} required disabled={locked} placeholder="Nome do atleta" />
             </label>
             <label className="grid gap-1.5 text-sm font-bold">
-              CPF do Representante
-              <input
-                className="field"
-                value={cpf}
-                onChange={(e) => setCpf(formatCpf(e.target.value))}
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={14}
-                required
-                disabled={locked}
-                placeholder="000.000.000-00"
-              />
+              CPF do representante
+              <input className="field" value={cpf} onChange={(e) => setCpf(formatCpf(e.target.value))} inputMode="numeric" autoComplete="off" maxLength={14} required disabled={locked} placeholder="000.000.000-00" />
             </label>
           </div>
           <label className="mt-4 grid gap-1.5 text-sm font-bold">
-            Instagram do Atleta
+            Instagram do atleta
             <input className="field" value={profile.childInstagram} readOnly />
-            <small className="font-normal text-muted">
-              Obtido do perfil do Representante.
-            </small>
+            <small className="font-normal text-muted">Obtido do perfil do representante.</small>
           </label>
         </section>
 
@@ -822,69 +644,25 @@ export default function AwardRegistrationPage() {
             Contexto esportivo
           </h2>
 
-          <p className="mt-1 text-sm text-muted">
-            Escolha o gênero para carregarmos as competições correspondentes.
-          </p>
-
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-1.5 text-sm font-bold">
-              Gênero
-
-              <select
-                className="field"
-                value={gender}
-                disabled={locked}
-                required
-                onChange={(event) => {
-                  const nextGender =
-                    event.target
-                      .value as AwardGender | "";
-
-                  setGender(
-                    nextGender,
-                  );
-
-                  /*
-                   * Gênero novo invalida todo o
-                   * contexto esportivo anterior.
-                   */
-                  setDivisionId("");
-                  setCategoryId("");
-                  setTeamId("");
-
-                  setDivisions([]);
-                  setCategories([]);
-                  setTeams([]);
-                }}
-              >
-                <option value="">
-                  Selecione
-                </option>
-
-                <option value="MALE">
-                  Masculino
-                </option>
-
-                <option value="FEMALE">
-                  Feminino
-                </option>
-              </select>
-            </label>
-
             <label className="grid gap-1.5 text-sm font-bold">
               Divisão
 
               <select
                 className="field"
                 value={divisionId}
-                disabled={
-                  locked ||
-                  !gender
-                }
+                disabled={locked}
                 required
                 onChange={(event) => {
+                  const nextDivisionId =
+                    event.target.value;
+
+                  /*
+                   * Trocar divisão invalida tudo
+                   * que depende dela.
+                   */
                   setDivisionId(
-                    event.target.value,
+                    nextDivisionId,
                   );
 
                   setCategoryId("");
@@ -902,9 +680,9 @@ export default function AwardRegistrationPage() {
                   (item) => (
                     <option
                       key={item.id}
-                      value={String(
-                        item.id,
-                      )}
+                      value={
+                        String(item.id)
+                      }
                     >
                       {item.name}
                     </option>
@@ -921,13 +699,14 @@ export default function AwardRegistrationPage() {
                 value={categoryId}
                 disabled={
                   locked ||
-                  !gender ||
                   !divisionId
                 }
                 required
                 onChange={(event) => {
+                  const nextCategoryId =
+                    event.target.value;
                   setCategoryId(
-                    event.target.value,
+                    nextCategoryId,
                   );
 
                   setTeamId("");
@@ -942,9 +721,9 @@ export default function AwardRegistrationPage() {
                   (item) => (
                     <option
                       key={item.id}
-                      value={String(
-                        item.id,
-                      )}
+                      value={
+                        String(item.id)
+                      }
                     >
                       {item.name}
                     </option>
@@ -952,85 +731,62 @@ export default function AwardRegistrationPage() {
                 )}
               </select>
             </label>
-
-            <label className="grid gap-1.5 text-sm font-bold">
-              Time do Atleta
-
-              <select
-                className="field"
-                value={teamId}
-                disabled={
-                  locked ||
-                  !gender ||
-                  !categoryId ||
-                  !eventId
-                }
-                required
-                onChange={(event) => {
-                  setTeamId(
-                    event.target.value,
-                  );
-                }}
-              >
-                <option value="">
-                  Selecione
-                </option>
-
-                {teams.map(
-                  (team) => (
-                    <option
-                      key={team.id}
-                      value={String(
-                        team.id,
-                      )}
-                    >
-                      {team.name}
-                    </option>
-                  ),
-                )}
-              </select>
-            </label>
           </div>
+
+          <label className="mt-4 grid gap-1.5 text-sm font-bold">
+            Time do atleta
+
+            <select
+              className="field"
+              value={teamId}
+              disabled={
+                locked ||
+                !categoryId ||
+                !eventId
+              }
+              required
+              onChange={(event) => {
+                setTeamId(
+                  event.target.value,
+                );
+              }}
+            >
+              <option value="">
+                Selecione
+              </option>
+
+              {teams.map(
+                (team) => (
+                  <option
+                    key={team.id}
+                    value={
+                      String(team.id)
+                    }
+                  >
+                    {team.name}
+                  </option>
+                ),
+              )}
+            </select>
+          </label>
         </section>
 
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-black text-ivory">
-                Categorias do prêmio
-              </h2>
-              <p className="mt-1 text-xs text-muted">
-                Escolha cuidadosamente o melhor vídeo do seu atleta, pois não será aceito mais de 1 (um) vídeo para a mesma categoria de premiação.
-              </p>
+              <h2 className="text-lg font-black text-ivory">Categorias do prêmio</h2>
+              <p className="mt-1 text-xs text-muted">Até quatro categorias, cada uma com sua própria mídia.</p>
             </div>
-            <span className="rounded-full border border-cyan/15 bg-cyan/6 px-3 py-1.5 text-xs font-black text-cyan">
-              {entries.length}/4
-            </span>
+            <span className="rounded-full border border-cyan/15 bg-cyan/6 px-3 py-1.5 text-xs font-black text-cyan">{entries.length}/4</span>
           </div>
 
           <div className="mt-5 grid gap-4">
             {entries.map((entry, index) => (
-              <article
-                key={entry.localId}
-                className="rounded-2xl border border-white/8 bg-night/35 p-4 sm:p-5"
-              >
+              <article key={entry.localId} className="rounded-2xl border border-white/8 bg-night/35 p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <strong className="text-sm text-ivory">
-                    Categoria {index + 1}
-                  </strong>
+                  <strong className="text-sm text-ivory">Categoria {index + 1}</strong>
                   {entries.length > 1 && !locked ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEntries((current) =>
-                          current.filter(
-                            (item) => item.localId !== entry.localId,
-                          ),
-                        )
-                      }
-                      className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 text-muted hover:border-coral/30 hover:text-coral"
-                      aria-label={`Remover categoria ${index + 1}`}
-                    >
+                    <button type="button" onClick={() => setEntries((current) => current.filter((item) => item.localId !== entry.localId))} className="inline-flex size-9 items-center justify-center rounded-full border border-white/10 text-muted hover:border-coral/30 hover:text-coral" aria-label={`Remover categoria ${index + 1}`}>
                       <Trash2 className="size-4" />
                     </button>
                   ) : null}
@@ -1038,60 +794,19 @@ export default function AwardRegistrationPage() {
 
                 <label className="mt-4 grid gap-1.5 text-sm font-bold">
                   Categoria
-                  <select
-                    className="field"
-                    value={entry.contestCategory}
-                    disabled={locked}
-                    required
-                    onChange={(e) =>
-                      patchEntry(entry.localId, {
-                        contestCategory: e.target.value as AwardContestCategory,
-                      })
-                    }
-                  >
+                  <select className="field" value={entry.contestCategory} disabled={locked} required onChange={(e) => patchEntry(entry.localId, { contestCategory: e.target.value as AwardContestCategory })}>
                     <option value="">Selecione</option>
                     {context.contestCategories.map((option) => (
-                      <option
-                        key={option.code}
-                        value={option.code}
-                        disabled={
-                          usedContestCategories.has(option.code) &&
-                          entry.contestCategory !== option.code
-                        }
-                      >
-                        {option.label}
-                      </option>
+                      <option key={option.code} value={option.code} disabled={usedContestCategories.has(option.code) && entry.contestCategory !== option.code}>{option.label}</option>
                     ))}
                   </select>
                 </label>
 
                 <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-black/15 p-1.5">
-                  <button
-                    type="button"
-                    disabled={locked}
-                    onClick={() =>
-                      patchEntry(entry.localId, {
-                        sourceType: "UPLOAD",
-                        externalUrl: "",
-                      })
-                    }
-                    className={`flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-black ${entry.sourceType === "UPLOAD" ? "bg-cyan text-ink" : "text-muted hover:text-ivory"}`}
-                  >
+                  <button type="button" disabled={locked} onClick={() => patchEntry(entry.localId, { sourceType: "UPLOAD", externalUrl: "" })} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-black ${entry.sourceType === "UPLOAD" ? "bg-cyan text-ink" : "text-muted hover:text-ivory"}`}>
                     <UploadCloud className="size-4" /> Upload
                   </button>
-                  <button
-                    type="button"
-                    disabled={locked}
-                    onClick={() =>
-                      patchEntry(entry.localId, {
-                        sourceType: "LINK",
-                        file: null,
-                        fileInfo: null,
-                        fileError: "",
-                      })
-                    }
-                    className={`flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-black ${entry.sourceType === "LINK" ? "bg-amber text-ink" : "text-muted hover:text-ivory"}`}
-                  >
+                  <button type="button" disabled={locked} onClick={() => patchEntry(entry.localId, { sourceType: "LINK", file: null, fileInfo: null, fileError: "" })} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-black ${entry.sourceType === "LINK" ? "bg-amber text-ink" : "text-muted hover:text-ivory"}`}>
                     <Link2 className="size-4" /> Link externo
                   </button>
                 </div>
@@ -1099,90 +814,32 @@ export default function AwardRegistrationPage() {
                 {entry.sourceType === "LINK" ? (
                   <label className="mt-4 grid gap-1.5 text-sm font-bold">
                     Link do vídeo
-                    <input
-                      className="field"
-                      type="url"
-                      value={entry.externalUrl}
-                      disabled={locked}
-                      required
-                      placeholder="https://youtube.com/... ou https://drive.google.com/..."
-                      onChange={(e) =>
-                        patchEntry(entry.localId, {
-                          externalUrl: e.target.value,
-                        })
-                      }
-                    />
+                    <input className="field" type="url" value={entry.externalUrl} disabled={locked} required placeholder="https://youtube.com/... ou https://drive.google.com/..." onChange={(e) => patchEntry(entry.localId, { externalUrl: e.target.value })} />
                   </label>
                 ) : (
                   <div className="mt-4">
                     <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cyan/25 bg-cyan/4 px-4 py-5 text-center hover:border-cyan/50">
                       <FileVideo2 className="size-7 text-cyan" />
-                      <strong className="mt-2 text-sm text-ivory">
-                        {entry.file ? entry.file.name : "Escolher vídeo"}
-                      </strong>
-                      <span className="mt-1 text-xs text-muted">
-                        Até {context.maxDurationSeconds}s • máximo{" "}
-                        {formatBytes(context.maxUploadBytes)} antes da
-                        compactação
-                      </span>
-                      <input
-                        className="sr-only"
-                        type="file"
-                        accept="video/*"
-                        disabled={entry.processing}
-                        onChange={(e) =>
-                          void pickVideo(
-                            entry.localId,
-                            e.target.files?.[0] ?? null,
-                          )
-                        }
-                      />
+                      <strong className="mt-2 text-sm text-ivory">{entry.file ? entry.file.name : "Escolher vídeo"}</strong>
+                      <span className="mt-1 text-xs text-muted">Até {context.maxDurationSeconds}s • máximo {formatBytes(context.maxUploadBytes)} antes da compactação</span>
+                      <input className="sr-only" type="file" accept="video/*" disabled={entry.processing} onChange={(e) => void pickVideo(entry.localId, e.target.files?.[0] ?? null)} />
                     </label>
 
                     {entry.fileInfo ? (
                       <div className="mt-3 rounded-xl border border-white/8 bg-black/15 px-3.5 py-3 text-xs text-muted">
-                        <strong className="text-cyan">Vídeo validado</strong> •{" "}
-                        {entry.fileInfo.durationSeconds.toFixed(1)}s •{" "}
-                        {entry.fileInfo.width}×{entry.fileInfo.height}
-                        {entry.fileInfo.willResize ? (
-                          <p className="mt-1 text-amber">
-                            Será reduzido automaticamente para no máximo 720p.
-                          </p>
-                        ) : null}
+                        <strong className="text-cyan">Vídeo validado</strong> • {entry.fileInfo.durationSeconds.toFixed(1)}s • {entry.fileInfo.width}×{entry.fileInfo.height}
+                        {entry.fileInfo.willResize ? <p className="mt-1 text-amber">Será reduzido automaticamente para no máximo 720p.</p> : null}
                       </div>
                     ) : null}
 
                     {entry.uploadProgress != null ? (
                       <div className="mt-3">
-                        <div className="flex justify-between text-xs text-muted">
-                          <span>
-                            {entry.processing && entry.uploadProgress >= 100
-                              ? "Validando e compactando..."
-                              : "Enviando..."}
-                          </span>
-                          <strong className="text-ivory">
-                            {Math.round(entry.uploadProgress)}%
-                          </strong>
-                        </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8">
-                          <div
-                            className="h-full rounded-full bg-cyan"
-                            style={{
-                              width: `${Math.min(100, entry.uploadProgress)}%`,
-                            }}
-                          />
-                        </div>
+                        <div className="flex justify-between text-xs text-muted"><span>{entry.processing && entry.uploadProgress >= 100 ? "Validando e compactando..." : "Enviando..."}</span><strong className="text-ivory">{Math.round(entry.uploadProgress)}%</strong></div>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8"><div className="h-full rounded-full bg-cyan" style={{ width: `${Math.min(100, entry.uploadProgress)}%` }} /></div>
                       </div>
                     ) : null}
 
-                    {entry.fileError ? (
-                      <p
-                        className="mt-3 rounded-xl border border-coral/25 bg-coral/8 px-3.5 py-3 text-sm text-[#ffb195]"
-                        role="alert"
-                      >
-                        {entry.fileError}
-                      </p>
-                    ) : null}
+                    {entry.fileError ? <p className="mt-3 rounded-xl border border-coral/25 bg-coral/8 px-3.5 py-3 text-sm text-[#ffb195]" role="alert">{entry.fileError}</p> : null}
                   </div>
                 )}
               </article>
@@ -1190,70 +847,14 @@ export default function AwardRegistrationPage() {
           </div>
 
           {entries.length < 4 && !locked ? (
-            <button
-              type="button"
-              onClick={() =>
-                setEntries((current) => [
-                  ...current,
-                  makeEntry(nextEntry.current++),
-                ])
-              }
-              className="btn-ghost mt-4 w-full border-dashed"
-            >
-              <Plus className="size-4" />
-              Adicionar mais uma categoria
-            </button>
+            <button type="button" onClick={() => setEntries((current) => [...current, makeEntry(nextEntry.current++)])} className="btn-ghost mt-4 w-full border-dashed"><Plus className="size-4" />Adicionar mais uma categoria</button>
           ) : null}
         </section>
 
-        <section className="surface rounded-[1.75rem] p-5 sm:p-7">
-          <div className="flex items-start gap-3">
-            <input
-              id="legacy-jury-terms-accepted"
-              name="juryTermsAccepted"
-              type="checkbox"
-              required
-              disabled={submitting}
-              className="mt-0.5 size-4 shrink-0"
-            />
-            <p className="text-xs leading-relaxed text-muted sm:text-sm">
-              <label
-                htmlFor="legacy-jury-terms-accepted"
-                className="cursor-pointer"
-              >
-                Li e aceito o{" "}
-              </label>
-              <Link
-                href="/termos/juri-tecnico-2026"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-black text-cyan underline decoration-cyan/40 underline-offset-4 hover:text-white"
-              >
-                Termo de Ciência, Aceite e Confidencialidade
-              </Link>{" "}
-              do Júri Técnico – Prêmio Legacy 2026.
-            </p>
-          </div>
-        </section>
+        {error ? <p className="rounded-xl border border-coral/25 bg-coral/8 px-4 py-3 text-sm text-[#ffb195]" role="alert">{error}</p> : null}
 
-        {error ? (
-          <p
-            className="rounded-xl border border-coral/25 bg-coral/8 px-4 py-3 text-sm text-[#ffb195]"
-            role="alert"
-          >
-            {error}
-          </p>
-        ) : null}
-
-        <button
-          className="btn-primary w-full"
-          disabled={submitting || entries.some((entry) => entry.processing)}
-        >
-          {submitting ? (
-            <LoaderCircle className="size-5 animate-spin" />
-          ) : (
-            <Send className="size-5" />
-          )}
+        <button className="btn-primary w-full" disabled={submitting || entries.some((entry) => entry.processing)}>
+          {submitting ? <LoaderCircle className="size-5 animate-spin" /> : <Send className="size-5" />}
           {submitting
             ? "Enviando inscrição..."
             : draft
@@ -1265,53 +866,27 @@ export default function AwardRegistrationPage() {
   );
 }
 
-async function inspectVideo(
-  file: File,
-  context: AwardRegistrationContext,
-): Promise<VideoInfo> {
+async function inspectVideo(file: File, context: AwardRegistrationContext): Promise<VideoInfo> {
   if (!file.type.startsWith("video/")) {
-    throw new Error(
-      "O arquivo selecionado não é um vídeo. Escolha um arquivo de vídeo.",
-    );
+    throw new Error("O arquivo selecionado não é um vídeo. Escolha um arquivo de vídeo.");
   }
   if (file.size > context.maxUploadBytes) {
-    throw new Error(
-      `O arquivo excede o limite de ${formatBytes(context.maxUploadBytes)} antes da compactação.`,
-    );
+    throw new Error(`O arquivo excede o limite de ${formatBytes(context.maxUploadBytes)} antes da compactação.`);
   }
 
   const url = URL.createObjectURL(file);
   try {
-    const metadata = await new Promise<{
-      duration: number;
-      width: number;
-      height: number;
-    }>((resolve, reject) => {
+    const metadata = await new Promise<{ duration: number; width: number; height: number }>((resolve, reject) => {
       const video = document.createElement("video");
       video.preload = "metadata";
-      video.onloadedmetadata = () =>
-        resolve({
-          duration: video.duration,
-          width: video.videoWidth,
-          height: video.videoHeight,
-        });
-      video.onerror = () =>
-        reject(
-          new Error(
-            "O navegador não reconheceu este arquivo como um vídeo válido.",
-          ),
-        );
+      video.onloadedmetadata = () => resolve({ duration: video.duration, width: video.videoWidth, height: video.videoHeight });
+      video.onerror = () => reject(new Error("O navegador não reconheceu este arquivo como um vídeo válido."));
       video.src = url;
     });
 
-    if (!Number.isFinite(metadata.duration) || metadata.duration <= 0)
-      throw new Error("Não foi possível determinar a duração do vídeo.");
-    if (metadata.duration > context.maxDurationSeconds + 0.05)
-      throw new Error(
-        `O vídeo deve ter no máximo ${context.maxDurationSeconds} segundos.`,
-      );
-    if (!metadata.width || !metadata.height)
-      throw new Error("Não foi possível identificar a resolução do vídeo.");
+    if (!Number.isFinite(metadata.duration) || metadata.duration <= 0) throw new Error("Não foi possível determinar a duração do vídeo.");
+    if (metadata.duration > context.maxDurationSeconds + 0.05) throw new Error(`O vídeo deve ter no máximo ${context.maxDurationSeconds} segundos.`);
+    if (!metadata.width || !metadata.height) throw new Error("Não foi possível identificar a resolução do vídeo.");
 
     const landscape = metadata.width >= metadata.height;
     return {
@@ -1327,39 +902,21 @@ async function inspectVideo(
   }
 }
 
-function uploadToOracle(
-  uploadUrl: string,
-  file: File,
-  onProgress: (progress: number) => void,
-) {
+function uploadToOracle(uploadUrl: string, file: File, onProgress: (progress: number) => void) {
   return new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("PUT", uploadUrl, true);
-    request.setRequestHeader(
-      "Content-Type",
-      file.type || "application/octet-stream",
-    );
-    request.upload.onprogress = (event) =>
-      event.lengthComputable && onProgress((event.loaded / event.total) * 100);
-    request.onload = () =>
-      request.status >= 200 && request.status < 300
-        ? (onProgress(100), resolve())
-        : reject(new Error("A Oracle não aceitou o upload do vídeo."));
-    request.onerror = () =>
-      reject(new Error("Falha de conexão durante o upload do vídeo."));
+    request.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    request.upload.onprogress = (event) => event.lengthComputable && onProgress((event.loaded / event.total) * 100);
+    request.onload = () => request.status >= 200 && request.status < 300 ? (onProgress(100), resolve()) : reject(new Error("A Oracle não aceitou o upload do vídeo."));
+    request.onerror = () => reject(new Error("Falha de conexão durante o upload do vídeo."));
     request.send(file);
   });
 }
 
-function digitsOnly(value: string) {
-  return value.replace(/\D/g, "");
-}
+function digitsOnly(value: string) { return value.replace(/\D/g, ""); }
 function formatCpf(value: string) {
-  return digitsOnly(value)
-    .slice(0, 11)
-    .replace(/^(\d{3})(\d)/, "$1.$2")
-    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  return digitsOnly(value).slice(0, 11).replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1-$2");
 }
 function isValidCpf(value: string) {
   const cpf = digitsOnly(value);
@@ -1372,15 +929,5 @@ function isValidCpf(value: string) {
   };
   return digit(9) === Number(cpf[9]) && digit(10) === Number(cpf[10]);
 }
-function isValidHttpsUrl(value: string) {
-  try {
-    return new URL(value).protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-function formatBytes(bytes: number) {
-  return bytes < 1024 * 1024
-    ? `${Math.ceil(bytes / 1024)} KB`
-    : `${Math.ceil(bytes / (1024 * 1024))} MB`;
-}
+function isValidHttpsUrl(value: string) { try { return new URL(value).protocol === "https:"; } catch { return false; } }
+function formatBytes(bytes: number) { return bytes < 1024 * 1024 ? `${Math.ceil(bytes / 1024)} KB` : `${Math.ceil(bytes / (1024 * 1024))} MB`; }
