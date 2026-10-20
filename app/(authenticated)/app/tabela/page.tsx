@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GitBranch,
   ListOrdered,
@@ -87,6 +87,7 @@ export default function StandingsPage() {
     loading: matchesLoading,
     error: matchesError,
     reload: reloadMatches,
+    refresh: refreshMatches,
   } = useApiData<MatchCalendar>(
     matchesUrl,
   );
@@ -96,6 +97,7 @@ export default function StandingsPage() {
     loading: competitionKeysLoading,
     error: competitionKeysError,
     reload: reloadCompetitionKeys,
+    refresh: refreshCompetitionKeys,
   } = useApiData<CompetitionKeyEntry[]>(
     competitionKeysUrl,
   );
@@ -203,6 +205,29 @@ export default function StandingsPage() {
     hasKnockout
       ? "KNOCKOUT"
       : "STANDINGS";
+
+  useEffect(() => {
+    if (selectedView !== "KNOCKOUT") return;
+    let disposed = false;
+    const refreshKnockout = () => {
+      if (disposed || document.visibilityState !== "visible") return;
+      void refreshMatches();
+      void refreshCompetitionKeys();
+    };
+    refreshKnockout();
+    const interval = window.setInterval(refreshKnockout, 60_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshKnockout();
+    };
+    window.addEventListener("focus", refreshKnockout);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshKnockout);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [selectedView, refreshMatches, refreshCompetitionKeys]);
 
   const groups =
     groupStandings(

@@ -306,7 +306,7 @@ export default function PremioDnaPage() {
             <BrandLogo size={40} />
             <span>
               <strong className="block text-ivory">DNA Futsal</strong>
-              <span>A base joga aqui.</span>
+              <span>Cobertura Completa da Base e Iniciação.</span>
             </span>
           </div>
           <span>Prêmio DNA Futsal</span>

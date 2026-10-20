@@ -182,48 +182,6 @@ export default function AwardRegistrationPage() {
     divisionId,
   ]);
 
-  useEffect(() => {
-    if (!divisionId) {
-      setCategories([]);
-      return;
-    }
-
-    let active = true;
-
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(divisionId)}`,
-    )
-      .then((result) => {
-        if (active) {
-          setCategories(result);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setCategories([]);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [divisionId]);
-
-  useEffect(() => {
-    if (!selectedDivisionId) return;
-
-    let active = true;
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(selectedDivisionId)}`,
-    )
-      .then((result) => active && setCategories(result))
-      .catch(() => active && setCategories([]));
-
-    return () => {
-      active = false;
-    };
-  }, [selectedDivisionId]);
-
   const sportsCategory = categories.find(
     (item) => String(item.id) === selectedCategoryId,
   );
@@ -253,38 +211,6 @@ export default function AwardRegistrationPage() {
 
     return () => {
       active = false;
-    };
-  }, [eventId]);
-
-  useEffect(() => {
-    if (!eventId) {
-      return;
-    }
-
-    let active =
-      true;
-
-    clientApi<Team[]>(
-      `/api/catalog/teams?eventId=${encodeURIComponent(
-        String(eventId),
-      )}`,
-    )
-      .then((result) => {
-        if (active) {
-          setTeams(
-            result,
-          );
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setTeams([]);
-        }
-      });
-
-    return () => {
-      active =
-        false;
     };
   }, [eventId]);
 
@@ -330,18 +256,18 @@ export default function AwardRegistrationPage() {
   function validate() {
     if (!gender) {
       throw new Error(
-        "Selecione o gênero do atleta.",
+        "Selecione o gênero do Atleta.",
       );
     }
-    if (!athleteName.trim()) throw new Error("Informe o nome do atleta.");
+    if (!athleteName.trim()) throw new Error("Informe o nome do Atleta.");
     if (!isValidCpf(cpf))
-      throw new Error("Informe um CPF válido do representante.");
+      throw new Error("Informe um CPF válido do Representante.");
     if (!selectedDivisionId || !selectedCategoryId || !selectedTeamId) {
-      throw new Error("Selecione divisão, categoria e time do atleta.");
+      throw new Error("Selecione divisão, categoria e time do Atleta.");
     }
     if (!profile?.childInstagram) {
       throw new Error(
-        "O Instagram do atleta precisa estar preenchido no perfil.",
+        "O Instagram do Atleta precisa estar preenchido no perfil.",
       );
     }
 
@@ -779,10 +705,10 @@ export default function AwardRegistrationPage() {
         <AlertTriangle className="size-10 text-amber" />
         <p className="eyebrow mt-5">Prêmio Legacy</p>
         <h1 className="display-title mt-2 text-4xl font-black">
-          Complete o perfil do atleta.
+          Complete o perfil do Atleta.
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-muted">
-          O Instagram do atleta será usado para identificar a inscrição e
+          O Instagram do Atleta será usado para identificar a inscrição e
           precisa estar preenchido antes de continuar.
         </p>
         <Link href="/app/perfil" className="btn-primary mt-6">
@@ -828,11 +754,12 @@ export default function AwardRegistrationPage() {
       <header className="mb-7">
         <p className="eyebrow">Prêmio Legacy</p>
         <h1 className="display-title mt-2 text-4xl font-black leading-none sm:text-5xl">
-          Inscrição do atleta.
+          Inscrição do Atleta.
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-          Informe os dados do atleta, escolha de uma a quatro categorias e envie
-          um link ou vídeo para cada uma.
+          Informe os dados do Atleta, escolha a(s) categoria(s) de premiação 
+          em que deseja concorrer e envie o vídeo do lance correspondente (link ou arquivo).
+          Você pode concorrer em qualquer categoria que desejar, inclusive em todas, desde que faça o upload de 1 (um) vídeo para cada uma.
         </p>
       </header>
 
@@ -851,11 +778,11 @@ export default function AwardRegistrationPage() {
       <form onSubmit={submit} className="grid gap-5">
         <section className="surface rounded-[1.75rem] p-5 sm:p-7">
           <h2 className="text-lg font-black text-ivory">
-            Atleta e representante
+            Atleta e Representante
           </h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold">
-              Nome completo do atleta
+              Nome completo do Atleta
               <input
                 className="field"
                 value={athleteName}
@@ -863,11 +790,11 @@ export default function AwardRegistrationPage() {
                 maxLength={150}
                 required
                 disabled={locked}
-                placeholder="Nome do atleta"
+                placeholder="Nome do Atleta"
               />
             </label>
             <label className="grid gap-1.5 text-sm font-bold">
-              CPF do representante
+              CPF do Representante
               <input
                 className="field"
                 value={cpf}
@@ -882,10 +809,10 @@ export default function AwardRegistrationPage() {
             </label>
           </div>
           <label className="mt-4 grid gap-1.5 text-sm font-bold">
-            Instagram do atleta
+            Instagram do Atleta
             <input className="field" value={profile.childInstagram} readOnly />
             <small className="font-normal text-muted">
-              Obtido do perfil do representante.
+              Obtido do perfil do Representante.
             </small>
           </label>
         </section>
@@ -1027,7 +954,7 @@ export default function AwardRegistrationPage() {
             </label>
 
             <label className="grid gap-1.5 text-sm font-bold">
-              Time do atleta
+              Time do Atleta
 
               <select
                 className="field"
@@ -1073,7 +1000,7 @@ export default function AwardRegistrationPage() {
                 Categorias do prêmio
               </h2>
               <p className="mt-1 text-xs text-muted">
-                Até quatro categorias, cada uma com sua própria mídia.
+                Escolha cuidadosamente o melhor vídeo do seu atleta, pois não será aceito mais de 1 (um) vídeo para a mesma categoria de premiação.
               </p>
             </div>
             <span className="rounded-full border border-cyan/15 bg-cyan/6 px-3 py-1.5 text-xs font-black text-cyan">
