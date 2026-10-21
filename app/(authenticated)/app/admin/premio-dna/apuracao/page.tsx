@@ -180,7 +180,7 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
   return (
     <div className="grid gap-6">
       <section className="overflow-hidden rounded-3xl border border-white/10 bg-panel">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 bg-gradient-to-r from-cyan/8 to-transparent px-5 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 bg-linear-to-r from-cyan/8 to-transparent px-5 py-4 sm:px-6">
           <div className="flex flex-wrap items-center gap-3">
             <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black ${edition.status === "CLOSED" ? "border-cyan/25 bg-cyan/10 text-cyan" : "border-amber/25 bg-amber/10 text-amber"}`}>
               <span className="size-1.5 rounded-full bg-current" />
@@ -264,7 +264,7 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
             </section>
 
             <aside className="grid min-w-0 gap-4">
-              <section className="rounded-2xl border border-cyan/15 bg-gradient-to-br from-cyan/8 to-panel p-5">
+              <section className="rounded-2xl border border-cyan/15 bg-linear-to-br from-cyan/8 to-panel p-5">
                 <p className="text-[10px] font-black uppercase tracking-[.16em] text-cyan">Leitura rápida</p>
                 <h2 className="mt-2 text-lg font-black">{filteredTies.length ? `${filteredTies.length} ${filteredTies.length === 1 ? "disputa empatada" : "disputas empatadas"}` : "Lideranças sem empate"}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted">
@@ -359,10 +359,10 @@ function CandidateRow({ candidate, leading }: { candidate: AdminAwardCandidateRe
     <li className={`grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-2 px-4 py-4 sm:gap-3 sm:px-5 ${leading ? "bg-amber/4" : ""}`}>
       <span className={`pt-0.5 text-xs font-black tabular-nums ${leading ? "text-amber" : "text-muted"}`}>{candidate.rank}º</span>
       <div className="min-w-0">
-        <p className="break-words text-sm font-bold leading-snug text-ivory">{candidate.candidateName}</p>
+        <p className="wrap-break-word text-sm font-bold leading-snug text-ivory">{candidate.candidateName}</p>
         <div className="mt-1.5 flex items-center gap-1.5">
           <TeamMark size="xs" team={{ id: candidate.teamId, name: candidate.teamName, sourceName: candidate.teamSourceName, logoUrl: candidate.teamLogoUrl }} />
-          <span className="min-w-0 break-words text-[11px] text-muted">{candidate.teamName}</span>
+          <span className="min-w-0 wrap-break-word text-[11px] text-muted">{candidate.teamName}</span>
         </div>
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/6" aria-hidden="true">
           <div className={`h-full rounded-full ${leading ? "bg-amber" : "bg-cyan/60"}`} style={{ width: `${Math.min(100, candidate.percentage)}%` }} />
@@ -395,7 +395,7 @@ function AuditDetails({ audit }: { audit: AdminAwardAudit }) {
         </p>
         {audit.issues.length ? <div className="mt-4 grid gap-2">
           {audit.issues.map((issue, index) => <div key={`${issue.ballotId ?? "global"}-${issue.code}-${index}`} className="rounded-xl border border-coral/15 bg-coral/5 p-4">
-            <strong className="break-words text-xs text-coral">{issue.code}</strong>
+            <strong className="wrap-break-word text-xs text-coral">{issue.code}</strong>
             {issue.ballotId ? <p className="mt-1 break-all text-[10px] text-muted">Cédula {issue.ballotId}</p> : null}
             <p className="mt-2 text-sm text-muted">{issue.detail}</p>
           </div>)}
