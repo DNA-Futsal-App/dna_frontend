@@ -56,8 +56,8 @@ export default function PremioDnaPage() {
         className="pointer-events-none absolute inset-0 -z-10 opacity-70"
         aria-hidden="true"
       >
-        <div className="absolute -right-56 -top-64 size-[38rem] rounded-full border-[70px] border-cyan/5" />
-        <div className="absolute -bottom-72 -left-72 size-[42rem] rounded-full border-[76px] border-coral/5" />
+        <div className="absolute -right-56 -top-64 size-152 rounded-full border-70 border-cyan/5" />
+        <div className="absolute -bottom-72 -left-72 size-168 rounded-full border-76 border-coral/5" />
       </div>
 
       <header className="relative z-20 mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -82,7 +82,7 @@ export default function PremioDnaPage() {
 
           <Link
             href="/entrar"
-            className="btn-ghost !min-h-10 !px-4 !py-2 text-sm"
+            className="btn-ghost min-h-10! px-4! py-2! text-sm"
           >
             Já tenho conta
           </Link>
@@ -136,7 +136,7 @@ export default function PremioDnaPage() {
 
         <div className="relative mx-auto w-full max-w-xl lg:ml-auto">
           <div className="absolute -inset-8 -z-10 rounded-full bg-cyan/8 blur-3xl" />
-          <div className="relative overflow-hidden rounded-[2rem] border border-cyan/15 bg-panel shadow-glow">
+          <div className="relative overflow-hidden rounded-4xl border border-cyan/15 bg-panel shadow-glow">
             <Image
               src="/premio-dna/inscricao-hero.svg"
               alt="Ilustração de atleta de futsal em ação"
@@ -198,7 +198,7 @@ export default function PremioDnaPage() {
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:px-8 lg:py-24">
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-panel">
+        <div className="relative overflow-hidden rounded-4xl border border-white/8 bg-panel">
           <Image
             src="/premio-dna/futsal-moment.svg"
             alt="Ilustração de um momento de futsal de base"
@@ -251,7 +251,7 @@ export default function PremioDnaPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
-        <div className="grid overflow-hidden rounded-[2rem] border border-white/8 bg-gradient-to-br from-panel via-panel to-deep/20 lg:grid-cols-[1fr_.85fr]">
+        <div className="grid overflow-hidden rounded-4xl border border-white/8 bg-linear-to-br from-panel via-panel to-deep/20 lg:grid-cols-[1fr_.85fr]">
           <div className="p-6 sm:p-8 lg:p-10">
             <p className="eyebrow">Antes de começar</p>
             <h2 className="display-title mt-3 text-3xl font-black sm:text-4xl">

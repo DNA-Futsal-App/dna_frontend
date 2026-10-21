@@ -23,10 +23,10 @@ export default function HomePage() {
 
         <div className="relative mx-auto w-full max-w-lg lg:mx-0 lg:ml-auto">
           <div className="absolute -inset-7 -z-10 rounded-full bg-cyan/10 blur-3xl" />
-          <div className="surface overflow-hidden rounded-[2rem] border-cyan/15 shadow-glow">
+          <div className="surface overflow-hidden rounded-4xl border-cyan/15 shadow-glow">
             <div className="flex items-center justify-between border-b border-white/8 px-5 py-4"><div><p className="text-[10px] font-black uppercase tracking-[.16em] text-cyan">Próximo jogo</p><p className="mt-1 text-sm font-bold text-muted">Sub-13 • Divisão Especial</p></div><span className="rounded-full bg-coral/12 px-3 py-1.5 text-xs font-black text-coral">DOM • 10:30</span></div>
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-8 text-center"><Team name="Juventus" initials="JUV" tone="amber" /><div><span className="display-title text-4xl font-black text-ivory">×</span><small className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-muted">8ª rodada</small></div><Team name="Santos" initials="SAN" tone="cyan" /></div>
-            <div className="border-t border-white/8 bg-ink/25 px-5 py-4"><div className="flex items-center justify-between text-xs"><span className="font-bold text-muted">Líder da competição</span><strong className="text-cyan">19 pontos</strong></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8"><div className="h-full w-4/5 rounded-full bg-gradient-to-r from-coral via-amber to-cyan" /></div></div>
+            <div className="border-t border-white/8 bg-ink/25 px-5 py-4"><div className="flex items-center justify-between text-xs"><span className="font-bold text-muted">Líder da competição</span><strong className="text-cyan">19 pontos</strong></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8"><div className="h-full w-4/5 rounded-full bg-linear-to-r from-coral via-amber to-cyan" /></div></div>
           </div>
           <div className="surface absolute -bottom-7 -left-4 hidden w-48 rounded-2xl p-4 sm:block"><div className="flex items-center gap-3"><span className="inline-flex size-10 items-center justify-center rounded-xl bg-amber/10 text-amber"><Newspaper className="size-5" /></span><span><small className="block text-[9px] font-black uppercase tracking-wider text-muted">Nova matéria</small><strong className="text-sm text-ivory">Resumo da rodada</strong></span></div></div>
         </div>
@@ -36,5 +36,5 @@ export default function HomePage() {
 }
 
 function Team({ name, initials, tone }: { name: string; initials: string; tone: "cyan" | "amber" }) {
-  return <div><span className={`mx-auto inline-flex size-18 items-center justify-center rounded-full border bg-gradient-to-br text-base font-black ${tone === "cyan" ? "border-cyan/30 from-cyan/25 to-deep/20 text-cyan" : "border-amber/30 from-amber/25 to-coral/15 text-amber"}`}>{initials}</span><strong className="mt-3 block truncate text-base text-ivory">{name}</strong></div>;
+  return <div><span className={`mx-auto inline-flex size-18 items-center justify-center rounded-full border bg-linear-to-br text-base font-black ${tone === "cyan" ? "border-cyan/30 from-cyan/25 to-deep/20 text-cyan" : "border-amber/30 from-amber/25 to-coral/15 text-amber"}`}>{initials}</span><strong className="mt-3 block truncate text-base text-ivory">{name}</strong></div>;
 }
