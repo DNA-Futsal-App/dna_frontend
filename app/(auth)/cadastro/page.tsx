@@ -6,6 +6,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { Check, LoaderCircle, UserRoundPlus } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { clientApi } from "@/lib/client-api";
+import {
+  SPORTS_COMPETITIONS,
+  buildSportsPreference,
+  categoriesCatalogUrl,
+  divisionsCatalogUrl,
+  type SportsCompetitionCode,
+} from "@/lib/sports-preference";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
 
 export default function RegisterPage() {
@@ -15,6 +22,8 @@ export default function RegisterPage() {
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
 
   const [teams, setTeams] = useState<Team[]>([]);
+  const [competitionCode, setCompetitionCode] = useState<SportsCompetitionCode>("PAULISTA");
+  const [teamId, setTeamId] = useState("");
 
   const [divisionId, setDivisionId] = useState("");
 
@@ -29,10 +38,12 @@ export default function RegisterPage() {
   const eventId = selectedCategory?.eventId ?? null;
 
   useEffect(() => {
-    clientApi<CatalogItem[]>("/api/catalog/divisions")
-      .then(setDivisions)
-      .catch(() => setDivisions([]));
-  }, []);
+    let active = true;
+    clientApi<CatalogItem[]>(divisionsCatalogUrl(competitionCode))
+      .then((result) => { if (active) setDivisions(result); })
+      .catch(() => { if (active) setDivisions([]); });
+    return () => { active = false; };
+  }, [competitionCode]);
 
   useEffect(() => {
     if (!divisionId) {
@@ -42,7 +53,7 @@ export default function RegisterPage() {
     let active = true;
 
     clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(divisionId)}`,
+      categoriesCatalogUrl(competitionCode, divisionId),
     )
       .then((result) => {
         if (active) {
@@ -58,7 +69,7 @@ export default function RegisterPage() {
     return () => {
       active = false;
     };
-  }, [divisionId]);
+  }, [divisionId, competitionCode]);
 
   useEffect(() => {
     if (!eventId) {
@@ -98,6 +109,12 @@ export default function RegisterPage() {
     }
     if (password !== form.get("passwordConfirmation"))
       return setError("As senhas precisam ser iguais.");
+    let sports;
+    try {
+      sports = buildSportsPreference(competitionCode, eventId, divisionId, categoryId, teamId);
+    } catch (err) {
+      return setError(err instanceof Error ? err.message : "Preferência esportiva inválida.");
+    }
     setLoading(true);
     try {
       await clientApi("/api/auth/register", {
@@ -109,14 +126,7 @@ export default function RegisterPage() {
           password,
 
           childInstagram: form.get("childInstagram") || null,
-
-          eventId,
-
-          categoryId: form.get("categoryId") || null,
-
-          divisionId: form.get("divisionId") || null,
-
-          teamId: form.get("teamId") || null,
+          ...sports,
         }),
       });
       router.push(
@@ -224,6 +234,27 @@ export default function RegisterPage() {
               pattern="^@?[A-Za-z0-9._]{1,30}$"
             />
           </label>
+          <label className="grid gap-1.5 text-sm font-bold">
+            Campeonato que deseja acompanhar
+            <select
+              className="field"
+              name="competitionCode"
+              value={competitionCode}
+              onChange={(event) => {
+                setCompetitionCode(event.target.value as SportsCompetitionCode);
+                setDivisionId("");
+                setCategoryId("");
+                setTeamId("");
+                setDivisions([]);
+                setCategories([]);
+                setTeams([]);
+              }}
+            >
+              {SPORTS_COMPETITIONS.map((item) => (
+                <option key={item.code} value={item.code}>{item.label}</option>
+              ))}
+            </select>
+          </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold">
               Divisão
@@ -234,6 +265,7 @@ export default function RegisterPage() {
                 onChange={(event) => {
                   setDivisionId(event.target.value);
                   setCategoryId("");
+                  setTeamId("");
                   setCategories([]);
                   setTeams([]);
                 }}
@@ -255,6 +287,7 @@ export default function RegisterPage() {
                 value={categoryId}
                 onChange={(event) => {
                   setCategoryId(event.target.value);
+                  setTeamId("");
                   setTeams([]);
                 }}
                 disabled={!divisionId}
@@ -271,7 +304,13 @@ export default function RegisterPage() {
           </div>
           <label className="grid gap-1.5 text-sm font-bold">
             Time
-            <select className="field" name="teamId" disabled={!eventId}>
+            <select
+              className="field"
+              name="teamId"
+              value={teamId}
+              onChange={(event) => setTeamId(event.target.value)}
+              disabled={!eventId}
+            >
               <option value="">Escolha depois</option>
               {teams.map((team) => (
                 <option key={team.id} value={team.id}>

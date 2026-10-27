@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const season =
     params.get("season") ??
     String(new Date().getFullYear());
+  const title = params.get("title")?.trim();
 
   const divisionId =
     params.get("divisionId");
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (demoEnabled()) {
+  if (demoEnabled() && !title) {
     return NextResponse.json([
       {
         id: "7",
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
     season,
     divisionId,
   });
+  if (title) query.set("title", title);
 
   return proxyPublic(
     `/api/v1/public/catalog/categories?${query}`,

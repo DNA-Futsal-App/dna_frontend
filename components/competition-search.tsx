@@ -8,20 +8,33 @@ import {
 } from "lucide-react";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import { useProfile } from "@/components/profile-context";
 import { clientApi } from "@/lib/client-api";
+import {
+  SPORTS_COMPETITIONS,
+  categoriesCatalogUrl,
+  divisionsCatalogUrl,
+  type SportsCompetitionCode,
+} from "@/lib/sports-preference";
+import {
+  firstVerifiedCompetition,
+  assertCatalogEventIsolation,
+} from "@/lib/competition-event-guard";
 import type {
   CatalogCategory,
   CatalogItem,
 } from "@/lib/types";
 
 export type BrowsedCompetition = {
+  competitionCode: SportsCompetitionCode;
   eventId: number;
   divisionId: string;
   divisionName: string;
@@ -33,6 +46,9 @@ type CompetitionBrowseContextValue = {
   selection: BrowsedCompetition | null;
   activeEventId: number | null;
   isExploring: boolean;
+  switching: { code: SportsCompetitionCode; error: string | null } | null;
+  switchCompetition: (code: SportsCompetitionCode) => void;
+  cancelSwitch: () => void;
   selectCompetition: (
     competition: BrowsedCompetition,
   ) => void;
@@ -44,6 +60,9 @@ const CompetitionBrowseContext =
     selection: null,
     activeEventId: null,
     isExploring: false,
+    switching: null,
+    switchCompetition: () => undefined,
+    cancelSwitch: () => undefined,
     selectCompetition: () => undefined,
     clearCompetition: () => undefined,
   });
@@ -56,6 +75,57 @@ export function CompetitionBrowseProvider({
   const { profile } = useProfile();
   const [selection, setSelection] =
     useState<BrowsedCompetition | null>(null);
+  const lastProfilePreference = useRef<string | null>(null);
+  const switchSequence = useRef(0);
+  const [switching, setSwitching] = useState<{
+    code: SportsCompetitionCode;
+    error: string | null;
+  } | null>(null);
+
+  const switchCompetition = useCallback(async (code: SportsCompetitionCode) => {
+    const sequence = ++switchSequence.current;
+    // Invalidate the previous event before any network request: never present
+    // masculine results under a feminine competition selector.
+    setSwitching({ code, error: null });
+    try {
+      const selected = await firstVerifiedCompetition(code, {
+        divisions: (selectedCode) =>
+          clientApi<CatalogItem[]>(divisionsCatalogUrl(selectedCode)),
+        categories: (selectedCode, divisionId) =>
+          clientApi<CatalogCategory[]>(categoriesCatalogUrl(selectedCode, divisionId)),
+      });
+      if (sequence !== switchSequence.current) return;
+      setSelection(selected);
+      setSwitching(null);
+    } catch (error) {
+      if (sequence !== switchSequence.current) return;
+      setSwitching({
+        code,
+        error: error instanceof Error ? error.message :
+          "Não foi possível consultar o evento na FPFS.",
+      });
+    }
+  }, []);
+
+  const cancelSwitch = useCallback(() => {
+    switchSequence.current += 1;
+    setSwitching(null);
+  }, []);
+
+  // An updated saved championship or event wins over temporary exploration.
+  useEffect(() => {
+    if (!profile) return;
+    const currentPreference = `${profile.competitionCode ?? "LEGACY"}:${profile.eventId ?? "none"}`;
+    const previousPreference = lastProfilePreference.current;
+    lastProfilePreference.current = currentPreference;
+    if (previousPreference === null || previousPreference === currentPreference) return;
+
+    let active = true;
+    queueMicrotask(() => {
+      if (active) setSelection(null);
+    });
+    return () => { active = false; };
+  }, [profile?.competitionCode, profile?.eventId]);
 
   const value = useMemo(
     () => ({
@@ -65,6 +135,9 @@ export function CompetitionBrowseProvider({
         profile?.eventId ??
         null,
       isExploring: selection != null,
+      switching,
+      switchCompetition,
+      cancelSwitch,
       selectCompetition: setSelection,
       clearCompetition: () =>
         setSelection(null),
@@ -72,6 +145,9 @@ export function CompetitionBrowseProvider({
     [
       profile?.eventId,
       selection,
+      switching,
+      switchCompetition,
+      cancelSwitch,
     ],
   );
 
@@ -99,14 +175,26 @@ export function CompetitionSearch({
   const {
     selection,
     isExploring,
+    switching,
+    switchCompetition,
+    cancelSwitch,
     selectCompetition,
     clearCompetition,
   } = useCompetitionBrowse();
 
-  const [divisions, setDivisions] =
-    useState<CatalogItem[]>([]);
-  const [categories, setCategories] =
-    useState<CatalogCategory[]>([]);
+  // Keep the catalog associated with the competition that produced it.
+  // A late response from the other championship cannot populate these selects.
+  const [divisionCatalog, setDivisionCatalog] = useState<{
+    code: SportsCompetitionCode;
+    items: CatalogItem[];
+  } | null>(null);
+  const [categoryCatalog, setCategoryCatalog] = useState<{
+    code: SportsCompetitionCode;
+    divisionId: string;
+    items: CatalogCategory[];
+  } | null>(null);
+  const [draftCompetitionCode, setDraftCompetitionCode] =
+    useState<SportsCompetitionCode | null>(null);
   const [
     draftDivisionId,
     setDraftDivisionId,
@@ -118,39 +206,44 @@ export function CompetitionSearch({
   const [formError, setFormError] =
     useState("");
 
-  const divisionId =
-    draftDivisionId ??
-    selection?.divisionId ??
-    profile?.divisionId ??
-    "";
+  const competitionCode =
+    draftCompetitionCode ??
+    selection?.competitionCode ??
+    profile?.competitionCode ??
+    "PAULISTA";
 
-  const categoryId =
-    draftCategoryId ??
-    selection?.categoryId ??
-    profile?.categoryId ??
-    "";
+  // Legacy (including Torneio União) preferences are not silently treated
+  // as Paulista. Browsing starts at Paulista, without changing the profile.
+  const canPrefill = draftCompetitionCode === null &&
+    (selection?.competitionCode === competitionCode ||
+      (!selection && profile?.competitionCode === competitionCode));
+
+  const divisionId = draftDivisionId ??
+    (canPrefill ? (selection?.divisionId ?? profile?.divisionId) : null) ?? "";
+  const categoryId = draftCategoryId ??
+    (canPrefill ? (selection?.categoryId ?? profile?.categoryId) : null) ?? "";
+
+  const divisions = divisionCatalog?.code === competitionCode
+    ? divisionCatalog.items : [];
+  const categories = categoryCatalog?.code === competitionCode &&
+    categoryCatalog.divisionId === divisionId
+    ? categoryCatalog.items : [];
 
   useEffect(() => {
     let active = true;
 
-    clientApi<CatalogItem[]>(
-      "/api/catalog/divisions",
-    )
+    clientApi<CatalogItem[]>(divisionsCatalogUrl(competitionCode))
       .then((result) => {
-        if (active) {
-          setDivisions(result);
-        }
+        if (active) setDivisionCatalog({ code: competitionCode, items: result });
       })
       .catch(() => {
-        if (active) {
-          setDivisions([]);
-        }
+        if (active) setDivisionCatalog({ code: competitionCode, items: [] });
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [competitionCode]);
 
   useEffect(() => {
     if (!divisionId) {
@@ -159,28 +252,24 @@ export function CompetitionSearch({
 
     let active = true;
 
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(
-        divisionId,
-      )}`,
-    )
+    clientApi<CatalogCategory[]>(categoriesCatalogUrl(competitionCode, divisionId))
       .then((result) => {
-        if (active) {
-          setCategories(result);
-        }
+        if (active) setCategoryCatalog({ code: competitionCode, divisionId, items: result });
       })
       .catch(() => {
-        if (active) {
-          setCategories([]);
-        }
+        if (active) setCategoryCatalog({ code: competitionCode, divisionId, items: [] });
       });
 
     return () => {
       active = false;
     };
-  }, [divisionId]);
+  }, [competitionCode, divisionId]);
 
-  function searchCompetition() {
+  const searchSequence = useRef(0);
+  const [searching, setSearching] = useState(false);
+
+  async function searchCompetition() {
+    const sequence = ++searchSequence.current;
     const division =
       divisions.find(
         (item) =>
@@ -203,22 +292,41 @@ export function CompetitionSearch({
     }
 
     setFormError("");
-
-    selectCompetition({
-      eventId: category.eventId,
-      divisionId: String(
-        division.id,
-      ),
-      divisionName: division.name,
-      categoryId: String(
-        category.id,
-      ),
-      categoryName: category.name,
-    });
+    setSearching(true);
+    try {
+      if (competitionCode === "PAULISTA_FEMININO") {
+        await assertCatalogEventIsolation(
+          competitionCode,
+          String(division.id),
+          category.eventId,
+          {
+            divisions: (code) => clientApi<CatalogItem[]>(divisionsCatalogUrl(code)),
+            categories: (code, id) => clientApi<CatalogCategory[]>(categoriesCatalogUrl(code, id)),
+          },
+        );
+      }
+      if (sequence !== searchSequence.current) return;
+      selectCompetition({
+        competitionCode,
+        eventId: category.eventId,
+        divisionId: String(division.id),
+        divisionName: division.name,
+        categoryId: String(category.id),
+        categoryName: category.name,
+      });
+    } catch (error) {
+      if (sequence === searchSequence.current) {
+        setFormError(error instanceof Error ? error.message : "Não foi possível validar o evento.");
+      }
+    } finally {
+      if (sequence === searchSequence.current) setSearching(false);
+    }
   }
 
   function resetCompetition() {
+    searchSequence.current += 1;
     clearCompetition();
+    setDraftCompetitionCode(null);
     setDraftDivisionId(null);
     setDraftCategoryId(null);
     setFormError("");
@@ -250,18 +358,64 @@ export function CompetitionSearch({
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+      {switching ? (
+        <div role={switching.error ? "alert" : "status"}
+          className="mt-3 rounded-lg border border-amber/30 bg-amber/10 p-3 text-sm text-ivory">
+          <p>{switching.error
+            ? `Não foi possível trocar o campeonato: ${switching.error}`
+            : "Carregando a nova competição. A seleção anterior continua ativa até a confirmação."}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {switching.error ? (
+              <button type="button" className="btn-ghost"
+                onClick={() => void switchCompetition(switching.code)}>Tentar novamente</button>
+            ) : null}
+            <button type="button" className="btn-ghost" onClick={cancelSwitch}>Cancelar</button>
+          </div>
+        </div>
+      ) : null}
+      <p className="mt-3 text-xs text-muted">
+        Trocar o campeonato carrega automaticamente uma categoria oficial. Para consultar outra,
+        escolha divisão e categoria e clique em Pesquisar.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1.2fr_1fr_1fr_auto]">
+        <label className="grid gap-1.5 text-xs font-bold text-muted">
+          Campeonato
+          <select
+            className="field"
+            aria-label="Campeonato para explorar"
+            value={competitionCode}
+            onChange={(event) => {
+              const code = event.target.value as SportsCompetitionCode;
+              searchSequence.current += 1;
+              setDraftCompetitionCode(null);
+              setDraftDivisionId(null);
+              setDraftCategoryId(null);
+              setDivisionCatalog(null);
+              setCategoryCatalog(null);
+              setFormError("");
+              setSearching(false);
+              void switchCompetition(code);
+            }}
+          >
+            {SPORTS_COMPETITIONS.map((item) => (
+              <option key={item.code} value={item.code}>{item.label}</option>
+            ))}
+          </select>
+        </label>
+
         <label className="grid gap-1.5 text-xs font-bold text-muted">
           Divisão
           <select
             className="field"
             value={divisionId}
             onChange={(event) => {
+              searchSequence.current += 1;
               setDraftDivisionId(
                 event.target.value,
               );
               setDraftCategoryId("");
-              setCategories([]);
+              setCategoryCatalog(null);
               setFormError("");
             }}
           >
@@ -289,8 +443,9 @@ export function CompetitionSearch({
           <select
             className="field"
             value={categoryId}
-            disabled={!divisionId}
+            disabled={!divisionId || !divisions.some((item) => String(item.id) === divisionId)}
             onChange={(event) => {
+              searchSequence.current += 1;
               setDraftCategoryId(
                 event.target.value,
               );
@@ -318,11 +473,11 @@ export function CompetitionSearch({
 
         <button
           type="button"
-          onClick={searchCompetition}
+          onClick={() => void searchCompetition()}
           disabled={
-            loading ||
-            !divisionId ||
-            !categoryId
+            loading || searching ||
+            !divisions.some((item) => String(item.id) === divisionId) ||
+            !categories.some((item) => String(item.id) === categoryId)
           }
           aria-busy={loading}
           className="btn-primary self-end"
@@ -357,6 +512,8 @@ export function CompetitionSearch({
         <div className="mt-4 rounded-xl border border-cyan/15 bg-cyan/6 px-3 py-2.5 text-xs text-muted">
           Visualizando temporariamente{" "}
           <strong className="text-cyan">
+            {SPORTS_COMPETITIONS.find((item) => item.code === selection.competitionCode)?.label}
+            {" • "}
             {selection.divisionName}
             {" • "}
             {selection.categoryName}

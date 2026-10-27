@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { clientApi } from "@/lib/client-api";
+import { categoriesCatalogUrl, divisionsCatalogUrl } from "@/lib/sports-preference";
 import type { CatalogCategory, CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useApiData } from "@/lib/use-api-data";
 
@@ -66,7 +67,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       const resolved: PreferenceNames = {};
 
       if (profile?.divisionId) {
-        const divisions = await clientApi<CatalogItem[]>("/api/catalog/divisions");
+        const divisions = await clientApi<CatalogItem[]>(
+          divisionsCatalogUrl(profile.competitionCode ?? "LEGACY"),
+        );
         resolved.division = divisions.find(
           (item) => String(item.id) === profile?.divisionId,
         )?.name;
@@ -74,7 +77,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       if (profile?.divisionId && profile?.categoryId) {
         const categories = await clientApi<CatalogCategory[]>(
-          `/api/catalog/categories?divisionId=${encodeURIComponent(profile.divisionId)}`,
+          categoriesCatalogUrl(profile.competitionCode ?? "LEGACY", profile.divisionId),
         );
         resolved.category = categories.find(
           (item) => String(item.id) === profile.categoryId,
@@ -104,6 +107,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       .filter((value): value is string => Boolean(value))
       .map(humanizeId);
     const resolved = [names.division, names.category, names.team].filter(Boolean);
+    const competitionLabel = profile?.competitionCode === "PAULISTA_FEMININO"
+      ? "Paulista Feminino"
+      : profile?.competitionCode === "PAULISTA" ? "Paulista" : null;
 
     return {
       profile,
@@ -112,7 +118,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       reload: reloadProfile,
       applyProfile,
       preferenceLabel:
-        (resolved.length ? resolved : fallback).join(" • ") ||
+        [competitionLabel, ...(resolved.length ? resolved : fallback)].filter(Boolean).join(" • ") ||
         "Escolha sua categoria",
     };
   }, [applyProfile, error, loading, names, profile, reloadProfile]);
