@@ -18,12 +18,12 @@ function loadRoute(routeName, demoMode = false) {
     reportDiagnostics: true,
   });
   assert.equal(transpiled.diagnostics?.length ?? 0, 0, `Falha de sintaxe em ${routeName}/route.ts`);
-  const module = { exports: {} };
+  const routeModule = { exports: {} };
   const called = [];
   const json = (body, options) => ({ type: 'json', body, status: options?.status ?? 200 });
   vm.runInNewContext(transpiled.outputText, {
-    module,
-    exports: module.exports,
+    module: routeModule,
+    exports: routeModule.exports,
     URLSearchParams,
     Date,
     require: name => {
@@ -35,8 +35,8 @@ function loadRoute(routeName, demoMode = false) {
       throw new Error(`Import inesperado em ${routeName}: ${name}`);
     },
   }, { filename: routeFile });
-  assert.equal(typeof module.exports.GET, 'function');
-  return { get: module.exports.GET, called };
+  assert.equal(typeof routeModule.exports.GET, 'function');
+  return { get: routeModule.exports.GET, called };
 }
 const request = url => ({ nextUrl: new URL(`https://teste.local${url}`) });
 
