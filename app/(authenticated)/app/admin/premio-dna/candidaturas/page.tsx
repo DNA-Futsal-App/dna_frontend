@@ -1003,7 +1003,7 @@ function AdminMediaPreview({
       <div
         className={
           externalSource.provider === "Instagram"
-            ? "mx-auto h-[640px] max-h-[75vh] w-full max-w-md overflow-hidden rounded-2xl border border-white/8 bg-black"
+            ? "mx-auto h-160 max-h-[75vh] w-full max-w-md overflow-hidden rounded-2xl border border-white/8 bg-black"
             : "aspect-video overflow-hidden rounded-2xl border border-white/8 bg-black"
         }
       >

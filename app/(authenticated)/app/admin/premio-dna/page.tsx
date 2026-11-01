@@ -210,6 +210,14 @@ export default function AwardAdminPage() {
             </Link>
 
             <Link
+              href="/app/admin/premio-dna/pre-votacao"
+              className="btn-ghost"
+            >
+              <Trophy className="size-4" />
+              Pré-votação
+            </Link>
+
+            <Link
               href="/app/admin/premio-dna/apuracao"
               className="btn-ghost"
             >

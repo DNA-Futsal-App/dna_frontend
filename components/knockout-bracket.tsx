@@ -1696,6 +1696,9 @@ function stageForPhase(
 
   if (
     value === "final" ||
+    value.startsWith(
+      "final ",
+    ) ||
     value.endsWith(
       " final",
     )

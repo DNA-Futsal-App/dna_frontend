@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { authenticatedBatch } from "@/lib/backend";
+import { sportsHomePath } from "@/lib/sports-navigation";
 
 export async function GET(
   request: NextRequest,
@@ -7,7 +8,7 @@ export async function GET(
   return authenticatedBatch(
     request,
     {
-      sports: "/api/v1/home",
+      sports: sportsHomePath(request.nextUrl.searchParams),
       news: "/api/v1/news?page=0&size=3",
     },
     {

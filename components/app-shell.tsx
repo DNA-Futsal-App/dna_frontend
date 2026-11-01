@@ -350,7 +350,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-68 border-r border-white/8 bg-night/92 px-5 py-6 backdrop-blur-xl lg:flex lg:flex-col">
         <Link href="/app" className="flex items-center gap-3" aria-label="DNA Futsal — Início">
           <BrandLogo size={54} priority />
-          <span><strong className="display-title block text-xl leading-none text-ivory">DNA Futsal</strong><small className="mt-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-cyan">A base joga aqui</small></span>
+          <span><strong className="display-title block text-xl leading-none text-ivory">DNA Futsal</strong><small className="mt-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-cyan">Cobertura Completa da Base e Iniciação</small></span>
         </Link>
         <nav className="mt-10 grid gap-1" aria-label="Navegação principal">
           {navigationItems.map((item) => {

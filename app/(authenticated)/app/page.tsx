@@ -30,8 +30,15 @@ import type {
 import { useApiData } from "@/lib/use-api-data";
 import { useProfile } from "@/components/profile-context";
 import { AwardRegistrationBanner } from "@/components/award-registration-banner";
+import { CompetitionSearch, useCompetitionBrowse } from "@/components/competition-search";
+import { dashboardUrl } from "@/lib/sports-navigation";
 
 export default function DashboardPage() {
+  return <><CompetitionSearch /><DashboardContent /></>;
+}
+
+function DashboardContent() {
+  const { activeEventId } = useCompetitionBrowse();
   const {
     data,
     loading,
@@ -39,7 +46,7 @@ export default function DashboardPage() {
     reload,
   } =
     useApiData<DashboardData>(
-      "/api/dashboard",
+      dashboardUrl(activeEventId),
     );
 
   const { profile } =

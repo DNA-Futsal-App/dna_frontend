@@ -17,8 +17,17 @@ import {
 import { ErrorState, LoadingCards } from "@/components/feedback";
 import { PageIntro } from "@/components/page-intro";
 import { clientApi } from "@/lib/client-api";
+import {
+  SPORTS_COMPETITIONS,
+  buildSportsPreference,
+  savedSportsPreference,
+  categoriesCatalogUrl,
+  divisionsCatalogUrl,
+  type CompetitionSelection,
+} from "@/lib/sports-preference";
 import type { CatalogItem, Team, UserProfile } from "@/lib/types";
 import { useProfile } from "@/components/profile-context";
+import { assertCatalogEventIsolation } from "@/lib/competition-event-guard";
 import { CatalogCategory } from "@/lib/types";
 import { AccountDeletionDialog } from "@/components/account-deletion-dialog";
 
@@ -33,10 +42,16 @@ export default function ProfilePage() {
   } = useProfile();
   const [divisions, setDivisions] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [divisionScope, setDivisionScope] = useState<CompetitionSelection | null>(null);
+  const [categoryScope, setCategoryScope] = useState<{
+    competition: CompetitionSelection;
+    divisionId: string;
+  } | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [divisionId, setDivisionId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [teamId, setTeamId] = useState<string | null>(null);
+  const [competitionCode, setCompetitionCode] = useState<CompetitionSelection | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -44,25 +59,37 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
-  const selectedCategoryId = categoryId ?? profile?.categoryId ?? "";
-  const selectedDivisionId = divisionId ?? profile?.divisionId ?? "";
-  const selectedTeamId = teamId ?? profile?.teamId ?? "";
+  const selectedCompetitionCode: CompetitionSelection =
+    competitionCode ?? profile?.competitionCode ?? (profile?.eventId ? "LEGACY" : "PAULISTA");
+  const selectedCategoryId = categoryId ?? (competitionCode === null ? profile?.categoryId : "") ?? "";
+  const selectedDivisionId = divisionId ?? (competitionCode === null ? profile?.divisionId : "") ?? "";
+  const selectedTeamId = teamId ?? (competitionCode === null ? profile?.teamId : "") ?? "";
+  const visibleDivisions = divisionScope === selectedCompetitionCode ? divisions : [];
+  const visibleCategories = categoryScope?.competition === selectedCompetitionCode &&
+    categoryScope.divisionId === selectedDivisionId ? categories : [];
 
-  const selectedCategory = categories.find(
+  const selectedCategory = visibleCategories.find(
     (item) => String(item.id) === String(selectedCategoryId),
   );
 
-  const usingPersistedPreference = divisionId === null && categoryId === null;
+  const usingPersistedPreference =
+    competitionCode === null && divisionId === null && categoryId === null;
 
   const selectedEventId =
     selectedCategory?.eventId ??
     (usingPersistedPreference ? (profile?.eventId ?? null) : null);
 
   useEffect(() => {
-    clientApi<CatalogItem[]>("/api/catalog/divisions")
-      .then(setDivisions)
-      .catch(() => setDivisions([]));
-  }, []);
+    let active = true;
+    clientApi<CatalogItem[]>(divisionsCatalogUrl(selectedCompetitionCode))
+      .then((result) => {
+        if (active) { setDivisions(result); setDivisionScope(selectedCompetitionCode); }
+      })
+      .catch(() => {
+        if (active) { setDivisions([]); setDivisionScope(null); }
+      });
+    return () => { active = false; };
+  }, [selectedCompetitionCode]);
 
   useEffect(() => {
     if (!selectedDivisionId) {
@@ -72,25 +99,25 @@ export default function ProfilePage() {
     let active = true;
 
     clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?divisionId=${encodeURIComponent(
-        selectedDivisionId,
-      )}`,
+      categoriesCatalogUrl(selectedCompetitionCode, selectedDivisionId),
     )
       .then((result) => {
         if (active) {
           setCategories(result);
+          setCategoryScope({ competition: selectedCompetitionCode, divisionId: selectedDivisionId });
         }
       })
       .catch(() => {
         if (active) {
           setCategories([]);
+          setCategoryScope(null);
         }
       });
 
     return () => {
       active = false;
     };
-  }, [selectedDivisionId]);
+  }, [selectedDivisionId, selectedCompetitionCode]);
 
   useEffect(() => {
     if (!selectedEventId) {
@@ -123,11 +150,33 @@ export default function ProfilePage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (deleting || loggingOut || saving) return;
-    setSaving(true);
     setMessage("");
     setFormError("");
     const form = new FormData(event.currentTarget);
+    const unchanged = competitionCode === null && divisionId === null && categoryId === null && teamId === null;
+    let sports;
     try {
+      sports = unchanged && profile
+        ? savedSportsPreference(profile)
+        : buildSportsPreference(
+            selectedCompetitionCode, selectedEventId, selectedDivisionId,
+            selectedCategoryId, selectedTeamId,
+          );
+      if (!unchanged && selectedCompetitionCode === "PAULISTA_FEMININO" && sports.eventId == null) {
+        throw new Error("Para acompanhar o Paulista Feminino, selecione divisão e categoria antes de salvar.");
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Preferência esportiva inválida.");
+      return;
+    }
+    setSaving(true);
+    try {
+      if (selectedCompetitionCode === "PAULISTA_FEMININO" && sports.eventId != null && sports.divisionId != null) {
+        await assertCatalogEventIsolation("PAULISTA_FEMININO", sports.divisionId, sports.eventId, {
+          divisions: (code) => clientApi<CatalogItem[]>(divisionsCatalogUrl(code)),
+          categories: (code, id) => clientApi<CatalogCategory[]>(categoriesCatalogUrl(code, id)),
+        });
+      }
       const updatedProfile = await clientApi<UserProfile>("/api/me", {
         method: "PUT",
         body: JSON.stringify({
@@ -136,15 +185,7 @@ export default function ProfilePage() {
           phone: form.get("phone"),
 
           childInstagram: form.get("childInstagram") || null,
-
-          eventId: selectedEventId,
-
-          categoryId: form.get("categoryId") || null,
-
-          divisionId: form.get("divisionId") || null,
-
-          teamId: form.get("teamId") || null,
-
+          ...sports,
           currentPassword: form.get("currentPassword"),
         }),
       });
@@ -159,6 +200,10 @@ export default function ProfilePage() {
         team: teams.find((item) => item.id === updatedProfile.teamId)?.name,
       });
 
+      setCompetitionCode(null);
+      setDivisionId(null);
+      setCategoryId(null);
+      setTeamId(null);
       setMessage("Perfil atualizado com sucesso.");
     } catch (err) {
       setFormError(
@@ -303,8 +348,37 @@ export default function ProfilePage() {
               Preferência esportiva
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Divisão e categoria definem o conteúdo geral do app. O time escolhido é usado exclusivamente na seção Meu Time.
+              Selecione o campeonato, a divisão e a categoria que deseja acompanhar. O time é usado na seção Meu Time.
             </p>
+            <label className="mt-5 grid gap-1.5 text-sm font-bold">
+              Campeonato
+              <select
+                className="field"
+                name="competitionCode"
+                value={selectedCompetitionCode}
+                onChange={(event) => {
+                  setCompetitionCode(event.target.value as CompetitionSelection);
+                  setDivisionId("");
+                  setCategoryId("");
+                  setTeamId("");
+                  setDivisions([]);
+                  setCategories([]);
+                  setTeams([]);
+                }}
+              >
+                {selectedCompetitionCode === "LEGACY" ? (
+                  <option value="LEGACY">Manter competição anterior (legado)</option>
+                ) : null}
+                {SPORTS_COMPETITIONS.map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
+                ))}
+              </select>
+            </label>
+            {selectedCompetitionCode === "LEGACY" ? (
+              <p className="mt-2 text-xs text-muted">
+                Sua competição anterior foi preservada. Para substituí-la, escolha um dos campeonatos acima.
+              </p>
+            ) : null}
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
               <label className="grid gap-1.5 text-sm font-bold">
                 Divisão
@@ -323,7 +397,10 @@ export default function ProfilePage() {
                   }}
                 >
                   <option value="">Nenhuma</option>
-                  {divisions.map((item) => (
+                  {selectedDivisionId && !visibleDivisions.some((item) => String(item.id) === selectedDivisionId) ? (
+                    <option value={selectedDivisionId}>Divisão salva ({selectedDivisionId})</option>
+                  ) : null}
+                  {visibleDivisions.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
                     </option>
@@ -344,7 +421,10 @@ export default function ProfilePage() {
                   disabled={!selectedDivisionId}
                 >
                   <option value="">Nenhuma</option>
-                  {categories.map((item) => (
+                  {selectedCategoryId && !visibleCategories.some((item) => String(item.id) === selectedCategoryId) ? (
+                    <option value={selectedCategoryId}>Categoria salva ({selectedCategoryId})</option>
+                  ) : null}
+                  {visibleCategories.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name}
                     </option>
@@ -361,6 +441,9 @@ export default function ProfilePage() {
                   disabled={!selectedEventId}
                 >
                   <option value="">Nenhum</option>
+                  {selectedTeamId && !teams.some((team) => team.id === selectedTeamId) ? (
+                    <option value={selectedTeamId}>Time salvo ({selectedTeamId})</option>
+                  ) : null}
                   {teams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}

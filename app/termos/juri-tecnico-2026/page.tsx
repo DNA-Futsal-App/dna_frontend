@@ -62,7 +62,7 @@ export default function JuryTechnicalTermsPage() {
             </div>
           </Link>
 
-          <Link href="/" className="btn-ghost !min-h-10 !px-4 !py-2 text-sm">
+          <Link href="/" className="btn-ghost min-h-10! px-4! py-2! text-sm">
             <ArrowLeft className="size-4" />
             Voltar
           </Link>

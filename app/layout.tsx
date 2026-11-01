@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "DNA Futsal — A base joga aqui",
+    default: "DNA Futsal — Cobertura Completa da Base e Iniciação",
     template: "%s | DNA Futsal",
   },
   description: "Resultados, classificação, artilharia e notícias do futsal de base paulista em um só lugar.",

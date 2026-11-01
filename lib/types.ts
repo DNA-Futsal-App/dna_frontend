@@ -132,6 +132,7 @@ export type UserProfile = {
   categoryId?: string | null;
   divisionId?: string | null;
   teamId?: string | null;
+  competitionCode?: "PAULISTA" | "PAULISTA_FEMININO" | null;
 
   emailVerified: boolean;
   createdAt: string;
