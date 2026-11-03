@@ -9,7 +9,7 @@ export default function HomePage() {
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(98,227,232,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(98,227,232,.035)_1px,transparent_1px)] bg-size-[44px_44px] mask-[linear-gradient(to_bottom,black,transparent_75%)]" />
       <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3" aria-label="DNA Futsal"><BrandLogo size={52} priority /><span className="hidden sm:block"><strong className="display-title block text-xl leading-none">DNA Futsal</strong><small className="text-[9px] font-bold uppercase tracking-[.18em] text-cyan">Cobertura Completa da Base e Iniciação</small></span></Link>
-        <div className="flex items-center gap-2"><Link href="/entrar" className="btn-ghost min-h-10! px-4! py-2! text-sm">Entrar</Link><Link href="/cadastro" className="btn-primary min-h-10! px-4! py-2! text-sm">Criar conta</Link></div>
+        <div className="flex items-center gap-2"><Link href="/premio/votacao" className="btn-ghost hidden min-h-10! px-4! py-2! text-sm sm:inline-flex">Votação popular</Link><Link href="/entrar" className="btn-ghost min-h-10! px-4! py-2! text-sm">Entrar</Link><Link href="/cadastro" className="btn-primary min-h-10! px-4! py-2! text-sm">Criar conta</Link></div>
       </header>
 
       <section className="mx-auto grid min-h-[calc(100dvh-5rem)] max-w-7xl items-center gap-10 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-18">
@@ -17,7 +17,7 @@ export default function HomePage() {
           <span className="eyebrow"><span className="size-2 rounded-full bg-coral" />Futsal de base, do seu jeito</span>
           <h1 className="display-title mt-5 max-w-3xl text-[clamp(3.6rem,11vw,7.7rem)] font-black leading-[0.8] text-ivory">O jogo começa <span className="text-cyan">aqui.</span></h1>
           <p className="mt-7 max-w-xl text-base leading-relaxed text-muted sm:text-lg">Resultados, próximos jogos, tabela, artilharia e notícias do time que importa para você — sem precisar caçar informação em vários lugares.</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link href="/cadastro" className="btn-primary">Começar agora <ArrowRight className="size-5" aria-hidden="true" /></Link><DemoButton /></div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link href="/cadastro" className="btn-primary">Começar agora <ArrowRight className="size-5" aria-hidden="true" /></Link><DemoButton /><Link href="/premio/votacao" className="btn-ghost">Votação popular</Link></div>
           <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-muted"><span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-cyan" />Conta verificada</span><span className="inline-flex items-center gap-2"><BellRing className="size-4 text-amber" />Seu time primeiro</span><span className="inline-flex items-center gap-2"><ChartNoAxesColumnIncreasing className="size-4 text-coral" />Dados atualizados</span></div>
         </div>
 

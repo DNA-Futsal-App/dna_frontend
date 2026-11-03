@@ -87,7 +87,7 @@ function LoginForm() {
         return;
       }
 
-      window.location.replace("/app");
+      window.location.replace(params.get("returnTo") === "/premio/votacao" ? "/premio/votacao" : "/app");
     } catch (err) {
       if (err instanceof ClientApiError && err.status === 403
         && err.problem?.code === "ACCOUNT_PENDING_DELETION" && !confirmAccountDeletionCancellation) {
