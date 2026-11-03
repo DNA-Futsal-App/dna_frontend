@@ -1,39 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { proxyAuthenticated, proxyPublic } from "@/lib/backend";
+import { resolvePopularVotingRoute, validPopularVotingOrigin } from "@/lib/popular-voting-route-guard";
 
 type RouteContext = { params: Promise<{ path: string[] }> };
-const uuid = "[0-9a-fA-F-]{36}";
-const contexts = new RegExp(`^editions/${uuid}/contexts$`);
-const board = new RegExp(`^editions/${uuid}/board$`);
-const media = new RegExp(`^editions/${uuid}/media/${uuid}$`);
-const myVote = new RegExp(`^editions/${uuid}/my-vote$`);
-const vote = new RegExp(`^editions/${uuid}/vote$`);
 
 async function forward(request: NextRequest, context: RouteContext, method: "GET" | "POST") {
   const { path } = await context.params;
-  const suffix = path?.join("/") ?? "";
-  const allowedGet = suffix === "editions" || contexts.test(suffix) || board.test(suffix) || media.test(suffix) || myVote.test(suffix);
-  if ((method === "GET" && !allowedGet) || (method === "POST" && !vote.test(suffix))) {
-    return NextResponse.json({ code: "INVALID_POPULAR_ROUTE", detail: "Rota não encontrada." }, { status: 404 });
+  const route = resolvePopularVotingRoute(method, path);
+  if (!route) {
+    // Report method and URL path to make mismatches observable in Network > Response.
+    // Do not log cookies, JWTs, request bodies, or other credentials.
+    const requestedPath = `/api/popular-voting/${(path ?? []).join("/")}`.slice(0, 250);
+    console.warn("[popular-voting] BFF route rejected", { method, path: requestedPath });
+    return NextResponse.json({
+      code: "INVALID_POPULAR_ROUTE",
+      detail: "O endereço da votação não corresponde a uma rota permitida.",
+      method,
+      path: requestedPath,
+    }, { status: 404 });
   }
   if (method === "POST") {
-    // A sessão fica em cookies httpOnly: negar escrita cross-origin.
-    const origin = request.headers.get("origin");
-    const fetchSite = request.headers.get("sec-fetch-site");
-    if (origin !== request.nextUrl.origin || (fetchSite && fetchSite !== "same-origin")) {
-      return NextResponse.json({ code: "CROSS_ORIGIN_FORBIDDEN", detail: "Origem inválida." }, { status: 403 });
+    // Our auth session uses httpOnly cookies; prevent cross-site writes.
+    // Do not compare Origin to request.nextUrl.origin behind a TLS reverse proxy.
+    if (!validPopularVotingOrigin(request.headers, request.nextUrl.origin, process.env.DNA_PUBLIC_ORIGIN)) {
+      return NextResponse.json({
+        code: "CROSS_ORIGIN_FORBIDDEN",
+        detail: "Origem inválida para registrar o voto.",
+      }, { status: 403 });
     }
   }
   const query = method === "GET" ? request.nextUrl.search : "";
   const body = method === "POST" ? await request.text() : undefined;
   const init = { method, body };
-  if (myVote.test(suffix) || method === "POST") {
+  if (route.kind === "my-vote" || route.kind === "vote") {
     const response = await proxyAuthenticated(request,
-      `/api/v1/awards/popular-voting/${suffix}${query}`, init);
+      `/api/v1/awards/popular-voting/${route.suffix}${query}`, init);
     response.headers.set("Cache-Control", "private, no-store");
     return response;
   }
-  const response = await proxyPublic(`/api/v1/public/awards/popular-voting/${suffix}${query}`, init);
+  const response = await proxyPublic(`/api/v1/public/awards/popular-voting/${route.suffix}${query}`, init);
   response.headers.set("Cache-Control", "no-store");
   return response;
 }
