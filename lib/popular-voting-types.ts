@@ -70,6 +70,11 @@ export function votingParams(context: VotingReadiness["context"]): string {
     contestCategory: context.contestCategory,
   }).toString();
 }
+export function votingCategoryUrl(editionId: string, context: VotingReadiness["context"]): string {
+  const parts = [editionId, context.eventId, context.divisionId, context.categoryId, context.gender];
+  return `/premio/votacao/${parts.map((part) => encodeURIComponent(String(part))).join("/")}`;
+}
+
 export function votingContextUrl(editionId: string, context: VotingReadiness["context"]): string {
   const parts = [editionId, context.eventId, context.divisionId,
     context.categoryId, context.gender, context.contestCategory];

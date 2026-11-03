@@ -10,6 +10,7 @@ import {
   votingContextKey, votingContextUrl, votingDate, votingParams, votingStatusLabel,
 } from "@/lib/popular-voting-types";
 import type { ContextWindow, VotingContext, VotingReadiness } from "@/lib/popular-voting-types";
+import { AdminBatchScheduler } from "@/components/popular-voting/admin-batch-scheduler";
 
 const reason: Record<string, string> = {
   INSCRICOES_ABERTAS: "As inscrições desta edição ainda estão abertas.",
@@ -168,6 +169,9 @@ export default function AdminPopularVotingPage() {
       </div>}
       {!loading && !selected && <p className="mt-5 text-sm text-muted">Nenhuma categoria com vídeos aprovados nesta edição.</p>}
     </section>
+    {!loading && editionId && contexts.length > 0 && <AdminBatchScheduler
+      editionId={editionId} contexts={contexts} onScheduled={() => void reload()}/>}
+    <h2 className="mt-6 text-lg font-black">Controle individual por modalidade</h2>
     {loadingGroup && <LoaderCircle className="size-7 animate-spin text-cyan"/>}
     {selected && !loadingGroup && readiness && windowData && <>
       <section className="surface rounded-3xl p-6 sm:p-8">
