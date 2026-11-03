@@ -87,7 +87,10 @@ function LoginForm() {
         return;
       }
 
-      window.location.replace(params.get("returnTo") === "/premio/votacao" ? "/premio/votacao" : "/app");
+      const returnTo = params.get("returnTo");
+      const allowed = returnTo === "/premio/votacao"
+        || (returnTo !== null && /^\/premio\/votacao\/[0-9a-fA-F-]{36}\/(?:[1-9]\d*\/){3}(?:MALE|FEMALE)\/(?:BEAUTIFUL_GOAL|BEST_DRIBBLE|FREE_KICK_GOAL|BEST_SAVE)$/.test(returnTo));
+      window.location.replace(allowed && returnTo ? returnTo : "/app");
     } catch (err) {
       if (err instanceof ClientApiError && err.status === 403
         && err.problem?.code === "ACCOUNT_PENDING_DELETION" && !confirmAccountDeletionCancellation) {
