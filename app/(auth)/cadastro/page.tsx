@@ -129,8 +129,11 @@ export default function RegisterPage() {
           ...sports,
         }),
       });
+      // router.push(
+      //   `/verificar-email?login=${encodeURIComponent(String(form.get("email")))}`,
+      // );
       router.push(
-        `/verificar-email?login=${encodeURIComponent(String(form.get("email")))}`,
+        `/entrar`,
       );
     } catch (err) {
       setError(
