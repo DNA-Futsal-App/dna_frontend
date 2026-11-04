@@ -135,9 +135,23 @@ export function VoteDetailClient(props: Props) {
           <p className="mt-3 text-muted">Os vídeos serão liberados na data programada. Volte depois da abertura.</p>
         </section> : !board ? <LoaderCircle className="size-8 animate-spin text-cyan"/> : <>
           {mine && <p className="flex items-center gap-2 rounded-xl border border-cyan/20 p-4 text-sm text-cyan"><CheckCircle2 className="size-5"/> Você já votou nesta categoria.</p>}
-          {!loggedIn && board.status === "OPEN" && <p className="rounded-xl border border-amber/20 p-4 text-sm text-muted">
-            Você pode assistir aos vídeos sem cadastro. Para votar, <Link className="font-bold text-amber underline" href={loginLink}>entre na sua conta</Link>.
-          </p>}
+          {!loggedIn && board.status === "OPEN" && (
+            <section aria-label="Login necessário para votar" className="relative overflow-hidden rounded-3xl border border-amber/40 bg-linear-to-br from-amber/15 via-panel to-night p-6 shadow-[0_20px_50px_rgba(0,0,0,.22)] sm:p-8">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="max-w-2xl">
+                  <p className="inline-flex items-center rounded-full border border-amber/40 bg-amber/10 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-amber">Login obrigatório para votar</p>
+                  <h2 className="display-title mt-4 text-2xl font-black text-ivory sm:text-3xl">Quer votar no seu atleta favorito?</h2>
+                  <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+                    Assista aos vídeos gratuitamente. Para registrar seu voto, entre na sua conta do DNA Futsal.
+                  </p>
+                </div>
+                <Link href={loginLink} className="btn-primary inline-flex min-h-14 w-full shrink-0 items-center justify-center px-6 text-center text-base font-black sm:w-auto lg:min-w-64">
+                  Fazer login para votar
+                </Link>
+              </div>
+              <p className="mt-5 border-t border-amber/20 pt-4 text-xs text-muted">Após entrar, você voltará automaticamente para esta votação.</p>
+            </section>
+          )}
           {board.status === "CLOSED" && <p role="status" className="rounded-xl border border-cyan/20 p-4 text-sm text-muted">
             Votação encerrada. Os resultados serão divulgados no dia da premição.
           </p>}
@@ -156,7 +170,7 @@ export function VoteDetailClient(props: Props) {
               </div>
               {board.status === "CLOSED" ? <p className="mt-5 text-sm font-semibold text-muted">Votação encerrada</p> :
                 <button type="button" className="btn-primary mt-5 w-full" disabled={busy !== null || Boolean(mine) || !loggedIn || board.status !== "OPEN"}
-                  onClick={() => void castVote(item)}>{mine === item.entryId ? "Seu voto" : mine ? "Voto registrado" : "Votar neste vídeo"}</button>}
+                  onClick={() => void castVote(item)}>{mine === item.entryId ? "Seu voto" : mine ? "Voto registrado" : !loggedIn ? "Faça login para votar" : "Votar neste vídeo"}</button>}
             </article>;
           })}</div>
         </>}
