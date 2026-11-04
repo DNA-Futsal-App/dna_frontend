@@ -160,19 +160,6 @@ export default function AdminPopularVotingPage() {
     </header>
     {error && <p role="alert" className="rounded-2xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
     {notice && <p role="status" className="rounded-2xl border border-cyan/30 p-4 text-sm text-cyan">{notice}</p>}
-    <section className="surface rounded-3xl p-5 sm:p-7">
-      {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <label className="grid gap-2 text-sm font-bold">Edição<select className="field" value={editionId} disabled={busy} onChange={(e) => setEditionId(e.target.value)}>{editions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        {selected && <>
-          <label className="grid gap-2 text-sm font-bold">Campeonato<select className="field" value={selected.eventId} disabled={busy} onChange={(e) => choose("eventId", e.target.value)}>{options("eventId").map((item) => <option key={item.eventId} value={item.eventId}>Evento #{item.eventId}</option>)}</select></label>
-          <label className="grid gap-2 text-sm font-bold">Divisão<select className="field" value={selected.divisionId} disabled={busy} onChange={(e) => choose("divisionId", e.target.value)}>{options("divisionId").map((item) => <option key={item.divisionId} value={item.divisionId}>{item.divisionName}</option>)}</select></label>
-          <label className="grid gap-2 text-sm font-bold">Categoria<select className="field" value={selected.categoryId} disabled={busy} onChange={(e) => choose("categoryId", e.target.value)}>{options("categoryId").map((item) => <option key={item.categoryId} value={item.categoryId}>{item.categoryName}</option>)}</select></label>
-          <label className="grid gap-2 text-sm font-bold">Gênero<select className="field" value={selected.gender} disabled={busy} onChange={(e) => choose("gender", e.target.value)}>{options("gender").map((item) => <option key={item.gender} value={item.gender}>{item.gender === "MALE" ? "Masculino" : "Feminino"}</option>)}</select></label>
-          <label className="grid gap-2 text-sm font-bold">Categoria do prêmio<select className="field" value={selected.contestCategory} disabled={busy} onChange={(e) => choose("contestCategory", e.target.value)}>{options("contestCategory").map((item) => <option key={item.contestCategory} value={item.contestCategory}>{item.contestCategoryLabel}</option>)}</select></label>
-        </>}
-      </div>}
-      {!loading && !selected && <p className="mt-5 text-sm text-muted">Nenhuma categoria com vídeos aprovados nesta edição.</p>}
-    </section>
     {!loading && editionId && contexts.length > 0 && <AdminBatchScheduler
       editionId={editionId} contexts={contexts} onScheduled={() => void reload()}/>}
     <h2 className="mt-6 text-lg font-black">Controle individual por modalidade</h2>

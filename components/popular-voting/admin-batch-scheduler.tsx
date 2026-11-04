@@ -139,7 +139,7 @@ export function AdminBatchScheduler({ editionId, contexts, onScheduled }: {
   return <section className="surface space-y-5 rounded-3xl p-5 sm:p-7">
     <header>
       <p className="eyebrow"><Layers3 className="size-4"/> Programação por categoria de base</p>
-      <h2 className="mt-3 text-2xl font-black">Abrir Sub-7 A1 hoje, Sub-7 A2 amanhã</h2>
+      <h2 className="mt-3 text-2xl font-black">Programe as votações</h2>
       <p className="mt-2 max-w-3xl text-sm text-muted">Escolha o campeonato, a divisão e a categoria de base. Programe todas as quatro modalidades do prêmio juntas, ou apenas uma. Você também pode limitar a um gênero ou incluir os dois.</p>
     </header>
     <div className="grid gap-4 md:grid-cols-3">
