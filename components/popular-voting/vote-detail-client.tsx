@@ -138,8 +138,8 @@ export function VoteDetailClient(props: Props) {
           {!loggedIn && board.status === "OPEN" && <p className="rounded-xl border border-amber/20 p-4 text-sm text-muted">
             Você pode assistir aos vídeos sem cadastro. Para votar, <Link className="font-bold text-amber underline" href={loginLink}>entre na sua conta</Link>.
           </p>}
-          <h2 className="display-title pt-3 text-2xl">Os três finalistas</h2>
-          <div className="grid gap-5 lg:grid-cols-3">{board.finalists.map((item) => {
+          <h2 className="display-title pt-3 text-2xl">Os {board.finalists.length} finalistas</h2>
+          <div className={`grid gap-5 ${board.finalists.length === 4 ? "md:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"}`}>{board.finalists.map((item) => {
             const external = item.externalUrl && /^https?:\/\//i.test(item.externalUrl) ? item.externalUrl : null;
             return <article key={item.entryId} className="surface rounded-3xl border border-white/10 p-5">
               <p className="text-xs font-black uppercase tracking-widest text-amber">Finalista</p>

@@ -54,7 +54,7 @@ export default function PopularVotingCatalogPage() {
       <section className="max-w-4xl pt-8">
         <p className="eyebrow"><Trophy className="size-4"/> Prêmio Legacy • Votação popular</p>
         <h1 className="display-title mt-4 text-4xl sm:text-6xl">Você decide essa disputa. <span className="text-cyan">Faça diferença.</span></h1>
-        <p className="mt-5 text-muted">Cada divisão, categoria e modalidade do prêmio tem seu próprio calendário e uma página exclusiva com os três finalistas.</p>
+        <p className="mt-5 text-muted">Cada divisão, categoria e modalidade do prêmio tem seu próprio calendário e uma página exclusiva com seus finalistas.</p>
       </section>
       {error && <p role="alert" className="rounded-xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
       {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : editions.length === 0 ?
@@ -85,7 +85,7 @@ export default function PopularVotingCatalogPage() {
                 {upcoming > 0 && <span className="rounded-full border border-amber/40 px-3 py-1 text-amber">{upcoming} em breve</span>}
                 {closed > 0 && <span className="rounded-full border border-white/20 px-3 py-1 text-muted">{closed} encerrada(s)</span>}
               </div>
-              <p className="mt-4 text-xs text-muted">Ver horários e os três finalistas de cada modalidade</p>
+              <p className="mt-4 text-xs text-muted">Ver horários e finalistas de cada modalidade</p>
             </Link>;
           })}</div>}
       </>}

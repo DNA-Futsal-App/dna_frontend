@@ -43,7 +43,7 @@ export default function PopularVotingBaseCategoryPage() {
       </Link>
       <section className="pt-4"><p className="eyebrow"><Trophy className="size-4"/> Prêmio Legacy • Categoria de base</p>
         <h1 className="display-title mt-4 text-4xl sm:text-6xl">{items[0] ? `${items[0].divisionName} • ${items[0].categoryName}` : "Votações da categoria"}</h1>
-        <p className="mt-3 text-sm text-muted">Cada modalidade possui os seus três finalistas e uma janela de votação própria.</p>
+        <p className="mt-3 text-sm text-muted">Cada modalidade possui seus finalistas e uma janela de votação própria.</p>
       </section>
       {error && <p role="alert" className="rounded-xl border border-coral/40 p-4 text-coral">{error}</p>}
       {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : items.length === 0 ?
@@ -59,7 +59,7 @@ export default function PopularVotingBaseCategoryPage() {
             <p className="mt-3 text-sm font-bold text-amber">{votingStatusLabel(item.status)}</p>
             <p className="mt-3 flex items-center gap-2 text-xs text-muted"><CalendarClock className="size-4"/>
               {votingDate(item.opensAt)} até {votingDate(item.closesAt)}</p>
-            <p className="mt-5 text-xs text-muted">Ver os três finalistas e assistir aos vídeos quando a votação abrir.</p>
+            <p className="mt-5 text-xs text-muted">Ver os finalistas e assistir aos vídeos quando a votação abrir.</p>
           </Link>)}</section>}
     </div>
   </main>;

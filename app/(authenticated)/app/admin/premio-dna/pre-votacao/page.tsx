@@ -214,7 +214,7 @@ export default function AwardPreVoteAdminPage() {
 
   async function finalize() {
     if (!selected || !board?.readyToFinalize) return;
-    if (!window.confirm("Confirmar os três finalistas? A classificação será congelada e não será possível alterar as notas deste grupo.")) return;
+    if (!window.confirm("Confirmar os finalistas desta disputa? A classificação será congelada e não será possível alterar as notas deste grupo.")) return;
     setBusy("finalize");
     setError("");
     try {
@@ -229,7 +229,7 @@ export default function AwardPreVoteAdminPage() {
         }) },
       );
       setBoard(result);
-      setNotice("Os três finalistas foram confirmados para a próxima etapa.");
+      setNotice("Os finalistas foram confirmados para a próxima etapa.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível publicar os finalistas.");
     } finally {
@@ -262,7 +262,7 @@ export default function AwardPreVoteAdminPage() {
         </Link>
         <p className="eyebrow mt-6"><BadgeCheck className="size-4" /> Avaliação administrativa</p>
         <h1 className="display-title mt-2 text-4xl">Pré-votação do Prêmio DNA Futsal</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted">Avalie cada vídeo aprovado de 1 a 10. As médias determinam os três finalistas por campeonato, divisão, categoria, gênero e prêmio.</p>
+        <p className="mt-2 max-w-3xl text-sm text-muted">Avalie cada vídeo aprovado de 1 a 10. As médias determinam os finalistas por campeonato, divisão, categoria, gênero e prêmio.</p>
       </header>
 
       <section className="surface rounded-3xl p-5 sm:p-6">
@@ -329,14 +329,14 @@ export default function AwardPreVoteAdminPage() {
                 <span className="inline-flex items-center gap-2 rounded-xl border border-cyan/30 px-4 py-2 text-sm font-bold text-cyan"><Trophy className="size-4" /> Finalistas confirmados</span>
               ) : (
                 <button type="button" className="btn-primary" disabled={!board?.readyToFinalize || busy !== null} onClick={() => void finalize()}>
-                  <Trophy className="size-4" /> Confirmar os 3 finalistas
+                  <Trophy className="size-4" /> Confirmar os finalistas
                 </button>
               )}
             </div>
           </div>
           {board && !board.published && <p className="mt-3 text-xs text-muted">
             {board.registrationsOpen ? "Aguardando encerramento das inscrições. " : "Inscrições encerradas. "}
-            {board.readyToFinalize ? "O grupo já pode ser publicado." : "A publicação exige três inscritos, revisão concluída, painel completo e ausência de empate na 3ª colocação."}
+            {board.readyToFinalize ? "O grupo já pode ser publicado." : "A publicação exige vídeos suficientes, revisão concluída e painel completo. Empates no corte só são permitidos na disputa autorizada."}
           </p>}
         </section>
 
