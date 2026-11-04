@@ -11,6 +11,7 @@ import {
 } from "@/lib/popular-voting-types";
 import type { ContextWindow, VotingContext, VotingReadiness } from "@/lib/popular-voting-types";
 import { AdminBatchScheduler } from "@/components/popular-voting/admin-batch-scheduler";
+import { AdminPopularResults } from "@/components/popular-voting/admin-popular-results";
 
 const reason: Record<string, string> = {
   INSCRICOES_ABERTAS: "As inscrições desta edição ainda estão abertas.",
@@ -213,6 +214,8 @@ export default function AdminPopularVotingPage() {
           <Link target="_blank" href={votingContextUrl(editionId, selected)} className="btn-ghost inline-flex">Abrir página pública exclusiva</Link>
         </>}
       </section>
+      {windowData.status === "CLOSED" && <AdminPopularResults
+        key={`${editionId}|${votingContextKey(selected)}`} editionId={editionId} context={selected}/>}
     </>}
   </div>;
 }

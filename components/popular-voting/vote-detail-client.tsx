@@ -138,6 +138,9 @@ export function VoteDetailClient(props: Props) {
           {!loggedIn && board.status === "OPEN" && <p className="rounded-xl border border-amber/20 p-4 text-sm text-muted">
             Você pode assistir aos vídeos sem cadastro. Para votar, <Link className="font-bold text-amber underline" href={loginLink}>entre na sua conta</Link>.
           </p>}
+          {board.status === "CLOSED" && <p role="status" className="rounded-xl border border-cyan/20 p-4 text-sm text-muted">
+            Votação encerrada. Os resultados serão divulgados no dia da premição.
+          </p>}
           <h2 className="display-title pt-3 text-2xl">Os {board.finalists.length} finalistas</h2>
           <div className={`grid gap-5 ${board.finalists.length === 4 ? "md:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"}`}>{board.finalists.map((item) => {
             const external = item.externalUrl && /^https?:\/\//i.test(item.externalUrl) ? item.externalUrl : null;
@@ -151,8 +154,7 @@ export function VoteDetailClient(props: Props) {
                   external ? <a className="btn-ghost" href={external} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-4"/> Assistir externamente</a> :
                   <span className="text-sm text-coral">Vídeo indisponível</span>}
               </div>
-              {board.status === "CLOSED" ? <p className="mt-5 text-xl font-bold">{item.votes ?? 0} votos
-                <span className="ml-2 text-sm text-muted">({board.totalVotes ? ((100 * (item.votes ?? 0)) / board.totalVotes).toFixed(1) : "0.0"}%)</span></p> :
+              {board.status === "CLOSED" ? <p className="mt-5 text-sm font-semibold text-muted">Votação encerrada</p> :
                 <button type="button" className="btn-primary mt-5 w-full" disabled={busy !== null || Boolean(mine) || !loggedIn || board.status !== "OPEN"}
                   onClick={() => void castVote(item)}>{mine === item.entryId ? "Seu voto" : mine ? "Voto registrado" : "Votar neste vídeo"}</button>}
             </article>;
