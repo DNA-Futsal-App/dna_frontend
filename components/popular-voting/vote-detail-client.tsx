@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Clock3, ExternalLink, LoaderCircle, PlayCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import {
   popularVotingRequest, votingContextKey, votingContextUrl, votingDate, votingParams, votingStatusLabel,
 } from "@/lib/popular-voting-types";
@@ -24,6 +25,7 @@ export function VoteDetailClient(props: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [confirmedVoteAthlete, setConfirmedVoteAthlete] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -106,6 +108,7 @@ export function VoteDetailClient(props: Props) {
       });
       setMine(item.entryId);
       setNotice("Seu voto foi registrado com sucesso.");
+      setConfirmedVoteAthlete(item.athleteName);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível confirmar seu voto.");
     } finally { setBusy(null); }
@@ -176,5 +179,35 @@ export function VoteDetailClient(props: Props) {
         </>}
       </>}
     </div>
+    {confirmedVoteAthlete && (
+      <ConfirmationDialog
+        titleId="dna-vote-success-title"
+        descriptionId="dna-vote-success-description"
+        busy={false}
+        onDismiss={() => setConfirmedVoteAthlete(null)}
+      >
+        <div className="space-y-5 text-center">
+          <span aria-hidden="true" className="mx-auto flex size-16 items-center justify-center rounded-full bg-cyan/15 text-cyan">
+            <CheckCircle2 className="size-9" />
+          </span>
+          <div className="space-y-2">
+            <h2 id="dna-vote-success-title" className="display-title text-2xl font-black text-ivory sm:text-3xl">
+              Voto registrado com sucesso!
+            </h2>
+            <p id="dna-vote-success-description" className="text-sm leading-relaxed text-muted sm:text-base">
+              Seu voto em <strong className="text-ivory">{confirmedVoteAthlete}</strong> foi confirmado. Obrigado por participar do Prêmio Legacy.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-dialog-cancel
+            onClick={() => setConfirmedVoteAthlete(null)}
+            className="btn-primary min-h-12 w-full justify-center sm:w-auto sm:min-w-56"
+          >
+            Continuar explorando
+          </button>
+        </div>
+      </ConfirmationDialog>
+    )}
   </main>;
 }
