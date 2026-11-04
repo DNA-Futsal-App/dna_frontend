@@ -161,7 +161,17 @@ export function VoteDetailClient(props: Props) {
           <h2 className="display-title pt-3 text-2xl">Os {board.finalists.length} finalistas</h2>
           <div className={`grid gap-5 ${board.finalists.length === 4 ? "md:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-3"}`}>{board.finalists.map((item) => {
             const external = item.externalUrl && /^https?:\/\//i.test(item.externalUrl) ? item.externalUrl : null;
-            return <article key={item.entryId} className="surface rounded-3xl border border-white/10 p-5">
+            const isChosen = mine === item.entryId;
+            const isOther = mine !== null && !isChosen;
+            return <article key={item.entryId}
+              className={`surface relative rounded-3xl border p-5 transition-all duration-300 ${
+                isChosen
+                  ? "border-cyan/70 bg-cyan/10 ring-2 ring-cyan/40 shadow-[0_0_36px_rgba(34,211,238,0.12)]"
+                  : isOther ? "border-white/5 opacity-60 saturate-50" : "border-white/10"
+              }`}>
+              {isChosen && <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan/40 bg-cyan/15 px-3 py-1.5 text-xs font-black text-cyan">
+                <CheckCircle2 className="size-4"/> Seu voto registrado
+              </p>}
               <p className="text-xs font-black uppercase tracking-widest text-amber">Finalista</p>
               <h3 className="mt-3 text-2xl font-black">{item.athleteName}</h3>
               <p className="mt-2 text-sm text-muted">{item.teamName}</p>
