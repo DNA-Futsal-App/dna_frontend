@@ -265,6 +265,11 @@ export default function AwardPreVoteAdminPage() {
         <p className="mt-2 max-w-3xl text-sm text-muted">Avalie cada vídeo aprovado de 1 a 10. As médias determinam os finalistas por campeonato, divisão, categoria, gênero e prêmio.</p>
       </header>
 
+      <nav aria-label="Subabas da pré-votação" className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+        <span aria-current="page" className="rounded-xl border border-cyan/40 bg-cyan/10 px-4 py-2 text-sm font-bold text-cyan">Atribuir notas</span>
+        <Link href="/app/admin/premio-dna/pre-votacao/avaliados" className="btn-ghost">Ranking e inscritos</Link>
+      </nav>
+
       <section className="surface rounded-3xl p-5 sm:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <label className="grid gap-2 text-sm font-bold">Edição
