@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarClock, LoaderCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { visibleVotingContexts } from "@/lib/popular-voting-visibility";
 import { popularVotingRequest, votingContextUrl, votingDate, votingStatusLabel } from "@/lib/popular-voting-types";
 import type { VotingContext } from "@/lib/popular-voting-types";
 
@@ -20,16 +21,20 @@ export default function PopularVotingBaseCategoryPage() {
     let active = true;
     if (!params?.editionId) return;
     setLoading(true);
-    popularVotingRequest<VotingContext[]>(`editions/${encodeURIComponent(params.editionId)}/contexts`)
-      .then((contexts) => {
-        if (!active) return;
-        setItems(contexts.filter((item) => String(item.eventId) === params.eventId
-          && String(item.divisionId) === params.divisionId
-          && String(item.categoryId) === params.categoryId && item.gender === params.gender));
-      })
-      .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível consultar os prêmios."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    const refresh = () => {
+      void popularVotingRequest<VotingContext[]>(`editions/${encodeURIComponent(params.editionId)}/contexts`)
+        .then((contexts) => {
+          if (!active) return;
+          setItems(visibleVotingContexts(contexts).filter((item) => String(item.eventId) === params.eventId
+            && String(item.divisionId) === params.divisionId
+            && String(item.categoryId) === params.categoryId && item.gender === params.gender));
+        })
+        .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível consultar os prêmios."); })
+        .finally(() => { if (active) setLoading(false); });
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 60_000);
+    return () => { active = false; window.clearInterval(interval); };
   }, [params?.editionId, params?.eventId, params?.divisionId, params?.categoryId, params?.gender]);
 
   return <main className="min-h-dvh bg-night px-4 pb-20 pt-6 text-ivory sm:px-6">
@@ -43,11 +48,11 @@ export default function PopularVotingBaseCategoryPage() {
       </Link>
       <section className="pt-4"><p className="eyebrow"><Trophy className="size-4"/> Prêmio Legacy • Categoria de base</p>
         <h1 className="display-title mt-4 text-4xl sm:text-6xl">{items[0] ? `${items[0].divisionName} • ${items[0].categoryName}` : "Votações da categoria"}</h1>
-        <p className="mt-3 text-sm text-muted">Cada modalidade possui seus finalistas e uma janela de votação própria.</p>
+        <p className="mt-3 text-sm text-muted">Somente modalidades com votação aberta ou agendada estão listadas aqui.</p>
       </section>
       {error && <p role="alert" className="rounded-xl border border-coral/40 p-4 text-coral">{error}</p>}
       {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : items.length === 0 ?
-        <p className="surface rounded-2xl p-8 text-muted">Nenhuma modalidade programada nesta categoria.</p> :
+        <p className="surface rounded-2xl p-8 text-muted">Não há votações abertas ou agendadas nesta categoria no momento.</p> :
         <section className="grid gap-4 md:grid-cols-2">{items.map((item) =>
           <Link key={item.contestCategory} href={votingContextUrl(params.editionId, item)}
             className="surface group rounded-3xl border border-white/10 p-6 transition hover:border-cyan/30">

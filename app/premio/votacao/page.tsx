@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, LoaderCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { visibleVotingContexts } from "@/lib/popular-voting-visibility";
 import { popularVotingRequest, votingCategoryUrl } from "@/lib/popular-voting-types";
 import type { VotingContext, VotingEdition } from "@/lib/popular-voting-types";
 
@@ -29,15 +30,20 @@ export default function PopularVotingCatalogPage() {
     if (!editionId) return;
     setLoadingContexts(true);
     setContexts([]);
-    popularVotingRequest<VotingContext[]>(`editions/${editionId}/contexts`)
-      .then((value) => { if (active) setContexts(value); })
-      .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Erro ao carregar disputas."); })
-      .finally(() => { if (active) setLoadingContexts(false); });
-    return () => { active = false; };
+    const refresh = () => {
+      void popularVotingRequest<VotingContext[]>(`editions/${editionId}/contexts`)
+        .then((value) => { if (active) setContexts(value); })
+        .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Erro ao carregar disputas."); })
+        .finally(() => { if (active) setLoadingContexts(false); });
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 60_000);
+    return () => { active = false; window.clearInterval(interval); };
   }, [editionId]);
 
-  // One card per base category, even when all four award modalities are scheduled.
-  const grouped = Array.from(contexts.reduce((map, item) => {
+  // Nunca listar modalidades encerradas ou ainda não programadas.
+  const visibleContexts = visibleVotingContexts(contexts);
+  const grouped = Array.from(visibleContexts.reduce((map, item) => {
     const key = [item.eventId, item.divisionId, item.categoryId, item.gender].join("|");
     const entries = map.get(key) ?? [];
     entries.push(item);
@@ -54,7 +60,7 @@ export default function PopularVotingCatalogPage() {
       <section className="max-w-4xl pt-8">
         <p className="eyebrow"><Trophy className="size-4"/> Prêmio Legacy • Votação popular</p>
         <h1 className="display-title mt-4 text-4xl sm:text-6xl">Você decide essa disputa. <span className="text-cyan">Faça diferença.</span></h1>
-        <p className="mt-5 text-muted">Cada divisão, categoria e modalidade do prêmio tem seu próprio calendário e uma página exclusiva com seus finalistas.</p>
+        <p className="mt-5 text-muted">Escolha uma categoria com votações abertas ou agendadas. Disputas encerradas não aparecem nesta lista.</p>
       </section>
       {error && <p role="alert" className="rounded-xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
       {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : editions.length === 0 ?
@@ -64,13 +70,12 @@ export default function PopularVotingCatalogPage() {
             {editions.map((item) => <option key={item.editionId} value={item.editionId}>{item.editionName}</option>)}
           </select>
         </label>
-        {loadingContexts ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : contexts.length === 0 ?
-          <p className="surface rounded-2xl p-6 text-muted">Ainda não há disputas programadas para esta edição.</p> :
+        {loadingContexts ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : grouped.length === 0 ?
+          <p role="status" className="surface rounded-2xl p-6 text-muted">Não há votações abertas ou agendadas nesta edição no momento. Volte em breve.</p> :
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{grouped.map((entries) => {
             const item = entries[0];
             const open = entries.filter((row) => row.status === "OPEN").length;
             const upcoming = entries.filter((row) => row.status === "SCHEDULED").length;
-            const closed = entries.filter((row) => row.status === "CLOSED").length;
             return <Link key={`${item.eventId}|${item.divisionId}|${item.categoryId}|${item.gender}`}
               href={votingCategoryUrl(editionId, item)} className="surface group rounded-3xl border border-white/10 p-6 transition hover:border-cyan/35">
               <div className="flex items-center justify-between gap-2">
@@ -83,7 +88,6 @@ export default function PopularVotingCatalogPage() {
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
                 {open > 0 && <span className="rounded-full border border-cyan/40 px-3 py-1 text-cyan">{open} aberta(s)</span>}
                 {upcoming > 0 && <span className="rounded-full border border-amber/40 px-3 py-1 text-amber">{upcoming} em breve</span>}
-                {closed > 0 && <span className="rounded-full border border-white/20 px-3 py-1 text-muted">{closed} encerrada(s)</span>}
               </div>
               <p className="mt-4 text-xs text-muted">Ver horários e finalistas de cada modalidade</p>
             </Link>;
