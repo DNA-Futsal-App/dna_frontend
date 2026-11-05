@@ -54,7 +54,7 @@ export default function PopularVotingBaseCategoryPage() {
       {loading ? <LoaderCircle className="size-7 animate-spin text-cyan"/> : items.length === 0 ?
         <p className="surface rounded-2xl p-8 text-muted">Não há votações abertas ou agendadas nesta categoria no momento.</p> :
         <section className="grid gap-4 md:grid-cols-2">{items.map((item) =>
-          <Link key={item.contestCategory} href={votingContextUrl(params.editionId, item)}
+          <Link key={item.contestCategory} prefetch={false} href={votingContextUrl(params.editionId, item)}
             className="surface group rounded-3xl border border-white/10 p-6 transition hover:border-cyan/30">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-black uppercase tracking-widest text-cyan">{item.contestCategoryLabel}</span>
