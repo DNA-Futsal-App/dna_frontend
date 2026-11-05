@@ -29,7 +29,7 @@ import type {
 
 import { useApiData } from "@/lib/use-api-data";
 import { useProfile } from "@/components/profile-context";
-import { AwardRegistrationBanner } from "@/components/award-registration-banner";
+import { AwardVotingBanner } from "@/components/award-voting-banner";
 import { CompetitionSearch, useCompetitionBrowse } from "@/components/competition-search";
 import { dashboardUrl } from "@/lib/sports-navigation";
 
@@ -108,7 +108,7 @@ function DashboardContent() {
         </p>
       </header>
 
-      <AwardRegistrationBanner />
+      <AwardVotingBanner />
 
       {home.nextMatch ? (
         <section className="relative overflow-hidden rounded-[1.75rem] border border-cyan/20 bg-linear-to-br from-deep/35 via-panel to-night p-5 shadow-glow sm:p-7">
