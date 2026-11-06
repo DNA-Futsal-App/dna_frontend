@@ -233,6 +233,10 @@ export default function AwardAdminPage() {
               <BarChart3 className="size-4" />
               Auditoria e apuração
             </Link>
+            <Link href="/app/admin/usuarios/redefinir-senha" className="btn-ghost">
+              <LockKeyhole className="size-4" />
+              Redefinição de senha
+            </Link>
             <button
               type="button"
               className="btn-ghost"
