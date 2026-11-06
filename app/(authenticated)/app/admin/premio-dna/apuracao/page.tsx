@@ -17,6 +17,7 @@ import type { CatalogCategory, CatalogItem } from "@/lib/types";
 import type {
   AdminAwardAudit, AdminAwardCandidateResult, AdminAwardEdition, AdminAwardResults,
 } from "@/lib/admin-awards-types";
+import { AdminPopularAuditDashboard } from "@/components/popular-voting/admin-popular-audit-dashboard";
 
 type Snapshot = {
   audit: AdminAwardAudit;
@@ -32,6 +33,7 @@ const percent = (value: number) => value.toLocaleString("pt-BR", { maximumFracti
 export default function AwardResultsAdminPage() {
   const { data: editions, loading, error, reload } = useApiData<AdminAwardEdition[]>("/api/admin/awards/editions");
   const [editionId, setEditionId] = useState("");
+  const [subtab, setSubtab] = useState<"technical" | "popular">("technical");
   const edition = editions?.find((item) => item.id === editionId) ?? editions?.[0];
 
   return (
@@ -60,8 +62,24 @@ export default function AwardResultsAdminPage() {
           ) : null}
         </div>
       </header>
+      <nav aria-label="Modalidade de apuração" className="mb-6 flex flex-wrap gap-2">
+        <button type="button" aria-current={subtab === "technical" ? "page" : undefined}
+          className={`rounded-full border px-4 py-2.5 text-sm font-black transition ${subtab === "technical"
+            ? "border-cyan/40 bg-cyan/10 text-cyan" : "border-white/10 bg-panel text-muted hover:text-ivory"}`}
+          onClick={() => setSubtab("technical")}>
+          Júri técnico
+        </button>
+        <button type="button" aria-current={subtab === "popular" ? "page" : undefined}
+          className={`rounded-full border px-4 py-2.5 text-sm font-black transition ${subtab === "popular"
+            ? "border-cyan/40 bg-cyan/10 text-cyan" : "border-white/10 bg-panel text-muted hover:text-ivory"}`}
+          onClick={() => setSubtab("popular")}>
+          Votação popular
+        </button>
+      </nav>
       {loading ? <DashboardLoading /> : error ? <ErrorState message={error} onRetry={reload} /> : edition ? (
-        <EditionDashboard key={edition.id} edition={edition} />
+        subtab === "technical"
+          ? <EditionDashboard key={edition.id} edition={edition} />
+          : <AdminPopularAuditDashboard key={edition.id} editionId={edition.id} />
       ) : <EmptyState title="Nenhuma edição encontrada" description="Os resultados aparecerão quando houver uma edição do prêmio." />}
     </div>
   );

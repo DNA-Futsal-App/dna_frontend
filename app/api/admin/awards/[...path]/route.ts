@@ -38,20 +38,23 @@ async function forward(
       : await request.text();
 
   const timeoutMs =
-  method === "POST" &&
-  suffix.endsWith("/coaches/sync")
-    ? 120_000
-    : undefined;
+    method === "POST" && suffix.endsWith("/coaches/sync")
+      ? 120_000
+      : undefined;
 
-return proxyAuthenticated(
-  request,
-  `/api/v1/admin/awards/${suffix}${query}`,
-  {
-    method,
-    body: body || undefined,
-    timeoutMs,
-  },
-);
+  const response = await proxyAuthenticated(
+    request,
+    `/api/v1/admin/awards/${suffix}${query}`,
+    {
+      method,
+      body: body || undefined,
+      timeoutMs,
+    },
+  );
+  if (method === "GET" && suffix.includes("/popular-voting/")) {
+    response.headers.set("Cache-Control", "private, no-store");
+  }
+  return response;
 }
 
 export function GET(
