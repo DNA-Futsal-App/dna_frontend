@@ -20,6 +20,20 @@ export type AwardGender =
   | "MALE"
   | "FEMALE";
 
+export type AwardRegistrationReopening = {
+  id: string;
+  editionId: string;
+  eventId: number;
+  divisionId: number;
+  categoryId: number;
+  gender: AwardGender;
+  contestCategory: AwardContestCategory;
+  opensAt: string;
+  closesAt: string;
+  closedAt: string | null;
+  status: "OPEN" | "SCHEDULED" | "CLOSED";
+};
+
 export type AwardRegistrationContext = {
   editionName: string;
   season: number;
@@ -27,6 +41,7 @@ export type AwardRegistrationContext = {
   maxUploadBytes: number;
   maxDurationSeconds: number;
   contestCategories: AwardContestCategoryOption[];
+  reopenings: AwardRegistrationReopening[];
 };
 
 export type AwardRegistrationEntryResponse = {

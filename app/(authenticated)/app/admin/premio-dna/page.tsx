@@ -201,6 +201,10 @@ export default function AwardAdminPage() {
               <UserRoundCheck className="size-4" />
               Júri técnico
             </Link>
+            <Link href="/app/admin/premio-dna/reabertura" className="btn-ghost">
+              <ShieldCheck className="size-4" />
+              Reabertura seletiva
+            </Link>
             <Link
               href="/app/admin/premio-dna/candidaturas"
               className="btn-ghost"

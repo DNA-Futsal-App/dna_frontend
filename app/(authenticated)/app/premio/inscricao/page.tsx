@@ -186,6 +186,21 @@ export default function AwardRegistrationPage() {
     (item) => String(item.id) === selectedCategoryId,
   );
   const eventId = sportsCategory?.eventId ?? null;
+  const extraordinary = !context?.registrationsOpen;
+  const windows = extraordinary ? (context?.reopenings ?? []).filter((row) => row.status === "OPEN") : [];
+  const visibleDivisions = extraordinary
+    ? divisions.filter((row) => windows.some((w) => w.gender === gender && w.divisionId === Number(row.id)))
+    : divisions;
+  const visibleCategories = extraordinary
+    ? categories.filter((row) => windows.some((w) => w.gender === gender
+        && w.divisionId === Number(divisionId) && w.categoryId === Number(row.id) && w.eventId === row.eventId))
+    : categories;
+  const visibleContests = extraordinary
+    ? context?.contestCategories.filter((row) => windows.some((w) => w.gender === gender
+        && w.divisionId === Number(divisionId) && w.categoryId === Number(categoryId)
+        && w.eventId === eventId && w.contestCategory === row.code)) ?? []
+    : context?.contestCategories ?? [];
+
 
   useEffect(() => {
     if (!eventId) {
@@ -448,8 +463,8 @@ export default function AwardRegistrationPage() {
       return;
     }
 
-    if (!context.registrationsOpen) {
-      setError("O período de inscrições do Prêmio Legacy está encerrado.");
+    if (!context.registrationsOpen && !context.reopenings?.some((w) => w.status === "OPEN")) {
+      setError("Não há modalidades autorizadas para inscrição neste momento.");
       return;
     }
 
@@ -674,7 +689,7 @@ export default function AwardRegistrationPage() {
     );
   }
 
-  if (!context.registrationsOpen) {
+  if (!context.registrationsOpen && !context.reopenings?.some((w) => w.status === "OPEN")) {
     return (
       <section className="surface mx-auto max-w-2xl rounded-[1.75rem] p-6 sm:p-8">
         <AlertTriangle className="size-10 text-amber" />
@@ -753,6 +768,11 @@ export default function AwardRegistrationPage() {
     <div className="mx-auto max-w-4xl">
       <header className="mb-7">
         <p className="eyebrow">Prêmio Legacy</p>
+        {!context.registrationsOpen && (
+          <p className="mt-2 rounded-xl border border-amber/35 bg-amber/10 px-4 py-2 text-sm font-bold text-amber">
+            Inscrição extraordinária — somente categorias autorizadas
+          </p>
+        )}
         <h1 className="display-title mt-2 text-4xl font-black leading-none sm:text-5xl">
           Inscrição do Atleta.
         </h1>
@@ -851,6 +871,7 @@ export default function AwardRegistrationPage() {
                   setDivisionId("");
                   setCategoryId("");
                   setTeamId("");
+                  setEntries([makeEntry(1)]);
 
                   setDivisions([]);
                   setCategories([]);
@@ -861,13 +882,10 @@ export default function AwardRegistrationPage() {
                   Selecione
                 </option>
 
-                <option value="MALE">
-                  Masculino
-                </option>
-
-                <option value="FEMALE">
-                  Feminino
-                </option>
+                  {(context.registrationsOpen || windows.some((w) => w.gender === "MALE")) &&
+                    <option value="MALE">Masculino</option>}
+                  {(context.registrationsOpen || windows.some((w) => w.gender === "FEMALE")) &&
+                    <option value="FEMALE">Feminino</option>}
               </select>
             </label>
 
@@ -889,6 +907,7 @@ export default function AwardRegistrationPage() {
 
                   setCategoryId("");
                   setTeamId("");
+                  setEntries([makeEntry(1)]);
 
                   setCategories([]);
                   setTeams([]);
@@ -898,7 +917,7 @@ export default function AwardRegistrationPage() {
                   Selecione
                 </option>
 
-                {divisions.map(
+                {visibleDivisions.map(
                   (item) => (
                     <option
                       key={item.id}
@@ -931,6 +950,7 @@ export default function AwardRegistrationPage() {
                   );
 
                   setTeamId("");
+                  setEntries([makeEntry(1)]);
                   setTeams([]);
                 }}
               >
@@ -938,7 +958,7 @@ export default function AwardRegistrationPage() {
                   Selecione
                 </option>
 
-                {categories.map(
+                {visibleCategories.map(
                   (item) => (
                     <option
                       key={item.id}
@@ -1050,7 +1070,7 @@ export default function AwardRegistrationPage() {
                     }
                   >
                     <option value="">Selecione</option>
-                    {context.contestCategories.map((option) => (
+                    {visibleContests.map((option) => (
                       <option
                         key={option.code}
                         value={option.code}

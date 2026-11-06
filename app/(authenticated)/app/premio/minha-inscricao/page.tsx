@@ -1113,6 +1113,16 @@ export default function MyAwardRegistrationPage() {
         registration.status ===
         "CANCELLED";
 
+    const extraordinaryEditable = (entry: AwardRegistrationEntryResponse) =>
+        !cancelled && (context.registrationsOpen || context.reopenings?.some((window) =>
+            window.status === "OPEN" && window.eventId === registration.eventId &&
+            window.divisionId === registration.divisionId &&
+            window.categoryId === registration.categoryId &&
+            window.gender === registration.gender &&
+            window.contestCategory === entry.contestCategory));
+    const hasExtraordinaryReview = !context.registrationsOpen &&
+        registration.entries.some((entry) => extraordinaryEditable(entry));
+
     const reviewStarted =
         registration.entries.some(
             (entry) =>
@@ -1200,12 +1210,12 @@ export default function MyAwardRegistrationPage() {
             {!context.registrationsOpen ? (
                 <div className="mb-5 rounded-2xl border border-amber/20 bg-amber/5 p-5">
                     <strong className="text-amber">
-                        Período de inscrições encerrado
+                        {hasExtraordinaryReview ? "Revisão extraordinária autorizada" : "Período de inscrições encerrado"}
                     </strong>
                     <p className="mt-1 text-sm leading-relaxed text-muted">
-                        Sua inscrição continua disponível para consulta, mas
-                        nenhuma candidatura pode ser adicionada, retirada ou
-                        alterada enquanto o período estiver fechado.
+                        {hasExtraordinaryReview
+                            ? "Somente os vídeos das modalidades reabertas podem ser substituídos. As demais candidaturas permanecem bloqueadas."
+                            : "Sua inscrição permanece para consulta; nenhuma candidatura pode ser alterada."}
                     </p>
                 </div>
             ) : null}
@@ -1401,10 +1411,11 @@ export default function MyAwardRegistrationPage() {
                                             />
 
                                             <h3 className="mt-3 text-xl font-black">
-                                                {
-                                                    entry.contestCategoryLabel
-                                                }
+                                                {entry.contestCategoryLabel}
                                             </h3>
+                                            {!context.registrationsOpen && extraordinaryEditable(entry) && (
+                                                <p className="mt-2 text-xs font-black text-cyan">Revisão excepcional autorizada</p>
+                                            )}
 
                                             {entry.reviewStatus ===
                                                 "REJECTED" &&
@@ -1479,8 +1490,7 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {context.registrationsOpen &&
-                                                        !cancelled ? (
+                                                    {extraordinaryEditable(entry) ? (
                                                         <>
                                                             <button
                                                                 type="button"
@@ -1660,8 +1670,7 @@ export default function MyAwardRegistrationPage() {
                                                                 </a>
                                                             ) : null}
 
-                                                            {context.registrationsOpen &&
-                                                                !cancelled ? (
+                                                            {extraordinaryEditable(entry) ? (
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
@@ -1703,8 +1712,7 @@ export default function MyAwardRegistrationPage() {
                                                         }
                                                     />
 
-                                                    {context.registrationsOpen &&
-                                                        !cancelled ? (
+                                                    {extraordinaryEditable(entry) ? (
                                                         <button
                                                             type="button"
                                                             disabled={
