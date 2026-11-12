@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     method: "POST",
     body: JSON.stringify({
       ...payload,
-      coachAccessToken: inviteToken ?? null,
+      // Category-scoped registration must never also claim an old edition-wide invite.
+      coachAccessToken: payload.coachCategoryRegistration ? null : (inviteToken ?? null),
     }),
   });
 

@@ -102,6 +102,13 @@ const coachVotingNavigation: NavigationItem = {
   mobile: true,
 };
 
+const categoryCoachVotingNavigation: NavigationItem = {
+  href: "/app/votacao-tecnicos",
+  label: "Votação",
+  icon: Trophy,
+  mobile: true,
+};
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ProfileProvider>
@@ -122,9 +129,11 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const awardPage =
     pathname.startsWith("/app/premio") ||
     pathname.startsWith("/app/votacao-treinador") ||
+    pathname.startsWith("/app/votacao-tecnicos") ||
     pathname.startsWith("/app/admin/premio-dna");
 
   const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
+  const [categoryCoachVotingEnabled, setCategoryCoachVotingEnabled] = useState(false);
   const [awardAdminEnabled, setAwardAdminEnabled] = useState(false);
   const [
     awardNotice,
@@ -302,6 +311,22 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
+    clientApi<Array<{ contextId: string }>>("/api/awards/coach-category-voting/contexts")
+      .then((items) => {
+        if (active) setCategoryCoachVotingEnabled(items.length > 0);
+      })
+      .catch(() => {
+        if (active) setCategoryCoachVotingEnabled(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
     clientApi("/api/admin/awards/editions")
       .then(() => {
         if (active) setAwardAdminEnabled(true);
@@ -316,11 +341,12 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navigationItems = useMemo(
-    () =>
-      coachVotingEnabled
+    () => categoryCoachVotingEnabled
+      ? [...navigation, categoryCoachVotingNavigation]
+      : coachVotingEnabled
         ? [...navigation, coachVotingNavigation]
         : navigation,
-    [coachVotingEnabled],
+    [coachVotingEnabled, categoryCoachVotingEnabled],
   );
 
   const mobileNavigation = navigationItems.filter((item) => item.mobile);
