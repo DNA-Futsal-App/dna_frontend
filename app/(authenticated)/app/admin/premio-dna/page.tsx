@@ -856,6 +856,7 @@ function VotingControlSection({
   const [opening, setOpening] = useState(false);
   const [closing, setClosing] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -897,6 +898,42 @@ function VotingControlSection({
       );
     } finally {
       setOpening(false);
+    }
+  }
+
+  async function reopen(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const opensAt = String(form.get("reopenOpensAt") ?? "");
+    const closesAt = String(form.get("reopenClosesAt") ?? "");
+    if (!opensAt || !closesAt) return;
+
+    const confirmed = window.confirm(
+      "ATENÇÃO: ao reabrir, TODAS as cédulas e todos os votos anteriores desta edição serão EXCLUÍDOS PERMANENTEMENTE. Os credenciamentos ativos serão preservados. Deseja continuar?",
+    );
+    if (!confirmed) return;
+
+    setReopening(true);
+    setError("");
+    try {
+      const result = await clientApi<ResetAwardVotingResult>(
+        `/api/admin/awards/editions/${edition.id}/reopen`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            votingOpensAt: new Date(opensAt).toISOString(),
+            votingClosesAt: new Date(closesAt).toISOString(),
+          }),
+        },
+      );
+      flash(
+        `Votação reaberta. ${result.ballotsDeleted} cédula(s) e ${result.votesDeleted} voto(s) anteriores excluídos.`,
+      );
+      await onChanged(result.edition);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível reabrir a votação.");
+    } finally {
+      setReopening(false);
     }
   }
 
@@ -1108,22 +1145,23 @@ function VotingControlSection({
               <h2 className="text-xl font-black">Edição encerrada</h2>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              A edição está fechada para novos votos. Os dados permanecem
-              disponíveis para consulta e auditoria.
+              Esta edição está encerrada. Reabri-la apagará todos os votos anteriores,
+              mas manterá os treinadores e seus credenciamentos ativos.
             </p>
-                      <button
-              type="button"
-              className="btn-ghost mt-6 w-full border-coral/30 text-coral hover:bg-coral/10"
-              onClick={() => void resetVoting()}
-              disabled={resetting}
-            >
-              {resetting ? (
-                <LoaderCircle className="size-5 animate-spin" />
-              ) : (
-                <RefreshCw className="size-5" />
-              )}
-              {resetting ? "Reiniciando..." : "Reiniciar votação"}
-            </button>
+            <form onSubmit={reopen} className="mt-5 grid gap-4">
+              <label className="grid gap-1.5 text-sm font-bold">
+                Novo início
+                <input className="field" type="datetime-local" name="reopenOpensAt" required />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold">
+                Novo encerramento
+                <input className="field" type="datetime-local" name="reopenClosesAt" required />
+              </label>
+              <button type="submit" className="btn-primary" disabled={reopening}>
+                {reopening ? <LoaderCircle className="size-5 animate-spin" /> : <RefreshCw className="size-5" />}
+                {reopening ? "Reabrindo..." : "Reabrir votação e excluir votos antigos"}
+              </button>
+            </form>
           </>
         )}
       </section>
