@@ -98,7 +98,7 @@ export type CoachBallot = {
 export type CoachAccessLinkInfo = {
   linkId?: string | null;
   available: boolean;
-  status: "AVAILABLE" | "REVOKED" | "EDITION_CLOSED" | "NONE";
+  status: "DISPONIVEL" | "REVOGADO" | "EDIÇÃO_ENCERRADA" | "NONE";
   editionId: string;
   editionSlug: string;
   editionName: string;

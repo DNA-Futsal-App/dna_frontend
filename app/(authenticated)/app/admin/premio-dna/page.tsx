@@ -38,10 +38,11 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 type Tab = "overview" | "control";
 
 const positions = [
-  { value: "GOLEIRO", label: "Goleiro" },
-  { value: "FIXO", label: "Fixo" },
-  { value: "ALA", label: "Ala" },
-  { value: "PIVO", label: "Pivô" },
+  { value: "Jogador_1", label: "Jogador 1" },
+  { value: "Jogador_2", label: "Jogador 2" },
+  { value: "Jogador_3", label: "Jogador 3" },
+  { value: "Jogador_4", label: "Jogador 4" },
+  { value: "Jogador_5", label: "Jogador 5" },
 ] as const;
 
 export default function AwardAdminPage() {
