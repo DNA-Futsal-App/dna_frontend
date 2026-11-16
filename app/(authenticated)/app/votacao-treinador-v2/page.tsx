@@ -1,5 +1,6 @@
 "use client";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   LoaderCircle,
@@ -26,11 +27,15 @@ type Selection = {
   loading: boolean;
 };
 export default function CoachVotingV2Page() {
+  const router = useRouter();
   const [credential, setCredential] = useState<CoachCredential | null>(null);
   const [context, setContext] = useState<CoachVotingContext | null>(null);
   const [contextId, setContextId] = useState("");
   const [selections, setSelections] = useState<Record<string, Selection>>({});
   const [loading, setLoading] = useState(true);
+  const [contextLoading, setContextLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const contextRequest = useRef(0);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [notice, setNotice] = useState("");
@@ -39,14 +44,25 @@ export default function CoachVotingV2Page() {
     (credential?.contexts ?? []).map((item) => ({ ...item, season: credential!.season })),
   );
   const slotLabels = playerSlotLabels(context?.voteCategories ?? []);
-  async function loadContext(id: string) {
+  const loadContext = useCallback(async (id: string) => {
+    const request = ++contextRequest.current;
     setSelections({});
-    setContext(
-      await clientApi<CoachVotingContext>(
+    setContext(null);
+    setError("");
+    setContextLoading(true);
+    try {
+      const loaded = await clientApi<CoachVotingContext>(
         `/api/awards/coach-voting-v2/context?contextId=${encodeURIComponent(id)}`,
-      ),
-    );
-  }
+      );
+      if (contextRequest.current === request) setContext(loaded);
+    } catch (cause) {
+      if (contextRequest.current === request) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar o contexto.");
+      }
+    } finally {
+      if (contextRequest.current === request) setContextLoading(false);
+    }
+  }, []);
   async function loadCredential(preferred?: string) {
     const result = await clientApi<CoachCredential>(
       "/api/awards/coach-access/me",
@@ -68,6 +84,20 @@ export default function CoachVotingV2Page() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      // Old bookmarks and prefetched links must use the active category flow.
+      try {
+        const categoryContexts = await clientApi<Array<{ contextId: string }>>(
+          "/api/awards/coach-category-voting/contexts",
+        );
+        if (cancelled) return;
+        if (categoryContexts.length > 0) {
+          setRedirecting(true);
+          router.replace("/app/votacao-tecnicos");
+          return;
+        }
+      } catch {
+        // Legacy coaches may not have access to the category endpoint.
+      }
       try {
         const result = await clientApi<CoachCredential>(
           "/api/awards/coach-access/me",
@@ -78,11 +108,7 @@ export default function CoachVotingV2Page() {
         const pick = list.find((x) => !x.submitted) ?? list[0];
         if (pick) {
           setContextId(pick.id);
-          setSelections({});
-          const loaded = await clientApi<CoachVotingContext>(
-            `/api/awards/coach-voting-v2/context?contextId=${encodeURIComponent(pick.id)}`,
-          );
-          if (!cancelled) setContext(loaded);
+          await loadContext(pick.id);
         } else {
           setContextId("");
           setContext(null);
@@ -100,8 +126,9 @@ export default function CoachVotingV2Page() {
     })();
     return () => {
       cancelled = true;
+      contextRequest.current++;
     };
-  }, []);
+  }, [loadContext, router]);
   function update(categoryId: string, patch: Partial<Selection>) {
     setSelections((cur) => {
       const p = cur[categoryId];
@@ -193,7 +220,7 @@ export default function CoachVotingV2Page() {
       setSubmitting(false);
     }
   }
-  if (loading)
+  if (loading || redirecting)
     return (
       <div className="flex min-h-80 items-center justify-center">
         <LoaderCircle className="size-9 animate-spin text-cyan" />
@@ -265,7 +292,18 @@ export default function CoachVotingV2Page() {
           {notice}
         </p>
       ) : null}
-      {context?.submitted || context?.state === "SUBMITTED" ? (
+      {contextLoading ? (
+        <div className="flex min-h-40 items-center justify-center" role="status" aria-label="Carregando votação">
+          <LoaderCircle className="size-8 animate-spin text-cyan" />
+        </div>
+      ) : !context ? (
+        <section className="rounded-3xl border border-white/8 bg-panel p-6">
+          <h2 className="text-xl font-black">Não foi possível abrir este contexto</h2>
+          <p className="mt-2 text-sm text-muted" role="alert">
+            {error || "Selecione um contexto disponível para votar."}
+          </p>
+        </section>
+      ) : context.submitted || context.state === "SUBMITTED" ? (
         <section className="rounded-3xl border border-cyan/15 bg-panel p-6">
           <CheckCircle2 className="size-9 text-cyan" />
           <h2 className="mt-3 text-xl font-black">Voto registrado</h2>
@@ -273,14 +311,14 @@ export default function CoachVotingV2Page() {
             Selecione acima outro contexto pendente, se houver.
           </p>
         </section>
-      ) : context?.state !== "OPEN" ? (
+      ) : context.state !== "OPEN" ? (
         <section className="rounded-3xl border border-white/8 bg-panel p-6">
           <Trophy className="size-9 text-amber" />
-          <h2 className="mt-3 text-xl font-black">{context?.editionName}</h2>
+          <h2 className="mt-3 text-xl font-black">{context.editionName}</h2>
           <p className="mt-2 text-sm text-muted">
-            {context?.state === "SCHEDULED"
+            {context.state === "SCHEDULED"
               ? `A votação abre em ${context.votingOpensAt ? formatDate(context.votingOpensAt, { dateStyle: "short", timeStyle: "short" }) : "breve"}.`
-              : context?.state === "DRAFT"
+              : context.state === "DRAFT"
                 ? "A organização ainda está preparando a votação."
                 : "A votação desta edição já foi encerrada."}
           </p>

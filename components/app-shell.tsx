@@ -132,8 +132,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/app/votacao-tecnicos") ||
     pathname.startsWith("/app/admin/premio-dna");
 
-  const [coachVotingEnabled, setCoachVotingEnabled] = useState(false);
-  const [categoryCoachVotingEnabled, setCategoryCoachVotingEnabled] = useState(false);
+  const [coachVotingRoute, setCoachVotingRoute] = useState<"CATEGORY" | "LEGACY" | null>(null);
   const [awardAdminEnabled, setAwardAdminEnabled] = useState(false);
   const [
     awardNotice,
@@ -295,29 +294,22 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    clientApi("/api/awards/coach-access/me")
-      .then(() => {
-        if (active) setCoachVotingEnabled(true);
-      })
-      .catch(() => {
-        if (active) setCoachVotingEnabled(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    clientApi<Array<{ contextId: string }>>("/api/awards/coach-category-voting/contexts")
-      .then((items) => {
-        if (active) setCategoryCoachVotingEnabled(items.length > 0);
-      })
-      .catch(() => {
-        if (active) setCategoryCoachVotingEnabled(false);
-      });
+    // Resolve the two access checks together: showing the legacy link before
+    // the category check finishes can send coaches to an obsolete voting page.
+    void Promise.allSettled([
+      clientApi("/api/awards/coach-access/me"),
+      clientApi<Array<{ contextId: string }>>("/api/awards/coach-category-voting/contexts"),
+    ]).then(([legacy, category]) => {
+      if (!active) return;
+      if (category.status === "fulfilled" && category.value.length > 0) {
+        setCoachVotingRoute("CATEGORY");
+      } else if (category.status === "fulfilled" && legacy.status === "fulfilled") {
+        setCoachVotingRoute("LEGACY");
+      } else {
+        // Fail closed if the category lookup failed; do not guess a legacy route.
+        setCoachVotingRoute(null);
+      }
+    });
 
     return () => {
       active = false;
@@ -341,12 +333,12 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navigationItems = useMemo(
-    () => categoryCoachVotingEnabled
+    () => coachVotingRoute === "CATEGORY"
       ? [...navigation, categoryCoachVotingNavigation]
-      : coachVotingEnabled
+      : coachVotingRoute === "LEGACY"
         ? [...navigation, coachVotingNavigation]
         : navigation,
-    [coachVotingEnabled, categoryCoachVotingEnabled],
+    [coachVotingRoute],
   );
 
   const mobileNavigation = navigationItems.filter((item) => item.mobile);
