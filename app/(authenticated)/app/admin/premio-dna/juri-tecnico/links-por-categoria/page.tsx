@@ -23,7 +23,7 @@ type CategoryLink = {
 };
 type CreatedLink = { link: CategoryLink; accessUrl: string };
 
-type GoldReport = { prepared: boolean; teams: { id: string; name: string }[] };
+type GoldReport = { teams: { id: string; name: string }[]; unresolvedTeams: string[] };
 const titleFor = (gender: Gender) => gender === "MALE" ? "Paulista" : "Paulista Feminino";
 
 export default function CoachCategoryLinksPage() {
@@ -78,10 +78,10 @@ export default function CoachCategoryLinksPage() {
     if (!editionId || !category || !divisionId) return;
     let cancelled = false;
     const query = new URLSearchParams({
-      eventId: String(category.eventId), divisionId, categoryId,
+      eventId: String(category.eventId), divisionId, categoryId, stage: "PAULISTA",
     });
-    clientApi<GoldReport>(`/api/admin/awards/editions/${editionId}/gold-eligibility?${query}`)
-      .then((data) => { if (!cancelled) setGoldPrepared(data.prepared && data.teams.length > 0); })
+    clientApi<GoldReport>(`/api/admin/awards/editions/${editionId}/gold-eligibility/preview?${query}`)
+      .then((data) => { if (!cancelled) setGoldPrepared(data.teams.length > 0 && data.unresolvedTeams.length === 0); })
       .catch(() => { if (!cancelled) setGoldPrepared(false); });
     return () => { cancelled = true; };
   }, [editionId, category, categoryId, divisionId]);
@@ -149,7 +149,7 @@ export default function CoachCategoryLinksPage() {
           </select>
         </label>
       </div>
-      <p className="text-sm text-muted">{goldPrepared ? "Chave Ouro preparada e congelada para esta categoria." : "Verifique ou prepare a Chave Ouro desta categoria antes de emitir convites."}</p>
+      <p className="text-sm text-muted">{goldPrepared ? "A classificação esportiva identificou as equipes da Chave Ouro." : "Não foi possível identificar uma Chave Ouro válida para esta categoria."}</p>
       <label className="grid gap-1.5 text-sm">Validade do convite (data e hora local)
         <input className="field" type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
       </label>

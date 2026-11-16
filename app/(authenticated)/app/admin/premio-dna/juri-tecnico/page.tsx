@@ -379,6 +379,8 @@ function ContextForm({
   cancel: () => void;
   setError: (m: string) => void;
 }) {
+  const [gender, setGender] = useState<"MALE" | "FEMALE">("MALE");
+  const title = gender === "FEMALE" ? "Paulista Feminino" : "Paulista";
   const [divisions, setDivisions] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -388,25 +390,33 @@ function ContextForm({
   const [saving, setSaving] = useState(false);
   const category = categories.find((x) => String(x.id) === categoryId) ?? null;
   useEffect(() => {
-    clientApi<CatalogItem[]>(`/api/catalog/divisions?season=${voter.season}`)
-      .then(setDivisions)
-      .catch(() => setDivisions([]));
-  }, [voter.season]);
+    let active = true;
+    const query = new URLSearchParams({ season: String(voter.season), title });
+    clientApi<CatalogItem[]>(`/api/catalog/divisions?${query}`)
+      .then((items) => { if (active) setDivisions(items); })
+      .catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar divisões."); });
+    return () => { active = false; };
+  }, [voter.season, title]);
   useEffect(() => {
     if (!divisionId) return;
-    clientApi<CatalogCategory[]>(
-      `/api/catalog/categories?season=${voter.season}&divisionId=${encodeURIComponent(divisionId)}`,
-    )
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, [divisionId, voter.season]);
+    let active = true;
+    const query = new URLSearchParams({
+      season: String(voter.season), divisionId, title,
+    });
+    clientApi<CatalogCategory[]>(`/api/catalog/categories?${query}`)
+      .then((items) => { if (active) setCategories(items); })
+      .catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar categorias."); });
+    return () => { active = false; };
+  }, [divisionId, voter.season, title]);
   useEffect(() => {
     if (!category?.eventId) return;
+    let active = true;
     clientApi<Team[]>(
       `/api/catalog/teams?eventId=${encodeURIComponent(String(category.eventId))}`,
     )
-      .then(setTeams)
-      .catch(() => setTeams([]));
+      .then((items) => { if (active) setTeams(items); })
+      .catch((err) => { if (active) setError(err instanceof Error ? err.message : "Não foi possível carregar equipes."); });
+    return () => { active = false; };
   }, [category?.eventId]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -423,6 +433,7 @@ function ContextForm({
             eventId: category.eventId,
             divisionId: Number(divisionId),
             categoryId: Number(category.id),
+            gender,
             teamId,
           }),
         },
@@ -441,8 +452,25 @@ function ContextForm({
   return (
     <form
       onSubmit={submit}
-      className="mt-4 grid gap-3 rounded-xl border border-cyan/15 bg-cyan/5 p-4 md:grid-cols-3"
+      className="mt-4 grid gap-3 rounded-xl border border-cyan/15 bg-cyan/5 p-4 md:grid-cols-4"
     >
+      <select
+        className="field"
+        aria-label="Modalidade"
+        value={gender}
+        onChange={(e) => {
+          setGender(e.target.value as "MALE" | "FEMALE");
+          setDivisions([]);
+          setCategories([]);
+          setTeams([]);
+          setDivisionId("");
+          setCategoryId("");
+          setTeamId("");
+        }}
+      >
+        <option value="MALE">Masculino</option>
+        <option value="FEMALE">Feminino</option>
+      </select>
       <select
         className="field"
         value={divisionId}
@@ -450,6 +478,8 @@ function ContextForm({
           setDivisionId(e.target.value);
           setCategoryId("");
           setTeamId("");
+          setCategories([]);
+          setTeams([]);
         }}
         required
       >
@@ -466,6 +496,7 @@ function ContextForm({
         onChange={(e) => {
           setCategoryId(e.target.value);
           setTeamId("");
+          setTeams([]);
         }}
         disabled={!divisionId}
         required
@@ -491,11 +522,11 @@ function ContextForm({
           </option>
         ))}
       </select>
-      <div className="flex gap-2 md:col-span-3 md:justify-end">
+      <div className="flex gap-2 md:col-span-4 md:justify-end">
         <button type="button" className="btn-ghost" onClick={cancel}>
           Cancelar
         </button>
-        <button className="btn-primary" disabled={saving}>
+        <button className="btn-primary" disabled={saving || !category || !teamId}>
           {saving ? <LoaderCircle className="size-4 animate-spin" /> : null}
           Liberar votação
         </button>
