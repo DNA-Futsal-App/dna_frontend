@@ -7,7 +7,8 @@ import type {
   CoachBallot, CoachVotingCandidate, CoachVotingCategory, CoachVotingContext,
   CoachVotingState,
 } from "@/lib/awards-types";
-import type { CatalogCategory } from "@/lib/types";
+import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type ApprovedContext = {
   contextId: string;
@@ -39,7 +40,7 @@ const endpoint = "/api/awards/coach-category-voting";
 
 export default function CategoryCoachVotingPage() {
   const [contexts, setContexts] = useState<ApprovedContext[]>([]);
-  const [categoryNames, setCategoryNames] = useState<Record<number, string>>({});
+  const competitionLabel = useCoachCompetitionLabels(contexts);
   const [selectedId, setSelectedId] = useState("");
   const [context, setContext] = useState<CoachVotingContext | null>(null);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
@@ -103,33 +104,7 @@ export default function CategoryCoachVotingPage() {
     return () => { active = false; selectedRef.current = ""; };
   }, [openContext]);
 
-  useEffect(() => {
-    if (!contexts.length) return;
-    let active = true;
-    const unique = [...new Map(contexts.map((item) => [
-      `${item.season}:${item.divisionId}:${item.gender}`,
-      item,
-    ])).values()];
-    void Promise.all(unique.map(async (item) => {
-      const query = new URLSearchParams({
-        season: String(item.season),
-        divisionId: String(item.divisionId),
-        title: item.gender === "FEMALE" ? "Paulista Feminino" : "Paulista",
-      });
-      try {
-        const entries = await clientApi<CatalogCategory[]>(`/api/catalog/categories?${query}`);
-        return entries.map((entry) => ({ eventId: entry.eventId, name: entry.name }));
-      } catch {
-        return [];
-      }
-    })).then((groups) => {
-      if (!active) return;
-      const byEvent: Record<number, string> = {};
-      groups.flat().forEach(({ eventId, name }) => { byEvent[eventId] = name; });
-      setCategoryNames(byEvent);
-    });
-    return () => { active = false; };
-  }, [contexts]);
+  // Official division and category labels are loaded by useCoachCompetitionLabels.
 
   function update(id: string, patch: Partial<Choice>) {
     setChoices((current) => ({
@@ -164,6 +139,7 @@ export default function CategoryCoachVotingPage() {
     }
   }
 
+  const slotLabels = playerSlotLabels(context?.voteCategories ?? []);
   const summary = useMemo(() => context?.voteCategories.flatMap((category) => {
     const selection = choices[category.id];
     const candidate = selection?.candidates.find((item) => item.id === selection.candidateId);
@@ -224,7 +200,7 @@ export default function CategoryCoachVotingPage() {
         <label className="grid gap-2 text-sm font-bold">Sua categoria autorizada
           <select className="field" value={selectedId} onChange={(event) => void openContext(event.target.value)} disabled={submitting}>
             {contexts.map((item) => <option key={item.contextId} value={item.contextId}>
-              {categoryNames[item.eventId] ?? `Categoria ${item.categoryId}`} • {item.gender === "FEMALE" ? "Feminino" : "Masculino"} • {item.teamName}{item.submitted ? " • VOTADO" : ""}
+              {competitionLabel(item)} • {item.gender === "FEMALE" ? "Feminino" : "Masculino"} • {item.teamName}{item.submitted ? " • VOTADO" : ""}
             </option>)}
           </select>
         </label>
@@ -239,7 +215,7 @@ export default function CategoryCoachVotingPage() {
             {receipt ? <>
               <p className="mt-2 text-sm text-muted">Registrado em {formatDate(receipt.submittedAt, { dateStyle: "short", timeStyle: "short" })}</p>
               <ul className="mt-4 grid gap-2">{receipt.votes.map((vote) => <li key={vote.voteCategoryId} className="flex justify-between gap-4 rounded-xl bg-night/50 p-3 text-sm">
-                <span className="text-muted">{vote.voteCategoryLabel}</span><strong>{vote.candidateName}</strong>
+                <span className="text-muted">{slotLabels[vote.voteCategoryId] ?? vote.voteCategoryLabel}</span><strong>{vote.candidateName}</strong>
               </li>)}</ul>
             </> : <p className="mt-2 text-sm text-muted">Seu voto já foi contabilizado. Selecione outra categoria para continuar.</p>}
           </section> : context.state !== "OPEN" ? <section className="rounded-3xl border border-white/10 bg-panel p-6">
@@ -255,7 +231,7 @@ export default function CategoryCoachVotingPage() {
                   : team.id !== context.representedTeamId,
               );
               return <section key={category.id} className="rounded-3xl border border-white/10 bg-panel p-5 sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">{category.label}</h2>{category.required && <span className="text-xs font-bold text-amber">Obrigatório</span>}</div>
+                <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">{voteCategoryLabel(category, slotLabels)}</h2>{category.required && <span className="text-xs font-bold text-amber">Obrigatório</span>}</div>
                 <div className={`mt-4 grid gap-4 ${category.targetType === "ATHLETE" ? "sm:grid-cols-2" : ""}`}>
                   <label className="grid gap-2 text-sm font-bold">Equipe
                     <select className="field" value={choice?.teamId ?? ""} onChange={(event) => void chooseTeam(category, event.target.value)}>
@@ -287,7 +263,7 @@ export default function CategoryCoachVotingPage() {
           <button className="btn-ghost" type="button" onClick={() => setConfirm(false)} disabled={submitting} aria-label="Fechar confirmação"><X className="size-5" /></button></div>
         <p className="mt-3 text-sm text-amber">Depois de confirmar, os votos desta categoria não poderão ser alterados.</p>
         <div className="mt-5 grid gap-2">{summary.map(({ category, candidate }) => <div key={category.id} className="flex justify-between gap-4 rounded-xl bg-night/40 p-3 text-sm">
-          <span className="text-muted">{category.label}</span><strong>{category.targetType === "COACH" ? candidate.teamName : candidate.name}</strong>
+          <span className="text-muted">{voteCategoryLabel(category, slotLabels)}</span><strong>{category.targetType === "COACH" ? candidate.teamName : candidate.name}</strong>
         </div>)}</div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" className="btn-ghost" onClick={() => setConfirm(false)} disabled={submitting}>Revisar escolhas</button>

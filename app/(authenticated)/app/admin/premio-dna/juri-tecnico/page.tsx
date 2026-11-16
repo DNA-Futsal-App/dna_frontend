@@ -17,6 +17,7 @@ import type {
 } from "@/lib/awards-types";
 import type { AdminAwardEdition } from "@/lib/admin-awards-types";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
+import { useCoachCompetitionLabels, type CoachCompetitionContext } from "@/lib/use-coach-competition-labels";
 
 export default function TechnicalJuryAdminPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
@@ -24,6 +25,9 @@ export default function TechnicalJuryAdminPage() {
   const [link, setLink] = useState<CoachAccessLinkInfo | null>(null);
   const [generatedUrl, setGeneratedUrl] = useState("");
   const [voters, setVoters] = useState<CoachCredential[]>([]);
+  const competitionLabel = useCoachCompetitionLabels(voters.flatMap((voter) =>
+    voter.contexts.map((context) => ({ ...context, season: voter.season })),
+  ));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -217,6 +221,7 @@ export default function TechnicalJuryAdminPage() {
             <CoachCard
               key={v.credentialId}
               voter={v}
+              competitionLabel={competitionLabel}
               reload={async () => load(editionId)}
               setError={setError}
             />
@@ -234,10 +239,12 @@ export default function TechnicalJuryAdminPage() {
 
 function CoachCard({
   voter,
+  competitionLabel,
   reload,
   setError,
 }: {
   voter: CoachCredential;
+  competitionLabel: (context: CoachCompetitionContext) => string;
   reload: () => Promise<void>;
   setError: (m: string) => void;
 }) {
@@ -314,7 +321,7 @@ function CoachCard({
             <div>
               <strong className="text-sm">{c.teamName}</strong>
               <small className="mt-1 block text-xs text-muted">
-                Divisão {c.divisionId} • Categoria {c.categoryId} • {c.source}
+                {competitionLabel({ ...c, season: voter.season })} • {c.source}
               </small>
             </div>
             <div className="flex items-center gap-2">

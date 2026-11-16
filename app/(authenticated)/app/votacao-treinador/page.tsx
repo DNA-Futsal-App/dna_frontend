@@ -16,7 +16,9 @@ import type {
   CoachVotingCandidate,
   CoachVotingCategory,
   CoachVotingContext,
-} from "@/lib/awards-types";
+ } from "@/lib/awards-types";
+import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type Selection = {
   teamId: string;
@@ -28,6 +30,8 @@ type Selection = {
 export default function CoachVotingPage() {
   const router = useRouter();
   const [context, setContext] = useState<CoachVotingContext | null>(null);
+  const slotLabels = playerSlotLabels(context?.voteCategories ?? []);
+  const competitionLabel = useCoachCompetitionLabels(context ? [context] : []);
   const [selections, setSelections] = useState<Record<string, Selection>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -239,9 +243,10 @@ export default function CoachVotingPage() {
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">
           Você está votando como <strong className="text-ivory">{context.coachName}</strong>,
-          representando <strong className="text-ivory">{context.representedTeamName}</strong>.
-          Para Goleiro, Fixo, Ala e Pivô, escolha o time e depois qualquer atleta
-          daquele elenco. A posição é definida pelo seu voto. Para Técnico, escolha apenas a equipe.
+          representando <strong className="text-ivory">{context.representedTeamName}</strong>,
+          na categoria <strong className="text-ivory">{competitionLabel(context)}</strong>.
+          Para Jogador 1 a Jogador 5, escolha um time da Chave Ouro e um atleta do elenco.
+          Para Técnico, escolha a equipe elegível.
         </p>
       </header>
 
@@ -259,10 +264,10 @@ export default function CoachVotingPage() {
                   <small className="text-[10px] font-black uppercase tracking-wider text-cyan">
                     {category.targetType === "COACH"
                       ? "Comissão técnica"
-                      : "Posição"}
+                      : "Jogador"}
                   </small>
                   <h2 className="mt-1 text-xl font-black text-ivory">
-                    {category.label}
+                    {voteCategoryLabel(category, slotLabels)}
                   </h2>
                 </div>
                 {selection?.candidateId ? (
@@ -396,7 +401,7 @@ export default function CoachVotingPage() {
                   className="flex items-center justify-between gap-4 rounded-xl bg-night/45 px-4 py-3"
                 >
                   <span className="text-sm font-bold text-muted">
-                    {category.label}
+                    {voteCategoryLabel(category, slotLabels)}
                   </span>
                   <span className="text-right text-sm font-black text-ivory">
                     {category.targetType === "COACH" ? (

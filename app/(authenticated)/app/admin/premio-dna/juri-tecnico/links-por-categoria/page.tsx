@@ -5,6 +5,7 @@ import Link from "next/link";
 import { clientApi } from "@/lib/client-api";
 import type { AdminAwardEdition } from "@/lib/admin-awards-types";
 import type { CatalogCategory, CatalogItem } from "@/lib/types";
+import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type Gender = "MALE" | "FEMALE";
 type CategoryLink = {
@@ -40,6 +41,10 @@ export default function CoachCategoryLinksPage() {
   const [busy, setBusy] = useState(false);
   const [goldPrepared, setGoldPrepared] = useState(false);
   const edition = editions.find((value) => value.id === editionId);
+  const competitionLabel = useCoachCompetitionLabels(links.map((link) => ({
+    season: editions.find((item) => item.id === link.editionId)?.season ?? 0,
+    ...link,
+  })));
   const category = categories.find((value) => String(value.id) === categoryId);
 
   async function loadLinks(id: string) {
@@ -162,7 +167,7 @@ export default function CoachCategoryLinksPage() {
       {links.length === 0 && <p className="text-sm text-muted">Nenhum convite por categoria emitido.</p>}
       {links.map((link) => <div key={link.linkId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/8 p-4">
         <div className="text-sm">
-          <strong>{link.gender === "MALE" ? "Masculino" : "Feminino"} • Evento {link.eventId} • Divisão {link.divisionId} • Categoria {link.categoryId}</strong>
+          <strong>{link.gender === "MALE" ? "Masculino" : "Feminino"} • {competitionLabel({ ...link, season: editions.find((item) => item.id === link.editionId)?.season ?? 0 })}</strong>
           <p className="mt-1 text-xs text-muted">Status: {link.status} • Válido até {new Date(link.expiresAt).toLocaleString("pt-BR")}</p>
         </div>
         {link.status !== "REVOKED" && <button className="btn-ghost" disabled={busy} onClick={() => void revoke(link)}>Revogar</button>}

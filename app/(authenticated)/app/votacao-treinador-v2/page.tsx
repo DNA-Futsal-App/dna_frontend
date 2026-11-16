@@ -16,6 +16,8 @@ import type {
   CoachVotingContext,
 } from "@/lib/awards-types";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
+import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type Selection = {
   teamId: string;
@@ -33,6 +35,10 @@ export default function CoachVotingV2Page() {
   const [confirming, setConfirming] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const competitionLabel = useCoachCompetitionLabels(
+    (credential?.contexts ?? []).map((item) => ({ ...item, season: credential!.season })),
+  );
+  const slotLabels = playerSlotLabels(context?.voteCategories ?? []);
   async function loadContext(id: string) {
     setSelections({});
     setContext(
@@ -242,8 +248,7 @@ export default function CoachVotingV2Page() {
               .filter((x) => x.active)
               .map((x) => (
                 <option key={x.id} value={x.id}>
-                  {x.teamName} • divisão {x.divisionId} • categoria{" "}
-                  {x.categoryId}
+                  {x.teamName} • {competitionLabel({ ...x, season: credential.season })}
                   {x.submitted ? " • VOTADO" : ""}
                 </option>
               ))}
@@ -290,7 +295,7 @@ export default function CoachVotingV2Page() {
                   key={category.id}
                   className="rounded-3xl border border-white/8 bg-panel p-5 sm:p-6"
                 >
-                  <h2 className="text-xl font-black">{category.label}</h2>
+                  <h2 className="text-xl font-black">{voteCategoryLabel(category, slotLabels)}</h2>
                   <div
                     className={`mt-5 grid gap-4 ${category.targetType === "COACH" ? "" : "sm:grid-cols-2"}`}
                   >
@@ -385,7 +390,7 @@ export default function CoachVotingV2Page() {
                   className="flex justify-between gap-4 rounded-xl bg-night/45 px-4 py-3"
                 >
                   <span className="text-sm font-bold text-muted">
-                    {category.label}
+                    {voteCategoryLabel(category, slotLabels)}
                   </span>
                   <span className="text-sm font-black">
                     {category.targetType === "COACH"

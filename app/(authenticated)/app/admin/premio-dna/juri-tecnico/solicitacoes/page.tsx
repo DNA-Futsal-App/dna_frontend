@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { clientApi, formatDate } from "@/lib/client-api";
 import type { AdminAwardEdition } from "@/lib/admin-awards-types";
+import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 type Application = {
@@ -29,6 +30,10 @@ export default function TechnicalJuryApplicationsPage() {
   const [editionId, setEditionId] = useState("");
   const [filter, setFilter] = useState<"ALL" | ReviewStatus>("PENDING");
   const [applications, setApplications] = useState<Application[]>([]);
+  const competitionLabel = useCoachCompetitionLabels(applications.map((item) => ({
+    ...item,
+    season: editions.find((edition) => edition.id === item.editionId)?.season ?? 0,
+  })));
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -112,7 +117,7 @@ export default function TechnicalJuryApplicationsPage() {
         <div className="grid gap-1 text-sm text-muted">
           <p><strong>Equipe:</strong> {a.teamName}</p>
           <p><strong>Função informada:</strong> {a.coachRole}</p>
-          <p><strong>Modalidade:</strong> {a.gender === "MALE" ? "Masculino" : "Feminino"} • Evento {a.eventId} • Divisão {a.divisionId} • Categoria {a.categoryId}</p>
+          <p><strong>Modalidade:</strong> {a.gender === "MALE" ? "Masculino" : "Feminino"} • {competitionLabel({ ...a, season: editions.find((edition) => edition.id === a.editionId)?.season ?? 0 })}</p>
           {a.evidenceUrl && <a className="text-cyan underline" href={a.evidenceUrl} target="_blank" rel="noopener noreferrer">Abrir comprovante apresentado</a>}
           {a.reviewReason && <p><strong>Motivo da recusa:</strong> {a.reviewReason}</p>}
         </div>
