@@ -7,6 +7,8 @@ import {
   Plus,
   ShieldCheck,
   UserX,
+  UserCheck,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { clientApi, formatDate } from "@/lib/client-api";
@@ -25,12 +27,30 @@ export default function TechnicalJuryAdminPage() {
   const [link, setLink] = useState<CoachAccessLinkInfo | null>(null);
   const [generatedUrl, setGeneratedUrl] = useState("");
   const [voters, setVoters] = useState<CoachCredential[]>([]);
+  const [page, setPage] = useState(1);
   const competitionLabel = useCoachCompetitionLabels(voters.flatMap((voter) =>
     voter.contexts.map((context) => ({ ...context, season: voter.season })),
   ));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  // One coach per card (even if assigned to multiple categories). Group by the
+  // highest-priority official category and show at most ten coaches per page.
+  const mainLabel = (voter: CoachCredential) => {
+    const activeContexts = voter.contexts.filter((context) => context.active);
+    const relevantContexts = activeContexts.length ? activeContexts : voter.contexts;
+    const labels = relevantContexts.map((context) =>
+      competitionLabel({ ...context, season: voter.season }),
+    ).filter((label) => !label.startsWith("Carregando") && !label.startsWith("Categoria esportiva"));
+    return labels.sort((a, b) => compareCompetition(a, b))[0] ?? "Sem categoria identificada";
+  };
+  const sorted = [...voters].sort((a, b) =>
+    compareCompetition(mainLabel(a), mainLabel(b)) ||
+    a.coachName.localeCompare(b.coachName, "pt-BR"),
+  );
+  const totalPages = Math.max(1, Math.ceil(sorted.length / 10));
+  const currentPage = Math.min(page, totalPages);
+  const visible = sorted.slice((currentPage - 1) * 10, currentPage * 10);
   async function load(id: string) {
     const [l, v] = await Promise.all([
       clientApi<CoachAccessLinkInfo>(
@@ -135,6 +155,7 @@ export default function TechnicalJuryAdminPage() {
           value={editionId}
           onChange={(e) => {
             setEditionId(e.target.value);
+            setPage(1);
             setGeneratedUrl("");
             void load(e.target.value);
           }}
@@ -216,25 +237,59 @@ export default function TechnicalJuryAdminPage() {
           {voters.length} treinador(es) •{" "}
           {voters.reduce((s, x) => s + x.contexts.length, 0)} contexto(s)
         </p>
+        <p className="mt-2 text-xs text-muted">
+          Página {currentPage} de {totalPages} · até 10 treinadores por página · A1 primeiro
+        </p>
         <div className="mt-5 grid gap-4">
-          {voters.map((v) => (
-            <CoachCard
-              key={v.credentialId}
-              voter={v}
-              competitionLabel={competitionLabel}
-              reload={async () => load(editionId)}
-              setError={setError}
-            />
-          ))}
+          {visible.map((v, index) => {
+            const group = mainLabel(v);
+            const previous = index > 0 ? mainLabel(visible[index - 1]) : null;
+            return <div key={v.credentialId} className="grid gap-3">
+              {group !== previous ? (
+                <h3 className="border-b border-white/10 pb-2 text-sm font-black text-cyan">
+                  {group}
+                </h3>
+              ) : null}
+              <CoachCard
+                voter={v}
+                competitionLabel={competitionLabel}
+                reload={async () => load(editionId)}
+                setError={setError}
+              />
+            </div>;
+          })}
           {!voters.length ? (
             <p className="py-8 text-center text-sm text-muted">
               Nenhum treinador credenciado.
             </p>
           ) : null}
         </div>
+        {totalPages > 1 ? (
+          <div className="mt-5 flex items-center justify-between gap-3">
+            <button type="button" className="btn-ghost" disabled={currentPage <= 1}
+              onClick={() => setPage(currentPage - 1)}>Anterior</button>
+            <span className="text-xs text-muted">{currentPage} / {totalPages}</span>
+            <button type="button" className="btn-ghost" disabled={currentPage >= totalPages}
+              onClick={() => setPage(currentPage + 1)}>Próxima</button>
+          </div>
+        ) : null}
       </section>
     </div>
   );
+}
+
+/** Sort by official division (A1 before A2), then by Sub age, never by opaque IDs. */
+function compareCompetition(a: string, b: string) {
+  function key(label: string): [number, number, string] {
+    const [division = "", category = ""] = label.split("·").map((part) => part.trim());
+    const divisionMatch = /^A\s*(\d+)$/i.exec(division);
+    const divisionOrder = divisionMatch ? Number(divisionMatch[1]) : 999;
+    const subMatch = /sub[- ]?(\d+)/i.exec(category);
+    return [divisionOrder, subMatch ? Number(subMatch[1]) : 999, label];
+  }
+  const left = key(a);
+  const right = key(b);
+  return left[0] - right[0] || left[1] - right[1] || left[2].localeCompare(right[2], "pt-BR");
 }
 
 function CoachCard({
@@ -270,7 +325,7 @@ function CoachCard({
     }
   }
   async function deactivateCoach() {
-    if (!window.confirm(`Desativar o acesso de ${voter.coachName}?`)) return;
+    if (!window.confirm(`Desativar ${voter.coachName}? Todas as cédulas e votos deste treinador nesta edição serão apagados. A conta DNA Futsal será preservada.`)) return;
     setBusy(true);
     try {
       await clientApi(
@@ -288,6 +343,26 @@ function CoachCard({
       setBusy(false);
     }
   }
+  async function reactivateCoach() {
+    if (!window.confirm(`Reabilitar ${voter.coachName} como votante? Os votos anteriores não serão recuperados.`)) return;
+    setBusy(true);
+    try {
+      await clientApi(`/api/admin/awards/coach-voters/${voter.credentialId}/reactivate`, { method: "POST" });
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível reabilitar o treinador.");
+    } finally { setBusy(false); }
+  }
+  async function removeCoach() {
+    if (!window.confirm(`Excluir ${voter.coachName} da lista do júri técnico? A conta DNA Futsal será mantida, mas o credenciamento deixará de aparecer na administração.`)) return;
+    setBusy(true);
+    try {
+      await clientApi(`/api/admin/awards/coach-voters/${voter.credentialId}/remove`, { method: "POST" });
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível remover o treinador do júri.");
+    } finally { setBusy(false); }
+  }
   return (
     <div className="rounded-2xl border border-white/7 bg-night/35 p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -302,15 +377,23 @@ function CoachCard({
             })}
           </small>
         </div>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => void deactivateCoach()}
-          disabled={busy}
-        >
-          <UserX className="size-4" />
-          Desativar
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {voter.active ? (
+            <button type="button" className="btn-ghost" onClick={() => void deactivateCoach()} disabled={busy}>
+              <UserX className="size-4" /> Desativar
+            </button>
+          ) : (
+            <>
+              <span className="self-center text-xs font-bold text-amber">ACESSO DESATIVADO</span>
+              <button type="button" className="btn-ghost" onClick={() => void reactivateCoach()} disabled={busy}>
+                <UserCheck className="size-4" /> Reabilitar
+              </button>
+              <button type="button" className="btn-ghost border-coral/30 text-coral" onClick={() => void removeCoach()} disabled={busy}>
+                <Trash2 className="size-4" /> Excluir dos técnicos
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <div className="mt-4 grid gap-2">
         {voter.contexts.map((c) => (
@@ -328,9 +411,9 @@ function CoachCard({
               <span
                 className={`text-xs font-black ${c.submitted ? "text-cyan" : "text-amber"}`}
               >
-                {c.submitted ? "VOTOU" : "PENDENTE"}
+                {c.submitted ? "VOTOU" : c.active ? "PENDENTE" : "DESATIVADO"}
               </span>
-              {!c.submitted ? (
+              {voter.active && c.active ? (
                 <button
                   type="button"
                   className="btn-ghost min-h-9! px-3! py-1.5! text-xs"
@@ -344,7 +427,7 @@ function CoachCard({
           </div>
         ))}
       </div>
-      {adding ? (
+      {!voter.active ? null : adding ? (
         <ContextForm
           voter={voter}
           done={async () => {
