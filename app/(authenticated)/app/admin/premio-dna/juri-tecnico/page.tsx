@@ -31,6 +31,21 @@ export default function TechnicalJuryAdminPage() {
   const [filters, setFilters] = useState<CoachSearchFilters>({
     name: "", email: "", phone: "", team: "",
   });
+  // The official catalogue supplies titles, divisions and categories; never infer
+  // a competition from a numeric ID (male and female IDs can overlap).
+  const [championships, setChampionships] = useState<CatalogItem[]>([]);
+  const [championship, setChampionship] = useState("");
+  const [competitionDivisions, setCompetitionDivisions] = useState<CatalogItem[]>([]);
+  const [competitionDivisionId, setCompetitionDivisionId] = useState("");
+  const [competitionCategories, setCompetitionCategories] = useState<CatalogCategory[]>([]);
+  const [competitionCategoryId, setCompetitionCategoryId] = useState("");
+  const [catalogError, setCatalogError] = useState("");
+  const editionSeason = editions.find((item) => item.id === editionId)?.season;
+  const chosenCategory = competitionCategories.find(
+    (item) => `${item.eventId}:${item.id}` === competitionCategoryId,
+  );
+  const competitionFilterActive = Boolean(championship && competitionDivisionId && chosenCategory);
+  const competitionFilterIncomplete = Boolean(championship && !competitionFilterActive);
   const competitionLabel = useCoachCompetitionLabels(voters.flatMap((voter) =>
     voter.contexts.map((context) => ({ ...context, season: voter.season })),
   ));
@@ -39,15 +54,26 @@ export default function TechnicalJuryAdminPage() {
   const [error, setError] = useState("");
   // One coach per card (even if assigned to multiple categories). Group by the
   // highest-priority official category and show at most ten coaches per page.
+  const matchesSelectedCompetition = (context: CoachCredential["contexts"][number]) =>
+    !competitionFilterActive || (chosenCategory !== undefined &&
+      context.eventId === chosenCategory.eventId &&
+      context.divisionId === Number(competitionDivisionId) &&
+      context.categoryId === chosenCategory.id);
   const mainLabel = (voter: CoachCredential) => {
-    const activeContexts = voter.contexts.filter((context) => context.active);
-    const relevantContexts = activeContexts.length ? activeContexts : voter.contexts;
+    const matchingContexts = voter.contexts.filter(matchesSelectedCompetition);
+    const activeContexts = matchingContexts.filter((context) => context.active);
+    const relevantContexts = activeContexts.length ? activeContexts : matchingContexts;
     const labels = relevantContexts.map((context) =>
       competitionLabel({ ...context, season: voter.season }),
     ).filter((label) => !label.startsWith("Carregando") && !label.startsWith("Categoria esportiva"));
     return labels.sort((a, b) => compareCompetition(a, b))[0] ?? "Sem categoria identificada";
   };
-  const filtered = voters.filter((voter) => matchesCoachFilters(voter, filters));
+  // Filter the complete edition first; only then paginate into groups of 10.
+  // Inactive coach contexts remain searchable for administrative reactivation.
+  const filtered = voters.filter((voter) =>
+    matchesCoachFilters(voter, filters) &&
+    (!competitionFilterActive || voter.contexts.some(matchesSelectedCompetition)),
+  );
   const sorted = [...filtered].sort((a, b) =>
     compareCompetition(mainLabel(a), mainLabel(b)) ||
     a.coachName.localeCompare(b.coachName, "pt-BR"),
@@ -59,6 +85,49 @@ export default function TechnicalJuryAdminPage() {
     setFilters((previous) => ({ ...previous, [field]: value }));
     setPage(1);
   }
+  function clearCompetitionFilters() {
+    setChampionship("");
+    setCompetitionDivisionId("");
+    setCompetitionCategoryId("");
+    setCompetitionDivisions([]);
+    setCompetitionCategories([]);
+    setCatalogError("");
+    setPage(1);
+  }
+  useEffect(() => {
+    let active = true;
+    if (!editionSeason) { return; }
+    clientApi<CatalogItem[]>(`/api/catalog/titles?season=${editionSeason}`)
+      .then((items) => { if (active) setChampionships(items); })
+      .catch((err: unknown) => {
+        if (active) setCatalogError(err instanceof Error ? err.message : "Erro ao carregar campeonatos.");
+      });
+    return () => { active = false; };
+  }, [editionSeason]);
+  useEffect(() => {
+    let active = true;
+    if (!editionSeason || !championship) return;
+    const query = new URLSearchParams({ season: String(editionSeason), title: championship });
+    clientApi<CatalogItem[]>(`/api/catalog/divisions?${query}`)
+      .then((items) => { if (active) setCompetitionDivisions(items); })
+      .catch((err: unknown) => {
+        if (active) setCatalogError(err instanceof Error ? err.message : "Erro ao carregar divisões.");
+      });
+    return () => { active = false; };
+  }, [editionSeason, championship]);
+  useEffect(() => {
+    let active = true;
+    if (!editionSeason || !championship || !competitionDivisionId) return;
+    const query = new URLSearchParams({
+      season: String(editionSeason), title: championship, divisionId: competitionDivisionId,
+    });
+    clientApi<CatalogCategory[]>(`/api/catalog/categories?${query}`)
+      .then((items) => { if (active) setCompetitionCategories(items); })
+      .catch((err: unknown) => {
+        if (active) setCatalogError(err instanceof Error ? err.message : "Erro ao carregar categorias.");
+      });
+    return () => { active = false; };
+  }, [editionSeason, championship, competitionDivisionId]);
   async function load(id: string) {
     const [l, v] = await Promise.all([
       clientApi<CoachAccessLinkInfo>(
@@ -164,6 +233,8 @@ export default function TechnicalJuryAdminPage() {
           onChange={(e) => {
             setEditionId(e.target.value);
             setFilters({ name: "", email: "", phone: "", team: "" });
+            clearCompetitionFilters();
+            setChampionships([]);
             setPage(1);
             setGeneratedUrl("");
             void load(e.target.value);
@@ -246,6 +317,65 @@ export default function TechnicalJuryAdminPage() {
           {voters.length} treinador(es) •{" "}
           {voters.reduce((s, x) => s + x.contexts.length, 0)} contexto(s)
         </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <label className="grid gap-1 text-sm font-bold">
+            Campeonato
+            <select aria-label="Filtrar por campeonato" className="field"
+              value={championship} disabled={!editionSeason || championships.length === 0}
+              onChange={(event) => {
+                setChampionship(event.target.value);
+                setCompetitionDivisionId("");
+                setCompetitionCategoryId("");
+                setCompetitionDivisions([]);
+                setCompetitionCategories([]);
+                setCatalogError("");
+                setPage(1);
+              }}>
+              <option value="">Todos os campeonatos</option>
+              {championships.map((item) => (
+                <option key={item.id} value={item.name}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
+            Divisão
+            <select aria-label="Filtrar por divisão" className="field"
+              value={competitionDivisionId}
+              disabled={!championship || competitionDivisions.length === 0}
+              onChange={(event) => {
+                setCompetitionDivisionId(event.target.value);
+                setCompetitionCategoryId("");
+                setCompetitionCategories([]);
+                setCatalogError("");
+                setPage(1);
+              }}>
+              <option value="">Selecione a divisão</option>
+              {competitionDivisions.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
+            Categoria
+            <select aria-label="Filtrar por categoria" className="field"
+              value={competitionCategoryId}
+              disabled={!competitionDivisionId || competitionCategories.length === 0}
+              onChange={(event) => { setCompetitionCategoryId(event.target.value); setPage(1); }}>
+              <option value="">Selecione a categoria</option>
+              {competitionCategories.map((item) => (
+                <option key={`${item.eventId}:${item.id}`} value={`${item.eventId}:${item.id}`}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {catalogError ? <p role="alert" className="mt-2 text-sm text-coral">{catalogError}</p> : null}
+        <p className="mt-2 text-xs text-muted" aria-live="polite">
+          {competitionFilterActive
+            ? `Exibindo técnicos vinculados a ${championship} · ${competitionDivisions.find((d) => String(d.id) === competitionDivisionId)?.name ?? "Divisão"} · ${chosenCategory?.name ?? "Categoria"}.`
+            : competitionFilterIncomplete
+              ? "Escolha campeonato, divisão e categoria para aplicar o filtro esportivo."
+              : "Selecione campeonato, divisão e categoria para localizar todos os técnicos da combinação."}
+        </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label className="grid gap-1 text-sm font-bold">
             Nome
@@ -276,8 +406,8 @@ export default function TechnicalJuryAdminPage() {
           <span>{filtered.length} de {voters.length} treinador(es) encontrado(s) · Página {currentPage} de {totalPages} · A1 primeiro</span>
           <button type="button" className="btn-ghost" onClick={() => {
             setFilters({ name: "", email: "", phone: "", team: "" });
-            setPage(1);
-          }} disabled={!Object.values(filters).some((value) => value.trim())}>
+            clearCompetitionFilters();
+          }} disabled={!Object.values(filters).some((value) => value.trim()) && !championship}>
             Limpar filtros
           </button>
         </div>
