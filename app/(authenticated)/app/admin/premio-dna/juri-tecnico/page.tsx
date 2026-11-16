@@ -28,6 +28,9 @@ export default function TechnicalJuryAdminPage() {
   const [generatedUrl, setGeneratedUrl] = useState("");
   const [voters, setVoters] = useState<CoachCredential[]>([]);
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<CoachSearchFilters>({
+    name: "", email: "", phone: "", team: "",
+  });
   const competitionLabel = useCoachCompetitionLabels(voters.flatMap((voter) =>
     voter.contexts.map((context) => ({ ...context, season: voter.season })),
   ));
@@ -44,13 +47,18 @@ export default function TechnicalJuryAdminPage() {
     ).filter((label) => !label.startsWith("Carregando") && !label.startsWith("Categoria esportiva"));
     return labels.sort((a, b) => compareCompetition(a, b))[0] ?? "Sem categoria identificada";
   };
-  const sorted = [...voters].sort((a, b) =>
+  const filtered = voters.filter((voter) => matchesCoachFilters(voter, filters));
+  const sorted = [...filtered].sort((a, b) =>
     compareCompetition(mainLabel(a), mainLabel(b)) ||
     a.coachName.localeCompare(b.coachName, "pt-BR"),
   );
   const totalPages = Math.max(1, Math.ceil(sorted.length / 10));
   const currentPage = Math.min(page, totalPages);
   const visible = sorted.slice((currentPage - 1) * 10, currentPage * 10);
+  function updateFilter(field: keyof CoachSearchFilters, value: string) {
+    setFilters((previous) => ({ ...previous, [field]: value }));
+    setPage(1);
+  }
   async function load(id: string) {
     const [l, v] = await Promise.all([
       clientApi<CoachAccessLinkInfo>(
@@ -155,6 +163,7 @@ export default function TechnicalJuryAdminPage() {
           value={editionId}
           onChange={(e) => {
             setEditionId(e.target.value);
+            setFilters({ name: "", email: "", phone: "", team: "" });
             setPage(1);
             setGeneratedUrl("");
             void load(e.target.value);
@@ -237,9 +246,41 @@ export default function TechnicalJuryAdminPage() {
           {voters.length} treinador(es) •{" "}
           {voters.reduce((s, x) => s + x.contexts.length, 0)} contexto(s)
         </p>
-        <p className="mt-2 text-xs text-muted">
-          Página {currentPage} de {totalPages} · até 10 treinadores por página · A1 primeiro
-        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <label className="grid gap-1 text-sm font-bold">
+            Nome
+            <input aria-label="Filtrar por nome" type="search" className="field"
+              placeholder="Nome do treinador" value={filters.name}
+              onChange={(event) => updateFilter("name", event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
+            E-mail
+            <input aria-label="Filtrar por e-mail" type="search" className="field"
+              placeholder="E-mail do treinador" value={filters.email}
+              onChange={(event) => updateFilter("email", event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
+            Telefone
+            <input aria-label="Filtrar por telefone" type="tel" inputMode="tel" className="field"
+              placeholder="DDD ou número" value={filters.phone}
+              onChange={(event) => updateFilter("phone", event.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm font-bold">
+            Time
+            <input aria-label="Filtrar por time" type="search" className="field"
+              placeholder="Equipe do treinador" value={filters.team}
+              onChange={(event) => updateFilter("team", event.target.value)} />
+          </label>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted" aria-live="polite">
+          <span>{filtered.length} de {voters.length} treinador(es) encontrado(s) · Página {currentPage} de {totalPages} · A1 primeiro</span>
+          <button type="button" className="btn-ghost" onClick={() => {
+            setFilters({ name: "", email: "", phone: "", team: "" });
+            setPage(1);
+          }} disabled={!Object.values(filters).some((value) => value.trim())}>
+            Limpar filtros
+          </button>
+        </div>
         <div className="mt-5 grid gap-4">
           {visible.map((v, index) => {
             const group = mainLabel(v);
@@ -258,9 +299,9 @@ export default function TechnicalJuryAdminPage() {
               />
             </div>;
           })}
-          {!voters.length ? (
+          {!visible.length ? (
             <p className="py-8 text-center text-sm text-muted">
-              Nenhum treinador credenciado.
+              {voters.length ? "Nenhum treinador encontrado com esses filtros." : "Nenhum treinador credenciado."}
             </p>
           ) : null}
         </div>
@@ -276,6 +317,27 @@ export default function TechnicalJuryAdminPage() {
       </section>
     </div>
   );
+}
+
+type CoachSearchFilters = {
+  name: string;
+  email: string;
+  phone: string;
+  team: string;
+};
+
+function normalizedCoachText(value: string | null | undefined): string {
+  return (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function matchesCoachFilters(voter: CoachCredential, filters: CoachSearchFilters): boolean {
+  const phoneQuery = filters.phone.replace(/\D/g, "");
+  return normalizedCoachText(voter.coachName).includes(normalizedCoachText(filters.name))
+    && normalizedCoachText(voter.email).includes(normalizedCoachText(filters.email))
+    && (!filters.phone.trim() || (phoneQuery.length > 0
+      && (voter.phone ?? "").replace(/\D/g, "").includes(phoneQuery)))
+    && (!filters.team.trim() || voter.contexts.some((context) =>
+      normalizedCoachText(context.teamName).includes(normalizedCoachText(filters.team))));
 }
 
 /** Sort by official division (A1 before A2), then by Sub age, never by opaque IDs. */

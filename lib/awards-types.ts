@@ -129,6 +129,7 @@ export type CoachCredential = {
   userId: string;
   coachName: string;
   email: string;
+  phone?: string | null;
   active: boolean;
   createdAt: string;
   contexts: CoachVotingContextSummary[];
