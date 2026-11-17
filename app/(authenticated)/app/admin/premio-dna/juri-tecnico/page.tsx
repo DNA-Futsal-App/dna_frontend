@@ -524,6 +524,22 @@ function CoachCard({
       setBusy(false);
     }
   }
+  async function reactivateContext(id: string) {
+    if (!window.confirm(`Reabilitar somente esta categoria de ${voter.coachName}? Votos anteriores não serão recuperados.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await clientApi(
+        `/api/admin/awards/coach-voters/${voter.credentialId}/contexts/${id}/reactivate`,
+        { method: "POST" },
+      );
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível reabilitar esta categoria.");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function deactivateCoach() {
     if (!window.confirm(`Desativar ${voter.coachName}? Todas as cédulas e votos deste treinador nesta edição serão apagados. A conta DNA Futsal será preservada.`)) return;
     setBusy(true);
@@ -621,6 +637,15 @@ function CoachCard({
                   disabled={busy}
                 >
                   Desativar
+                </button>
+              ) : voter.active && !c.active ? (
+                <button
+                  type="button"
+                  className="btn-ghost min-h-9! px-3! py-1.5! text-xs"
+                  onClick={() => void reactivateContext(c.id)}
+                  disabled={busy}
+                >
+                  <UserCheck className="size-4" /> Reabilitar categoria
                 </button>
               ) : null}
             </div>

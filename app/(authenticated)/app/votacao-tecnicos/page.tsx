@@ -18,7 +18,7 @@ type ApprovedContext = {
   eventId: number;
   divisionId: number;
   categoryId: number;
-  gender: "MALE" | "FEMALE";
+  gender: "MALE" | "FEMALE" | null;
   teamId: string;
   teamName: string;
   state: CoachVotingState;
@@ -62,6 +62,7 @@ export default function CategoryCoachVotingPage() {
     setReceipt(null);
     setConfirm(false);
     setError("");
+    setNotice("");
     setContext(null);
     setContextLoading(true);
     try {
@@ -148,6 +149,8 @@ export default function CategoryCoachVotingPage() {
   const complete = !!context && summary.length > 0 &&
     context.voteCategories.every((category) => !category.required || !!choices[category.id]?.candidateId)
     && !Object.values(choices).some((choice) => choice.loading);
+  const nextPendingContext = contexts.find((item) =>
+    item.contextId !== selectedId && !item.submitted && item.state === "OPEN");
 
   async function submit() {
     if (!complete || !context || submitting || selectedRef.current !== selectedId) return;
@@ -197,14 +200,24 @@ export default function CategoryCoachVotingPage() {
       <p className="mt-2 text-sm text-muted">Não há categoria ativa vinculada ao seu credenciamento. Entre em contato com a organização caso seu vínculo já tenha sido realizado.</p>
     </section> : <>
       <section className="rounded-3xl border border-white/10 bg-panel p-5">
-        <label className="grid gap-2 text-sm font-bold">Sua categoria autorizada
-          <select className="field" value={selectedId} onChange={(event) => void openContext(event.target.value)} disabled={submitting}>
-            {contexts.map((item) => <option key={item.contextId} value={item.contextId}>
-              {competitionLabel(item)} • {item.gender === "FEMALE" ? "Feminino" : "Masculino"} • {item.teamName}{item.submitted ? " • VOTADO" : ""}
-            </option>)}
-          </select>
-        </label>
-        <p className="mt-3 text-xs text-muted">{contexts.filter((item) => !item.submitted).length} contexto(s) ainda sem voto.</p>
+        <h2 className="text-lg font-black">Escolha a categoria em que deseja votar</h2>
+        <p className="mt-2 text-sm text-muted">Cada categoria autorizada possui uma votação independente. Você pode alternar entre elas antes ou depois de votar.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {contexts.map((item) => (
+            <button key={item.contextId} type="button" disabled={submitting}
+              aria-pressed={selectedId === item.contextId}
+              onClick={() => void openContext(item.contextId)}
+              className={`rounded-xl border p-4 text-left transition-colors ${selectedId === item.contextId
+                ? "border-cyan bg-cyan/10" : "border-white/10 bg-night/40 hover:border-cyan/40"}`}>
+              <span className="block text-sm font-black">{competitionLabel(item)}</span>
+              <span className="mt-1 block text-xs text-muted">{item.gender === "FEMALE" ? "Feminino" : item.gender === "MALE" ? "Masculino" : "Modalidade não identificada"} • {item.teamName}</span>
+              <span className={`mt-2 block text-xs font-black ${item.submitted ? "text-cyan" : "text-amber"}`}>
+                {item.submitted ? "VOTO REGISTRADO" : item.state === "OPEN" ? "DISPONÍVEL PARA VOTAR" : item.state === "SCHEDULED" ? "AGENDADA" : "INDISPONÍVEL"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted">{contexts.filter((item) => !item.submitted).length} categoria(s) ainda sem voto.</p>
       </section>
 
       {contextLoading ? <div className="flex min-h-40 items-center justify-center"><LoaderCircle className="size-8 animate-spin text-cyan" /></div>
@@ -218,6 +231,10 @@ export default function CategoryCoachVotingPage() {
                 <span className="text-muted">{slotLabels[vote.voteCategoryId] ?? vote.voteCategoryLabel}</span><strong>{vote.candidateName}</strong>
               </li>)}</ul>
             </> : <p className="mt-2 text-sm text-muted">Seu voto já foi contabilizado. Selecione outra categoria para continuar.</p>}
+            {nextPendingContext ? <button type="button" className="btn-primary mt-5" disabled={submitting}
+              onClick={() => void openContext(nextPendingContext.contextId)}>
+              Votar na próxima categoria: {competitionLabel(nextPendingContext)}
+            </button> : null}
           </section> : context.state !== "OPEN" ? <section className="rounded-3xl border border-white/10 bg-panel p-6">
             <h2 className="text-xl font-black">{context.state === "SCHEDULED" ? "Votação agendada" : context.state === "DRAFT" ? "Votação em preparação" : "Votação encerrada"}</h2>
             <p className="mt-2 text-sm text-muted">{context.state === "SCHEDULED" && context.votingOpensAt

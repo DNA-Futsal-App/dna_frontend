@@ -39,22 +39,32 @@ export default function CoachVotingPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    clientApi<CoachVotingContext>("/api/awards/coach-voting/context")
-      .then((result) => {
+    let active = true;
+    void (async () => {
+      try {
+        // Old bookmarks must not trap coaches who have multiple approved categories.
+        const available = await clientApi<Array<{ contextId: string }>>(
+          "/api/awards/coach-category-voting/contexts",
+        );
+        if (!active) return;
+        if (available.length > 0) {
+          router.replace("/app/votacao-tecnicos");
+          return;
+        }
+        const result = await clientApi<CoachVotingContext>("/api/awards/coach-voting/context");
+        if (!active) return;
         setContext(result);
-
         if (result.submitted || result.state === "SUBMITTED") {
           router.replace("/app/votacao-treinador/obrigado");
         }
-      })
-      .catch((err) =>
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Você não possui acesso a esta votação.",
-        ),
-      )
-      .finally(() => setLoading(false));
+      } catch (err) {
+        if (active) setError(err instanceof Error
+          ? err.message : "Não foi possível verificar seu acesso à votação.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, [router]);
 
   function updateSelection(
