@@ -9,7 +9,7 @@ export type CoachCompetitionContext = {
   eventId: number;
   divisionId: number;
   categoryId: number;
-  gender?: "MALE" | "FEMALE";
+  gender?: "MALE" | "FEMALE" | null;
 };
 
 function contextKey(item: CoachCompetitionContext): string {
