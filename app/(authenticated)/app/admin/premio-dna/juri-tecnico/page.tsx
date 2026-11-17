@@ -98,7 +98,13 @@ export default function TechnicalJuryAdminPage() {
     let active = true;
     if (!editionSeason) { return; }
     clientApi<CatalogItem[]>(`/api/catalog/titles?season=${editionSeason}`)
-      .then((items) => { if (active) setChampionships(items); })
+      .then((items) => {
+        if (!active) return;
+        // Only these two Paulista championships participate in the award.
+        setChampionships(items.filter((item) =>
+          item.name.trim() === "Paulista" || item.name.trim() === "Paulista Feminino",
+        ));
+      })
       .catch((err: unknown) => {
         if (active) setCatalogError(err instanceof Error ? err.message : "Erro ao carregar campeonatos.");
       });
@@ -331,9 +337,11 @@ export default function TechnicalJuryAdminPage() {
                 setCatalogError("");
                 setPage(1);
               }}>
-              <option value="">Todos os campeonatos</option>
+              <option value="">Selecione o campeonato</option>
               {championships.map((item) => (
-                <option key={item.id} value={item.name}>{item.name}</option>
+                <option key={item.id} value={item.name}>
+                  {item.name.trim() === "Paulista" ? "Paulista Masculino" : "Paulista Feminino"}
+                </option>
               ))}
             </select>
           </label>

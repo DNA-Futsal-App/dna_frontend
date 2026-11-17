@@ -7,7 +7,7 @@ import type {
   CoachBallot, CoachVotingCandidate, CoachVotingCategory, CoachVotingContext,
   CoachVotingState,
 } from "@/lib/awards-types";
-import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { orderedCoachBallotVotes, orderedVoteCategories, playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
 import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type ApprovedContext = {
@@ -140,11 +140,11 @@ export default function CategoryCoachVotingPage() {
   }
 
   const slotLabels = playerSlotLabels(context?.voteCategories ?? []);
-  const summary = useMemo(() => context?.voteCategories.flatMap((category) => {
+  const summary = useMemo(() => (context ? orderedVoteCategories(context.voteCategories) : []).flatMap((category) => {
     const selection = choices[category.id];
     const candidate = selection?.candidates.find((item) => item.id === selection.candidateId);
     return candidate ? [{ category, candidate }] : [];
-  }) ?? [], [context, choices]);
+  }), [context, choices]);
   const complete = !!context && summary.length > 0 &&
     context.voteCategories.every((category) => !category.required || !!choices[category.id]?.candidateId)
     && !Object.values(choices).some((choice) => choice.loading);
@@ -185,7 +185,7 @@ export default function CategoryCoachVotingPage() {
     <header>
       <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-amber"><Trophy className="size-5" />Júri técnico</div>
       <h1 className="display-title mt-3 text-3xl sm:text-4xl">Votação dos técnicos</h1>
-      <p className="mt-2 text-sm text-muted">Somente categorias aprovadas pela organização ficam disponíveis. Cada categoria possui um voto definitivo.</p>
+      <p className="mt-2 text-sm text-muted">Você escolherá o goleiro, quatro jogadores de linha e o melhor treinador. Cada categoria possui um voto definitivo.</p>
     </header>
 
     {notice && <p role="status" className="rounded-xl border border-cyan/20 bg-cyan/7 p-4 text-sm text-cyan">{notice}</p>}
@@ -194,7 +194,7 @@ export default function CategoryCoachVotingPage() {
     {!contexts.length ? <section className="rounded-3xl border border-white/10 bg-panel p-6">
       <ClipboardCheck className="size-9 text-amber" />
       <h2 className="mt-4 text-xl font-black">Nenhuma categoria habilitada</h2>
-      <p className="mt-2 text-sm text-muted">Caso já tenha se inscrito por um convite, aguarde a aprovação da organização. O link por si só não autoriza a votação.</p>
+      <p className="mt-2 text-sm text-muted">Não há categoria ativa vinculada ao seu credenciamento. Entre em contato com a organização caso seu vínculo já tenha sido realizado.</p>
     </section> : <>
       <section className="rounded-3xl border border-white/10 bg-panel p-5">
         <label className="grid gap-2 text-sm font-bold">Sua categoria autorizada
@@ -214,7 +214,7 @@ export default function CategoryCoachVotingPage() {
             <h2 className="mt-3 text-xl font-black">Voto confirmado</h2>
             {receipt ? <>
               <p className="mt-2 text-sm text-muted">Registrado em {formatDate(receipt.submittedAt, { dateStyle: "short", timeStyle: "short" })}</p>
-              <ul className="mt-4 grid gap-2">{receipt.votes.map((vote) => <li key={vote.voteCategoryId} className="flex justify-between gap-4 rounded-xl bg-night/50 p-3 text-sm">
+              <ul className="mt-4 grid gap-2">{orderedCoachBallotVotes(receipt.votes).map((vote) => <li key={vote.voteCategoryId} className="flex justify-between gap-4 rounded-xl bg-night/50 p-3 text-sm">
                 <span className="text-muted">{slotLabels[vote.voteCategoryId] ?? vote.voteCategoryLabel}</span><strong>{vote.candidateName}</strong>
               </li>)}</ul>
             </> : <p className="mt-2 text-sm text-muted">Seu voto já foi contabilizado. Selecione outra categoria para continuar.</p>}
@@ -224,7 +224,7 @@ export default function CategoryCoachVotingPage() {
               ? `Abertura prevista para ${formatDate(context.votingOpensAt, { dateStyle: "short", timeStyle: "short" })}.`
               : "Ainda não é possível registrar um voto nesta categoria."}</p>
           </section> : <>
-            <div className="grid gap-5">{context.voteCategories.map((category) => {
+            <div className="grid gap-5">{orderedVoteCategories(context.voteCategories).map((category) => {
               const choice = choices[category.id];
               const options = (context.teams as GoldTeam[]).filter((team) =>
                 category.targetType === "ATHLETE" ? team.athleteEligible === true

@@ -17,7 +17,7 @@ import type {
   CoachVotingCategory,
   CoachVotingContext,
  } from "@/lib/awards-types";
-import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { orderedVoteCategories, playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
 import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type Selection = {
@@ -135,7 +135,7 @@ export default function CoachVotingPage() {
   const summary = useMemo(() => {
     if (!context) return [];
 
-    return context.voteCategories
+    return orderedVoteCategories(context.voteCategories)
       .map((category) => {
         const selection = selections[category.id];
         const candidate = selection?.candidates.find(
@@ -245,13 +245,13 @@ export default function CoachVotingPage() {
           Você está votando como <strong className="text-ivory">{context.coachName}</strong>,
           representando <strong className="text-ivory">{context.representedTeamName}</strong>,
           na categoria <strong className="text-ivory">{competitionLabel(context)}</strong>.
-          Para Jogador 1 a Jogador 5, escolha um time da Chave Ouro e um atleta do elenco.
-          Para Técnico, escolha a equipe elegível.
+          Para Melhor Goleiro e Jogadores 1 a 4, escolha uma equipe da Chave Ouro e um atleta do elenco.
+          Para Melhor Treinador, escolha uma equipe elegível.
         </p>
       </header>
 
       <div className="grid gap-5">
-        {context.voteCategories.map((category) => {
+        {orderedVoteCategories(context.voteCategories).map((category) => {
           const selection = selections[category.id];
 
           return (

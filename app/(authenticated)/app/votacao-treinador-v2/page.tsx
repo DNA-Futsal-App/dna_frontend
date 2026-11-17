@@ -17,7 +17,7 @@ import type {
   CoachVotingContext,
 } from "@/lib/awards-types";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
-import { playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
+import { orderedVoteCategories, playerSlotLabels, voteCategoryLabel } from "@/lib/coach-voting-display";
 import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
 type Selection = {
@@ -180,7 +180,7 @@ export default function CoachVotingV2Page() {
     () =>
       !context
         ? []
-        : (context.voteCategories
+        : (orderedVoteCategories(context.voteCategories)
             .map((category) => {
               const s = selections[category.id];
               const candidate = s?.candidates.find(
@@ -326,7 +326,7 @@ export default function CoachVotingV2Page() {
       ) : (
         <>
           <div className="grid gap-5">
-            {context.voteCategories.map((category) => {
+            {orderedVoteCategories(context.voteCategories).map((category) => {
               const s = selections[category.id];
               return (
                 <section
