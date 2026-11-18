@@ -1,18 +1,13 @@
 import type { CoachVotingCategory } from "@/lib/awards-types";
 
-/**
- * Apresentação das seis escolhas do júri técnico.
- * Os IDs e códigos persistidos NÃO são modificados: JOGADOR_5 é a vaga de Ala Direita,
- * enquanto PIVO permanece a vaga do pivô. A ordem da tela independe de displayOrder.
- */
 const CHOICE_LAYOUT: Record<string, { order: number; label: string }> = {
   GOLEIRO: { order: 10, label: "Melhor Goleiro:" },
-  FIXO: { order: 20, label: "Melhor Jogador 1: (Fixo)" },
-  ALA: { order: 30, label: "Melhor Jogador 2: (Ala Esq.)" },
-  JOGADOR_5: { order: 40, label: "Melhor Jogador 3: (Ala Dir.)" },
-  ALA_DIREITA: { order: 40, label: "Melhor Jogador 3: (Ala Dir.)" },
-  PIVO: { order: 50, label: "Melhor Jogador 4: (Pivô)" },
-  TECNICO: { order: 60, label: "Melhor Treinador:" },
+  FIXO: { order: 20, label: "Melhor Jogador 1" },
+  ALA: { order: 30, label: "Melhor Jogador 2" },
+  JOGADOR_5: { order: 40, label: "Melhor Jogador 3" },
+  ALA_DIREITA: { order: 40, label: "Melhor Jogador 3" },
+  PIVO: { order: 50, label: "Melhor Jogador 4" },
+  TECNICO: { order: 60, label: "Melhor Treinador" },
 };
 
 function votingOrder(code: string, displayOrder: number): number {
