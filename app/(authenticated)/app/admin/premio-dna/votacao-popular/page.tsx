@@ -12,6 +12,7 @@ import {
 import type { ContextWindow, VotingContext, VotingReadiness } from "@/lib/popular-voting-types";
 import { AdminBatchScheduler } from "@/components/popular-voting/admin-batch-scheduler";
 import { AdminPopularResults } from "@/components/popular-voting/admin-popular-results";
+import { AdminPopularTieResolution } from "@/components/popular-voting/admin-popular-tie-resolution";
 
 const reason: Record<string, string> = {
   INSCRICOES_ABERTAS: "As inscrições desta edição ainda estão abertas.",
@@ -24,7 +25,7 @@ const reason: Record<string, string> = {
   DESEMPATE_ADMINISTRATIVO_INVALIDO: "A exceção histórica de quatro finalistas está inconsistente.",
   NENHUM_ADMIN_ATIVO: "Não há administradores ativos para compor o júri.",
   NOTAS_PENDENTES: "Há administradores com notas pendentes. Confira os nomes e os vídeos abaixo.",
-  EMPATE_NO_CORTE_TOP3: "Existe empate entre o terceiro e o quarto colocados.",
+  EMPATE_NO_CORTE_TOP3: "Empate no corte: selecione 3 ou 4 finalistas no controle individual abaixo.",
 };
 
 type Field = "eventId" | "divisionId" | "categoryId" | "gender" | "contestCategory";
@@ -162,9 +163,49 @@ export default function AdminPopularVotingPage() {
     </header>
     {error && <p role="alert" className="rounded-2xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
     {notice && <p role="status" className="rounded-2xl border border-cyan/30 p-4 text-sm text-cyan">{notice}</p>}
-    {!loading && editionId && contexts.length > 0 && <AdminBatchScheduler
-      editionId={editionId} contexts={contexts} onScheduled={() => void reload()}/>}
-    <h2 className="mt-6 text-lg font-black">Controle individual por modalidade</h2>
+    {!loading && editionId && contexts.length > 0 && <>
+      <AdminBatchScheduler editionId={editionId} contexts={contexts} onScheduled={() => void reload()}/>
+      <p className="mt-3 text-sm text-muted">Há empate? Resolva a seleção de 3 ou 4 candidatos no <a className="font-bold text-cyan underline" href="#controle-individual">controle individual</a> abaixo antes de agendar em lote.</p>
+    </>}
+    <h2 id="controle-individual" className="mt-6 text-lg font-black">Controle individual por modalidade</h2>
+    <section className="surface rounded-3xl p-5 sm:p-6">
+      <p className="mb-4 text-sm text-muted">Selecione a disputa para resolver empates e programar a votação popular. Cada modalidade tem sua própria decisão.</p>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <label className="grid gap-2 text-sm font-bold">Edição
+          <select className="field" value={editionId} disabled={busy || loading} onChange={(event) => setEditionId(event.target.value)}>
+            {editions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </label>
+        {selected && <>
+          <label className="grid gap-2 text-sm font-bold">Campeonato
+            <select className="field" value={selected.eventId} disabled={busy} onChange={(event) => choose("eventId", event.target.value)}>
+              {options("eventId").map((item) => <option key={item.eventId} value={item.eventId}>Evento #{item.eventId}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold">Divisão
+            <select className="field" value={selected.divisionId} disabled={busy} onChange={(event) => choose("divisionId", event.target.value)}>
+              {options("divisionId").map((item) => <option key={item.divisionId} value={item.divisionId}>{item.divisionName}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold">Categoria
+            <select className="field" value={selected.categoryId} disabled={busy} onChange={(event) => choose("categoryId", event.target.value)}>
+              {options("categoryId").map((item) => <option key={item.categoryId} value={item.categoryId}>{item.categoryName}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold">Gênero
+            <select className="field" value={selected.gender} disabled={busy} onChange={(event) => choose("gender", event.target.value)}>
+              {options("gender").map((item) => <option key={item.gender} value={item.gender}>{item.gender === "FEMALE" ? "Feminino" : "Masculino"}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold">Categoria do prêmio
+            <select className="field" value={selected.contestCategory} disabled={busy} onChange={(event) => choose("contestCategory", event.target.value)}>
+              {options("contestCategory").map((item) => <option key={item.contestCategory} value={item.contestCategory}>{item.contestCategoryLabel}</option>)}
+            </select>
+          </label>
+        </>}
+      </div>
+      {!loading && !selected && <p className="mt-4 text-sm text-amber">Não há disputas disponíveis nesta edição.</p>}
+    </section>
     {loadingGroup && <LoaderCircle className="size-7 animate-spin text-cyan"/>}
     {selected && !loadingGroup && readiness && windowData && <>
       <section className="surface rounded-3xl p-6 sm:p-8">
@@ -185,6 +226,9 @@ export default function AdminPopularVotingPage() {
             </article>)}</div>
         </section>}
       </section>
+      {windowData.status === "NOT_SCHEDULED" && !readiness.finalistsConfirmed && <AdminPopularTieResolution
+        key={`${editionId}|${key}`} editionId={editionId} context={selected} readiness={readiness}
+        onResolved={reload}/>}
       <section className="surface space-y-5 rounded-3xl p-6 sm:p-8">
         <h2 className="flex items-center gap-2 text-xl font-black"><CalendarClock className="size-5 text-cyan"/> Calendário independente</h2>
         {windowData.status === "NOT_SCHEDULED" ? <>
@@ -193,10 +237,11 @@ export default function AdminPopularVotingPage() {
             <label className="grid gap-2 text-sm font-bold">Início<input className="field" type="datetime-local" value={opensAt} disabled={busy} onChange={(e) => setOpensAt(e.target.value)}/></label>
             <label className="grid gap-2 text-sm font-bold">Encerramento<input className="field" type="datetime-local" value={closesAt} disabled={busy} onChange={(e) => setClosesAt(e.target.value)}/></label>
           </div>
-          <button className="btn-primary" type="button" disabled={busy || !opensAt || !closesAt} onClick={() => void schedule()}>
+          <button className="btn-primary" type="button" disabled={busy || !readiness.ready || !opensAt || !closesAt} onClick={() => void schedule()}>
             {busy ? <LoaderCircle className="size-4 animate-spin"/> : <CalendarClock className="size-4"/>} Validar e programar esta categoria
           </button>
-          <p className="text-xs text-muted">Se houver notas pendentes, a solicitação será recusada e a lista de pendências atualizada.</p>
+          {!readiness.ready && <p className="text-xs text-amber">A votação ainda não pode ser agendada. Resolva o empate acima e todas as demais pendências antes de confirmar.</p>}
+          <p className="text-xs text-muted">O backend verifica as notas, a decisão de desempate e os finalistas antes de programar esta disputa.</p>
         </> : <>
           <p className="text-sm text-muted">Abertura: {votingDate(windowData.opensAt)} • Encerramento: {votingDate(windowData.closesAt)} (Brasília)</p>
           {windowData.status === "OPEN" && <button className="btn-ghost" type="button" disabled={busy} onClick={() => void close()}>Encerrar somente esta votação</button>}
