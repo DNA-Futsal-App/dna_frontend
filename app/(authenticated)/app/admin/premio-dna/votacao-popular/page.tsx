@@ -20,6 +20,8 @@ const reason: Record<string, string> = {
   MENOS_DE_QUATRO_VIDEOS_APROVADOS: "Esta disputa excepcional exige pelo menos quatro vídeos aprovados e prontos.",
   EXCECAO_SEM_EMPATE_NO_CORTE: "A exceção de quatro finalistas exige empate entre o terceiro e o quarto colocados.",
   EMPATE_COM_MAIS_DE_QUATRO: "Há empate também com o quinto colocado. A exceção comporta apenas quatro finalistas.",
+  DECISAO_DE_EMPATE_INVALIDA: "A decisão de empate precisa ser refeita na aba de pré-votação.",
+  DESEMPATE_ADMINISTRATIVO_INVALIDO: "A exceção histórica de quatro finalistas está inconsistente.",
   NENHUM_ADMIN_ATIVO: "Não há administradores ativos para compor o júri.",
   NOTAS_PENDENTES: "Há administradores com notas pendentes. Confira os nomes e os vídeos abaixo.",
   EMPATE_NO_CORTE_TOP3: "Existe empate entre o terceiro e o quarto colocados.",
@@ -119,7 +121,7 @@ export default function AdminPopularVotingPage() {
       || opening.getTime() <= Date.now() || closing.getTime() <= opening.getTime()) {
       setError("A abertura deve ser futura e o encerramento deve vir depois dela."); return;
     }
-    if (!window.confirm("Confirmar o Top 3 e agendar a votação exclusivamente para este grupo?")) return;
+    if (!window.confirm("Confirmar os finalistas e agendar a votação exclusivamente para este grupo?")) return;
     setBusy(true); setError(""); setNotice("");
     try {
       await clientApi(`/api/admin/awards/editions/${editionId}/popular-voting/window`, {
@@ -170,7 +172,7 @@ export default function AdminPopularVotingPage() {
           <h2 className="text-xl font-black">Situação desta disputa</h2>
           <p className="mt-2 text-xs text-muted">{readiness.approvedVideos} vídeos aprovados • {readiness.activeAdministrators} administradores ativos • {readiness.pendingReview} revisões pendentes</p>
         </div><span className="rounded-full border border-white/15 px-3 py-2 text-xs font-bold">{votingStatusLabel(windowData.status)}</span></div>
-        {readiness.ready ? <p className="mt-5 flex items-center gap-2 text-sm text-cyan"><CheckCircle2 className="size-5"/> Todos os administradores avaliaram todos os vídeos. {readiness.finalistsConfirmed ? "Top 3 confirmado." : "O Top 3 será consolidado ao agendar."}</p> :
+        {readiness.ready ? <p className="mt-5 flex items-center gap-2 text-sm text-cyan"><CheckCircle2 className="size-5"/> Todos os administradores avaliaram todos os vídeos. {readiness.finalistsConfirmed ? "Finalistas confirmados." : "Os finalistas serão consolidados ao agendar."}</p> :
           <div className="mt-5 space-y-3">{readiness.blockers.map((blocker) => <p key={blocker} className="flex items-start gap-2 text-sm text-amber"><CircleAlert className="mt-0.5 size-4 shrink-0"/>{reason[blocker] ?? blocker}</p>)}</div>}
         {readiness.missingAdmins.length > 0 && <section className="mt-6">
           <h3 className="flex items-center gap-2 text-base font-black"><Users className="size-5"/> Administradores com avaliações pendentes</h3>

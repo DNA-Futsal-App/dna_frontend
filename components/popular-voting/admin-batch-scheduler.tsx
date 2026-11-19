@@ -33,7 +33,9 @@ const blockers: Record<string, string> = {
   MENOS_DE_TRES_VIDEOS_APROVADOS: "Menos de 3 vídeos aprovados",
   NENHUM_ADMIN_ATIVO: "Nenhum administrador ativo",
   NOTAS_PENDENTES: "Avaliações de administradores pendentes",
-  EMPATE_NO_CORTE_TOP3: "Empate na terceira colocação",
+  EMPATE_NO_CORTE_TOP3: "Empate na terceira colocação: resolva na pré-votação",
+  DECISAO_DE_EMPATE_INVALIDA: "Decisão administrativa de empate inválida",
+  DESEMPATE_ADMINISTRATIVO_INVALIDO: "Decisão histórica de desempate inválida",
 };
 
 function distinct<T extends string | number>(values: T[]): T[] {

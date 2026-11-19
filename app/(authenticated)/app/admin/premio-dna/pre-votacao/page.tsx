@@ -54,6 +54,22 @@ type Board = {
   readyToFinalize: boolean;
 };
 
+type TieCandidate = {
+  entryId: string;
+  athleteName: string;
+  teamName: string;
+  average: number;
+  compulsory: boolean;
+  eligible: boolean;
+};
+type TieReview = {
+  tiedAtCutoff: boolean;
+  published: boolean;
+  decidedCount: number | null;
+  selectedEntryIds: string[];
+  candidates: TieCandidate[];
+};
+
 function contextKey(context: Context): string {
   return [context.eventId, context.divisionId, context.categoryId, context.gender, context.contestCategory].join("|");
 }
@@ -78,6 +94,9 @@ export default function AwardPreVoteAdminPage() {
   const [contexts, setContexts] = useState<Context[]>([]);
   const [selected, setSelected] = useState<Context | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
+  const [tieReview, setTieReview] = useState<TieReview | null>(null);
+  const [tieTarget, setTieTarget] = useState<3 | 4 | null>(null);
+  const [tieChosen, setTieChosen] = useState<string[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [media, setMedia] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -113,6 +132,9 @@ export default function AwardPreVoteAdminPage() {
         setContexts(items);
         setSelected(items[0] ?? null);
         setBoard(null);
+        setTieReview(null);
+        setTieTarget(null);
+        setTieChosen([]);
         setDrafts({});
         setMedia({});
         setError("");
@@ -130,11 +152,22 @@ export default function AwardPreVoteAdminPage() {
     if (!editionId || !selected) return;
     setLoadingBoard(true);
     setBoard(null);
+    setTieReview(null);
+    setTieTarget(null);
+    setTieChosen([]);
     setDrafts({});
     setMedia({});
     setNotice("");
-    clientApi<Board>(`/api/admin/awards/editions/${editionId}/pre-vote?${contextParams(selected)}`)
-      .then((value) => { if (active) setBoard(value); })
+    Promise.all([
+      clientApi<Board>(`/api/admin/awards/editions/${editionId}/pre-vote?${contextParams(selected)}`),
+      clientApi<TieReview>(`/api/admin/awards/editions/${editionId}/pre-vote/tie-review?${contextParams(selected)}`),
+    ]).then(([value, tie]) => {
+      if (!active) return;
+      setBoard(value);
+      setTieReview(tie);
+      setTieTarget(tie.decidedCount === 3 || tie.decidedCount === 4 ? tie.decidedCount : null);
+      setTieChosen(tie.selectedEntryIds);
+    })
       .catch((err: unknown) => {
         if (active) setError(err instanceof Error ? err.message : "Erro ao carregar os vídeos.");
       })
@@ -164,8 +197,14 @@ export default function AwardPreVoteAdminPage() {
     if (!selected || !editionId) return;
     setLoadingBoard(true);
     try {
-      const value = await clientApi<Board>(`/api/admin/awards/editions/${editionId}/pre-vote?${contextParams(selected)}`);
+      const [value, tie] = await Promise.all([
+        clientApi<Board>(`/api/admin/awards/editions/${editionId}/pre-vote?${contextParams(selected)}`),
+        clientApi<TieReview>(`/api/admin/awards/editions/${editionId}/pre-vote/tie-review?${contextParams(selected)}`),
+      ]);
       setBoard(value);
+      setTieReview(tie);
+      setTieTarget(tie.decidedCount === 3 || tie.decidedCount === 4 ? tie.decidedCount : null);
+      setTieChosen(tie.selectedEntryIds);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível atualizar.");
@@ -188,6 +227,7 @@ export default function AwardPreVoteAdminPage() {
         { method: "POST", body: JSON.stringify({ score: value }) },
       );
       setBoard(result);
+      await refresh();
       setNotice(`Nota de ${entry.athleteName} salva com sucesso.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível salvar a nota.");
@@ -210,6 +250,52 @@ export default function AwardPreVoteAdminPage() {
     } finally {
       setBusy(null);
     }
+  }
+
+  function chooseTieCount(count: 3 | 4) {
+    const candidates = tieReview?.candidates ?? [];
+    const required = candidates.filter((candidate) => candidate.compulsory).map((candidate) => candidate.entryId);
+    const tied = candidates.filter((candidate) => candidate.eligible && !candidate.compulsory);
+    // Optar por tres exige escolha nominal. Quatro inclui ambos automaticamente
+    // quando ha exatamente dois empatados e abre selecao quando ha mais.
+    const needed = count - required.length;
+    const defaults = count === 4 && tied.length === needed
+      ? tied.map((candidate) => candidate.entryId) : [];
+    setTieTarget(count);
+    setTieChosen([...required, ...defaults]);
+  }
+
+  function toggleTieCandidate(id: string) {
+    if (!tieReview || !tieTarget) return;
+    const candidate = tieReview.candidates.find((item) => item.entryId === id);
+    if (!candidate?.eligible || candidate.compulsory) return;
+    setTieChosen((current) => current.includes(id)
+      ? current.filter((value) => value !== id)
+      : current.length < tieTarget ? [...current, id] : current);
+  }
+
+  async function saveTieDecision() {
+    if (!selected || !tieTarget || tieChosen.length !== tieTarget || busy !== null) return;
+    if (!window.confirm(`Confirmar ${tieTarget} finalistas desta disputa? A decisao podera ser revista antes da publicacao.`)) return;
+    setBusy("tie"); setError(""); setNotice("");
+    try {
+      await clientApi(`/api/admin/awards/editions/${editionId}/pre-vote/tie-decision`, {
+        method: "POST",
+        body: JSON.stringify({
+          context: {
+            eventId: selected.eventId, divisionId: selected.divisionId,
+            categoryId: selected.categoryId, gender: selected.gender,
+            contestCategory: selected.contestCategory,
+          },
+          finalistCount: tieTarget,
+          selectedEntryIds: tieChosen,
+        }),
+      });
+      await refresh();
+      setNotice(`Decisao de empate registrada: ${tieTarget} finalistas. Confirme a publicacao em seguida.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel registrar o desempate.");
+    } finally { setBusy(null); }
   }
 
   async function finalize() {
@@ -277,6 +363,7 @@ export default function AwardPreVoteAdminPage() {
               setSelected(null);
               setContexts([]);
               setBoard(null);
+              setTieReview(null);
               setEditionId(event.target.value);
             }}>
               {editions.map((edition) => <option key={edition.id} value={edition.id}>{edition.name}</option>)}
@@ -344,6 +431,43 @@ export default function AwardPreVoteAdminPage() {
             {board.readyToFinalize ? "O grupo já pode ser publicado." : "A publicação exige vídeos suficientes, revisão concluída e painel completo. Empates no corte só são permitidos na disputa autorizada."}
           </p>}
         </section>
+
+        {tieReview?.tiedAtCutoff && !board?.published && <section className="surface rounded-3xl border border-amber/30 p-5 sm:p-7">
+          <h2 className="text-xl font-black text-ivory">Empate na classificacao</h2>
+          <p className="mt-2 text-sm text-muted">
+            Ha empate na nota de corte. Escolha se deseja avancar com tres ou quatro finalistas.
+            Quem possui media maior que a nota de corte permanece classificado.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button type="button" className={tieTarget === 4 ? "btn-primary" : "btn-ghost"}
+              disabled={busy !== null} onClick={() => chooseTieCount(4)}>Seguir com 4 finalistas</button>
+            <button type="button" className={tieTarget === 3 ? "btn-primary" : "btn-ghost"}
+              disabled={busy !== null} onClick={() => chooseTieCount(3)}>Seguir com 3 finalistas</button>
+          </div>
+          {tieTarget && <>
+            <p className="mt-4 text-sm text-muted">Selecione os atletas empatados que devem avancar.
+              Voce selecionou {tieChosen.length} de {tieTarget}.</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              {tieReview.candidates.filter((candidate) => candidate.eligible).map((candidate) => (
+                <label key={candidate.entryId} className="flex items-start gap-3 rounded-xl border border-white/15 p-4">
+                  <input type="checkbox" className="mt-1 size-4" checked={tieChosen.includes(candidate.entryId)}
+                    disabled={busy !== null || candidate.compulsory}
+                    onChange={() => toggleTieCandidate(candidate.entryId)}/>
+                  <span className="grid gap-1 text-sm">
+                    <strong>{candidate.athleteName}</strong>
+                    <span className="text-muted">{candidate.teamName} • media {candidate.average.toFixed(2)}</span>
+                    {candidate.compulsory && <span className="text-xs text-cyan">Classificado por media superior</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <button type="button" className="btn-primary mt-4" disabled={busy !== null || tieChosen.length !== tieTarget}
+              onClick={() => void saveTieDecision()}>
+              {busy === "tie" ? <LoaderCircle className="size-4 animate-spin"/> : <Save className="size-4"/>}
+              Salvar decisao e habilitar publicacao
+            </button>
+          </>}
+        </section>}
 
         {loadingBoard && <div className="flex justify-center py-10"><LoaderCircle className="size-8 animate-spin text-cyan" /></div>}
         {!loadingBoard && board?.entries.length === 0 && <p className="surface rounded-2xl p-6 text-muted">Não há inscrições aprovadas para os filtros selecionados.</p>}
