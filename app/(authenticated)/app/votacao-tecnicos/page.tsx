@@ -130,7 +130,8 @@ export default function CategoryCoachVotingPage() {
       if (selectedRef.current !== expectedContext || requestIds.current[category.id] !== sequence) return;
       update(category.id, {
         candidates,
-        candidateId: category.targetType === "COACH" ? (candidates[0]?.id ?? "") : "",
+        // Even with only one coach, selecting the person must be deliberate.
+        candidateId: "",
         loading: false,
       });
     } catch (cause) {
@@ -249,23 +250,25 @@ export default function CategoryCoachVotingPage() {
               );
               return <section key={category.id} className="rounded-3xl border border-white/10 bg-panel p-5 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">{voteCategoryLabel(category, slotLabels)}</h2>{category.required && <span className="text-xs font-bold text-amber">Obrigatório</span>}</div>
-                <div className={`mt-4 grid gap-4 ${category.targetType === "ATHLETE" ? "sm:grid-cols-2" : ""}`}>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm font-bold">Equipe
                     <select className="field" value={choice?.teamId ?? ""} onChange={(event) => void chooseTeam(category, event.target.value)}>
                       <option value="">Selecione uma equipe</option>
                       {options.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
                     </select>
                   </label>
-                  {category.targetType === "ATHLETE" && <label className="grid gap-2 text-sm font-bold">Atleta
+                  <label className="grid gap-2 text-sm font-bold">{category.targetType === "COACH" ? "Técnico" : "Atleta"}
                     <select className="field" disabled={!choice?.teamId || choice.loading} value={choice?.candidateId ?? ""}
                       onChange={(event) => update(category.id, { candidateId: event.target.value })}>
-                      <option value="">{choice?.loading ? "Carregando..." : "Selecione um atleta"}</option>
+                      <option value="">{choice?.loading ? "Carregando..." : category.targetType === "COACH" ? "Selecione um técnico" : "Selecione um atleta"}</option>
                       {(choice?.candidates ?? []).map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
                     </select>
-                  </label>}
+                  </label>
                 </div>
                 {category.targetType === "ATHLETE" ? <p className="mt-3 text-xs text-muted">Somente atletas de equipes da Chave Ouro são elegíveis.</p>
-                  : <p className="mt-3 flex gap-2 text-xs text-muted"><ShieldCheck className="size-4 shrink-0 text-cyan" />Você não pode votar na própria equipe para o prêmio de Técnico.</p>}
+                  : <p className="mt-3 flex gap-2 text-xs text-muted"><ShieldCheck className="size-4 shrink-0 text-cyan" />Escolha um técnico da comissão técnica de outra equipe da Chave Ouro.</p>}
+                {category.targetType === "COACH" && choice?.teamId && !choice.loading && !choice.candidates.length &&
+                  <p className="mt-2 text-xs text-amber">Nenhum técnico foi encontrado na comissão técnica desta equipe.</p>}
                 {category.targetType === "ATHLETE" && !options.length && <p className="mt-2 text-xs text-amber">Nenhuma equipe da Chave Ouro preparada para esta categoria.</p>}
               </section>;
             })}</div>
@@ -280,7 +283,7 @@ export default function CategoryCoachVotingPage() {
           <button className="btn-ghost" type="button" onClick={() => setConfirm(false)} disabled={submitting} aria-label="Fechar confirmação"><X className="size-5" /></button></div>
         <p className="mt-3 text-sm text-amber">Depois de confirmar, os votos desta categoria não poderão ser alterados.</p>
         <div className="mt-5 grid gap-2">{summary.map(({ category, candidate }) => <div key={category.id} className="flex justify-between gap-4 rounded-xl bg-night/40 p-3 text-sm">
-          <span className="text-muted">{voteCategoryLabel(category, slotLabels)}</span><strong>{category.targetType === "COACH" ? candidate.teamName : candidate.name}</strong>
+          <span className="text-muted">{voteCategoryLabel(category, slotLabels)}</span><strong>{category.targetType === "COACH" ? `${candidate.name} (${candidate.teamName})` : candidate.name}</strong>
         </div>)}</div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" className="btn-ghost" onClick={() => setConfirm(false)} disabled={submitting}>Revisar escolhas</button>

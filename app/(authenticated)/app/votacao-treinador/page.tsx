@@ -115,10 +115,7 @@ export default function CoachVotingPage() {
           ...current,
           [category.id]: {
             ...current[category.id],
-            candidateId:
-              category.targetType === "COACH"
-                ? candidates[0]?.id ?? ""
-                : current[category.id]?.candidateId ?? "",
+            candidateId: "",
             candidates,
             loading: false,
           },
@@ -286,9 +283,7 @@ export default function CoachVotingPage() {
               </div>
 
               <div
-                className={`mt-5 grid gap-4 ${
-                  category.targetType === "COACH" ? "" : "sm:grid-cols-2"
-                }`}
+                className="mt-5 grid gap-4 sm:grid-cols-2"
               >
                 <label className="grid gap-1.5 text-sm font-bold">
                   Time
@@ -314,40 +309,39 @@ export default function CoachVotingPage() {
                   </select>
                 </label>
 
-                {category.targetType !== "COACH" ? (
-                  <label className="grid gap-1.5 text-sm font-bold">
-                    Atleta
-                    <select
-                      className="field"
-                      value={selection?.candidateId ?? ""}
-                      onChange={(event) =>
-                        updateSelection(category.id, {
-                          candidateId: event.target.value,
-                        })
-                      }
-                      disabled={!selection?.teamId || selection.loading}
-                    >
-                      <option value="">
-                        {selection?.loading
-                          ? "Carregando..."
-                          : "Selecione o atleta"}
+                <label className="grid gap-1.5 text-sm font-bold">
+                  {category.targetType === "COACH" ? "Técnico" : "Atleta"}
+                  <select
+                    className="field"
+                    value={selection?.candidateId ?? ""}
+                    onChange={(event) =>
+                      updateSelection(category.id, {
+                        candidateId: event.target.value,
+                      })
+                    }
+                    disabled={!selection?.teamId || selection.loading}
+                  >
+                    <option value="">
+                      {selection?.loading ? "Carregando..." :
+                        category.targetType === "COACH" ? "Selecione um técnico" : "Selecione o atleta"}
+                    </option>
+                    {(selection?.candidates ?? []).map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.name}
                       </option>
-                      {(selection?.candidates ?? []).map((candidate) => (
-                        <option key={candidate.id} value={candidate.id}>
-                          {candidate.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
+                    ))}
+                  </select>
+                </label>
               </div>
 
               {category.targetType === "COACH" ? (
                 <p className="mt-3 flex gap-2 text-xs text-muted">
                   <ShieldCheck className="size-4 shrink-0 text-cyan" />
-                  O voto de Técnico é registrado diretamente para a equipe
-                  escolhida. Sua própria equipe não aparece nesta lista.
+                  Selecione o nome de um técnico da comissão técnica de outra equipe da Chave Ouro.
                 </p>
+              ) : null}
+              {category.targetType === "COACH" && selection?.teamId && !selection.loading && !selection.candidates.length ? (
+                <p className="mt-2 text-xs text-amber">Nenhum técnico encontrado nesta equipe.</p>
               ) : null}
             </section>
           );
@@ -414,16 +408,10 @@ export default function CoachVotingPage() {
                     {voteCategoryLabel(category, slotLabels)}
                   </span>
                   <span className="text-right text-sm font-black text-ivory">
-                    {category.targetType === "COACH" ? (
-                      candidate.teamName
-                    ) : (
-                      <>
-                        {candidate.name}
-                        <small className="block font-medium text-muted">
-                          {candidate.teamName}
-                        </small>
-                      </>
-                    )}
+                    {candidate.name}
+                    <small className="block font-medium text-muted">
+                      {candidate.teamName}
+                    </small>
                   </span>
                 </div>
               ))}

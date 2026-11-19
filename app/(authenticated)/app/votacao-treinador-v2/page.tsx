@@ -157,7 +157,7 @@ export default function CoachVotingV2Page() {
       );
       update(category.id, {
         candidates: list,
-        candidateId: category.targetType === "COACH" ? (list[0]?.id ?? "") : "",
+        candidateId: "",
         loading: false,
       });
     } catch (e) {
@@ -335,7 +335,7 @@ export default function CoachVotingV2Page() {
                 >
                   <h2 className="text-xl font-black">{voteCategoryLabel(category, slotLabels)}</h2>
                   <div
-                    className={`mt-5 grid gap-4 ${category.targetType === "COACH" ? "" : "sm:grid-cols-2"}`}
+                    className="mt-5 grid gap-4 sm:grid-cols-2"
                   >
                     <label className="grid gap-1.5 text-sm font-bold">
                       Time
@@ -360,37 +360,37 @@ export default function CoachVotingV2Page() {
                           ))}
                       </select>
                     </label>
-                    {category.targetType !== "COACH" ? (
-                      <label className="grid gap-1.5 text-sm font-bold">
-                        Atleta
-                        <select
-                          className="field"
-                          value={s?.candidateId ?? ""}
-                          onChange={(e) =>
-                            update(category.id, { candidateId: e.target.value })
-                          }
-                          disabled={!s?.teamId || s.loading}
-                        >
-                          <option value="">
-                            {s?.loading
-                              ? "Carregando..."
-                              : "Selecione o atleta"}
+                    <label className="grid gap-1.5 text-sm font-bold">
+                      {category.targetType === "COACH" ? "Técnico" : "Atleta"}
+                      <select
+                        className="field"
+                        value={s?.candidateId ?? ""}
+                        onChange={(e) =>
+                          update(category.id, { candidateId: e.target.value })
+                        }
+                        disabled={!s?.teamId || s.loading}
+                      >
+                        <option value="">
+                          {s?.loading ? "Carregando..." :
+                            category.targetType === "COACH" ? "Selecione um técnico" : "Selecione o atleta"}
+                        </option>
+                        {(s?.candidates ?? []).map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
                           </option>
-                          {(s?.candidates ?? []).map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    ) : null}
+                        ))}
+                      </select>
+                    </label>
                   </div>
                   {category.targetType === "COACH" ? (
                     <p className="mt-3 flex gap-2 text-xs text-muted">
                       <ShieldCheck className="size-4 shrink-0 text-cyan" />
-                      Sua própria equipe não aparece no voto de Técnico.
+                      Selecione uma pessoa da comissão técnica de outra equipe da Chave Ouro.
                     </p>
                   ) : null}
+                  {category.targetType === "COACH" && s?.teamId && !s.loading && !s.candidates.length && (
+                    <p className="mt-2 text-xs text-amber">Nenhum técnico encontrado nesta equipe.</p>
+                  )}
                 </section>
               );
             })}
@@ -432,7 +432,7 @@ export default function CoachVotingV2Page() {
                   </span>
                   <span className="text-sm font-black">
                     {category.targetType === "COACH"
-                      ? candidate.teamName
+                      ? `${candidate.name} (${candidate.teamName})`
                       : candidate.name}
                   </span>
                 </div>
