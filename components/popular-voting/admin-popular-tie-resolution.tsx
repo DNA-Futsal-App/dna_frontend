@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, LoaderCircle, Save, Users } from "lucide-react";
 import { clientApi } from "@/lib/client-api";
 import { votingParams } from "@/lib/popular-voting-types";
-import type { VotingContext, VotingReadiness } from "@/lib/popular-voting-types";
+import type { VotingReadiness } from "@/lib/popular-voting-types";
 
 type TieCandidate = {
   entryId: string;
@@ -26,7 +26,7 @@ type TieReview = {
 
 type Props = {
   editionId: string;
-  context: VotingContext;
+  context: VotingReadiness["context"];
   readiness: VotingReadiness;
   onResolved: () => Promise<void>;
 };
@@ -130,13 +130,17 @@ export function AdminPopularTieResolution({ editionId, context, readiness, onRes
     <p className="text-sm text-coral">Não foi possível carregar a decisão de empate: {error}</p>
     <p className="mt-2 text-xs text-muted">Confira se o backend atualizado e a migração V34 foram publicados.</p>
   </section>;
+  if (review?.published) return <section className="surface rounded-3xl border border-amber/30 p-5 sm:p-6">
+    <h3 className="text-lg font-black">Finalistas já homologados</h3>
+    <p className="mt-2 text-sm text-muted">Os finalistas desta disputa já foram publicados. Para alterar os classificados é necessária uma reabertura auditada, sem descartar votos existentes.</p>
+  </section>;
   if (!review?.tiedAtCutoff) {
     if (!hasPendingPrerequisites && !isTieBlocker) return null;
     return <section className="surface rounded-3xl p-5 sm:p-6">
-      <h3 className="text-lg font-black">Conferência do empate</h3>
+      <h3 className="text-lg font-black">Verificação do empate</h3>
       <p className="mt-2 text-sm text-muted">{hasPendingPrerequisites
-        ? "A decisão entre 3 ou 4 finalistas será liberada após o encerramento das inscrições, aprovação dos vídeos e notas de todos os administradores."
-        : "O agendamento detectou um empate, mas a pré-votação ainda não apresentou candidatos elegíveis. Atualize as notas e confira a classificação."}</p>
+        ? "Há inscrições, revisões ou avaliações pendentes. Resolva as pendências antes de confirmar o desempate."
+        : "A validação identificou um possível empate, mas a pré-votação não apresentou candidatos elegíveis. Confira as notas e a classificação."}</p>
     </section>;
   }
 
@@ -152,9 +156,9 @@ export function AdminPopularTieResolution({ editionId, context, readiness, onRes
     </p>}
     <div className="flex flex-wrap gap-3">
       <button type="button" className={count === 4 ? "btn-primary" : "btn-ghost"}
-        disabled={saving || selectable.length < 4} onClick={() => chooseCount(4)}>Seguir com 4 finalistas</button>
+        disabled={saving || hasPendingPrerequisites || selectable.length < 4} onClick={() => chooseCount(4)}>Seguir com 4 finalistas</button>
       <button type="button" className={count === 3 ? "btn-primary" : "btn-ghost"}
-        disabled={saving} onClick={() => chooseCount(3)}>Seguir com 3 finalistas</button>
+        disabled={saving || hasPendingPrerequisites} onClick={() => chooseCount(3)}>Seguir com 3 finalistas</button>
     </div>
     {count !== null && <>
       <p className="text-sm text-muted">Selecionados: {chosen.length} de {count}. Marque os atletas empatados que devem participar.</p>
@@ -170,7 +174,7 @@ export function AdminPopularTieResolution({ editionId, context, readiness, onRes
           </span>
         </label>)}
       </div>
-      <button type="button" className="btn-primary" disabled={saving || chosen.length !== count}
+      <button type="button" className="btn-primary" disabled={saving || hasPendingPrerequisites || chosen.length !== count}
         onClick={() => void saveDecision()}>
         {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
         Salvar decisão e atualizar agendamento

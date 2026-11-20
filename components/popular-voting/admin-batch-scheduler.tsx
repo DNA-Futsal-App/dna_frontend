@@ -6,6 +6,7 @@ import { CalendarClock, CheckCircle2, CircleAlert, Layers3, LoaderCircle, Users 
 import { clientApi } from "@/lib/client-api";
 import type { ContestCategory, Gender, VotingContext, VotingReadiness, VotingStatus } from "@/lib/popular-voting-types";
 import { votingStatusLabel } from "@/lib/popular-voting-types";
+import { AdminPopularTieResolution } from "./admin-popular-tie-resolution";
 
 type BatchSelection = {
   eventId: number;
@@ -33,7 +34,8 @@ const blockers: Record<string, string> = {
   MENOS_DE_TRES_VIDEOS_APROVADOS: "Menos de 3 vídeos aprovados",
   NENHUM_ADMIN_ATIVO: "Nenhum administrador ativo",
   NOTAS_PENDENTES: "Avaliações de administradores pendentes",
-  EMPATE_NO_CORTE_TOP3: "Empate na terceira colocação: resolva na pré-votação",
+  EMPATE_NO_CORTE_TOP3: "Empate na terceira colocação: escolha 3 ou 4 finalistas abaixo",
+  FINALISTAS_PUBLICADOS_DIVERGENTES: "A decisão diverge dos finalistas homologados. Não modifique votos existentes.",
   DECISAO_DE_EMPATE_INVALIDA: "Decisão administrativa de empate inválida",
   DESEMPATE_ADMINISTRATIVO_INVALIDO: "Decisão histórica de desempate inválida",
 };
@@ -45,10 +47,11 @@ function keyFor(item: VotingContext) {
   return `${item.eventId}|${item.divisionId}|${item.categoryId}`;
 }
 
-export function AdminBatchScheduler({ editionId, contexts, onScheduled }: {
+export function AdminBatchScheduler({ editionId, contexts, onScheduled, onContextSelected }: {
   editionId: string;
   contexts: VotingContext[];
   onScheduled?: () => void;
+  onContextSelected?: (context: VotingContext | null) => void;
 }) {
   const [base, setBase] = useState("");
   const [gender, setGender] = useState<Gender | "ALL">("MALE");
@@ -77,6 +80,13 @@ export function AdminBatchScheduler({ editionId, contexts, onScheduled }: {
   }, [editionId, uniqueBases]);
 
   const selected = uniqueBases.find((item) => keyFor(item) === base);
+  useEffect(() => {
+    const chosen = gender !== "ALL" && contestCategory !== "ALL"
+      ? contexts.find((item) => keyFor(item) === base && item.gender === gender
+          && item.contestCategory === contestCategory) ?? null
+      : null;
+    onContextSelected?.(chosen);
+  }, [base, gender, contestCategory, contexts, onContextSelected]);
   const selection: BatchSelection | null = selected ? {
     eventId: selected.eventId,
     divisionId: selected.divisionId,
@@ -108,6 +118,11 @@ export function AdminBatchScheduler({ editionId, contexts, onScheduled }: {
     if (!params) return;
     setReport(await clientApi<BatchReport>(
       `/api/admin/awards/editions/${editionId}/popular-voting/batch/readiness?${params}`));
+  }
+
+  async function handleResolved() {
+    await refresh();
+    onScheduled?.();
   }
 
   async function schedule() {
@@ -206,7 +221,11 @@ export function AdminBatchScheduler({ editionId, contexts, onScheduled }: {
     </div>}
     {error && <p role="alert" className="rounded-xl border border-coral/40 p-3 text-sm text-coral">{error}</p>}
     {notice && <p role="status" className="rounded-xl border border-cyan/30 p-3 text-sm text-cyan">{notice}</p>}
-    <button type="button" className="btn-primary" disabled={busy || loading || !selection || !report || !opensAt || !closesAt} onClick={() => void schedule()}>
+    {report?.items.filter((item) => item.status === "NOT_SCHEDULED" && !item.readiness.finalistsConfirmed)
+      .map((item) => <AdminPopularTieResolution
+        key={`${editionId}|${item.context.eventId}|${item.context.divisionId}|${item.context.categoryId}|${item.context.gender}|${item.context.contestCategory}`}
+        editionId={editionId} context={item.context} readiness={item.readiness} onResolved={handleResolved}/>)}
+    <button type="button" className="btn-primary" disabled={busy || loading || !selection || !report?.ready || !opensAt || !closesAt} onClick={() => void schedule()}>
       {busy ? <LoaderCircle className="size-4 animate-spin" /> : <CalendarClock className="size-4" />}
       {contestCategory === "ALL" ? "Validar e programar todas as modalidades" : "Validar e programar esta modalidade"}
     </button>

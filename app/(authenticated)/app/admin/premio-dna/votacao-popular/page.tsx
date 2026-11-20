@@ -12,7 +12,7 @@ import {
 import type { ContextWindow, VotingContext, VotingReadiness } from "@/lib/popular-voting-types";
 import { AdminBatchScheduler } from "@/components/popular-voting/admin-batch-scheduler";
 import { AdminPopularResults } from "@/components/popular-voting/admin-popular-results";
-import { AdminPopularTieResolution } from "@/components/popular-voting/admin-popular-tie-resolution";
+
 
 const reason: Record<string, string> = {
   INSCRICOES_ABERTAS: "As inscrições desta edição ainda estão abertas.",
@@ -25,11 +25,9 @@ const reason: Record<string, string> = {
   DESEMPATE_ADMINISTRATIVO_INVALIDO: "A exceção histórica de quatro finalistas está inconsistente.",
   NENHUM_ADMIN_ATIVO: "Não há administradores ativos para compor o júri.",
   NOTAS_PENDENTES: "Há administradores com notas pendentes. Confira os nomes e os vídeos abaixo.",
-  EMPATE_NO_CORTE_TOP3: "Empate no corte: selecione 3 ou 4 finalistas no controle individual abaixo.",
+  EMPATE_NO_CORTE_TOP3: "Empate no corte: decida os finalistas no quadro de agendamento acima.",
+  FINALISTAS_PUBLICADOS_DIVERGENTES: "A quantidade de finalistas homologados difere da escolha; não é possível alterar uma publicação já feita por aqui.",
 };
-
-type Field = "eventId" | "divisionId" | "categoryId" | "gender" | "contestCategory";
-const fields: Field[] = ["eventId", "divisionId", "categoryId", "gender", "contestCategory"];
 
 export default function AdminPopularVotingPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
@@ -63,7 +61,7 @@ export default function AdminPopularVotingPage() {
     setReadiness(null);
     setWindowData(null);
     clientApi<VotingContext[]>(`/api/admin/awards/editions/${editionId}/popular-voting/contexts`)
-      .then((value) => { if (active) { setContexts(value); setSelected(value[0] ?? null); } })
+      .then((value) => { if (active) { setContexts(value); setSelected(null); } })
       .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : "Erro ao carregar categorias aprovadas."); });
     return () => { active = false; };
   }, [editionId]);
@@ -89,21 +87,6 @@ export default function AdminPopularVotingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editionId, key]);
 
-  function choose(field: Field, raw: string) {
-    if (!selected) return;
-    const index = fields.indexOf(field);
-    const value = index < 3 ? Number(raw) : raw;
-    const found = contexts.find((item) => item[field] === value && fields.slice(0, index)
-      .every((previous) => item[previous] === selected[previous]));
-    if (found) setSelected(found);
-  }
-  function options(field: Field) {
-    if (!selected) return [];
-    const index = fields.indexOf(field);
-    return Array.from(new Map(contexts.filter((item) => fields.slice(0, index)
-      .every((previous) => item[previous] === selected[previous]))
-      .map((item) => [String(item[field]), item])).values());
-  }
   async function reload() {
     if (!selected) return;
     const params = votingParams(selected);
@@ -163,49 +146,16 @@ export default function AdminPopularVotingPage() {
     </header>
     {error && <p role="alert" className="rounded-2xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
     {notice && <p role="status" className="rounded-2xl border border-cyan/30 p-4 text-sm text-cyan">{notice}</p>}
-    {!loading && editionId && contexts.length > 0 && <>
-      <AdminBatchScheduler editionId={editionId} contexts={contexts} onScheduled={() => void reload()}/>
-      <p className="mt-3 text-sm text-muted">Há empate? Resolva a seleção de 3 ou 4 candidatos no <a className="font-bold text-cyan underline" href="#controle-individual">controle individual</a> abaixo antes de agendar em lote.</p>
-    </>}
+    {editions.length > 1 && <label className="grid max-w-sm gap-2 text-sm font-bold">Edição do prêmio
+      <select className="field" value={editionId} disabled={busy} onChange={(event) => setEditionId(event.target.value)}>
+        {editions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+      </select>
+    </label>}
+    {!loading && editionId && contexts.length > 0 && <AdminBatchScheduler
+      editionId={editionId} contexts={contexts} onContextSelected={setSelected}
+      onScheduled={() => void reload()}/>}
     <h2 id="controle-individual" className="mt-6 text-lg font-black">Controle individual por modalidade</h2>
-    <section className="surface rounded-3xl p-5 sm:p-6">
-      <p className="mb-4 text-sm text-muted">Selecione a disputa para resolver empates e programar a votação popular. Cada modalidade tem sua própria decisão.</p>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <label className="grid gap-2 text-sm font-bold">Edição
-          <select className="field" value={editionId} disabled={busy || loading} onChange={(event) => setEditionId(event.target.value)}>
-            {editions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-        </label>
-        {selected && <>
-          <label className="grid gap-2 text-sm font-bold">Campeonato
-            <select className="field" value={selected.eventId} disabled={busy} onChange={(event) => choose("eventId", event.target.value)}>
-              {options("eventId").map((item) => <option key={item.eventId} value={item.eventId}>Evento #{item.eventId}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">Divisão
-            <select className="field" value={selected.divisionId} disabled={busy} onChange={(event) => choose("divisionId", event.target.value)}>
-              {options("divisionId").map((item) => <option key={item.divisionId} value={item.divisionId}>{item.divisionName}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">Categoria
-            <select className="field" value={selected.categoryId} disabled={busy} onChange={(event) => choose("categoryId", event.target.value)}>
-              {options("categoryId").map((item) => <option key={item.categoryId} value={item.categoryId}>{item.categoryName}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">Gênero
-            <select className="field" value={selected.gender} disabled={busy} onChange={(event) => choose("gender", event.target.value)}>
-              {options("gender").map((item) => <option key={item.gender} value={item.gender}>{item.gender === "FEMALE" ? "Feminino" : "Masculino"}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-bold">Categoria do prêmio
-            <select className="field" value={selected.contestCategory} disabled={busy} onChange={(event) => choose("contestCategory", event.target.value)}>
-              {options("contestCategory").map((item) => <option key={item.contestCategory} value={item.contestCategory}>{item.contestCategoryLabel}</option>)}
-            </select>
-          </label>
-        </>}
-      </div>
-      {!loading && !selected && <p className="mt-4 text-sm text-amber">Não há disputas disponíveis nesta edição.</p>}
-    </section>
+    {!selected && <p className="text-sm text-muted">Selecione uma modalidade e um gênero específicos no agendamento acima para consultar seus detalhes.</p>}
     {loadingGroup && <LoaderCircle className="size-7 animate-spin text-cyan"/>}
     {selected && !loadingGroup && readiness && windowData && <>
       <section className="surface rounded-3xl p-6 sm:p-8">
@@ -226,9 +176,7 @@ export default function AdminPopularVotingPage() {
             </article>)}</div>
         </section>}
       </section>
-      {windowData.status === "NOT_SCHEDULED" && !readiness.finalistsConfirmed && <AdminPopularTieResolution
-        key={`${editionId}|${key}`} editionId={editionId} context={selected} readiness={readiness}
-        onResolved={reload}/>}
+
       <section className="surface space-y-5 rounded-3xl p-6 sm:p-8">
         <h2 className="flex items-center gap-2 text-xl font-black"><CalendarClock className="size-5 text-cyan"/> Calendário independente</h2>
         {windowData.status === "NOT_SCHEDULED" ? <>
