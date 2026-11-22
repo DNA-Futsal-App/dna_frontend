@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, CalendarClock, LoaderCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { SessionAccountLink } from "@/components/session-account-link";
 import { visibleVotingContexts } from "@/lib/popular-voting-visibility";
 import { popularVotingRequest, votingContextUrl, votingDate, votingStatusLabel } from "@/lib/popular-voting-types";
 import type { VotingContext } from "@/lib/popular-voting-types";
@@ -41,7 +42,7 @@ export default function PopularVotingBaseCategoryPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       <header className="flex items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-3"><BrandLogo size={48}/><strong className="display-title text-xl">DNA Futsal</strong></Link>
-        <Link href="/entrar" className="btn-ghost">Entrar</Link>
+        <SessionAccountLink />
       </header>
       <Link href="/premio/votacao" className="inline-flex items-center gap-2 text-sm font-bold text-muted hover:text-cyan">
         <ArrowLeft className="size-4"/> Voltar às categorias

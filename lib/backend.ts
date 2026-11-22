@@ -166,13 +166,20 @@ export async function loginWithBackend(payload: unknown) {
     login?: string;
     password?: string;
     confirmAccountDeletionCancellation?: boolean;
+    coachCategoryRegistration?: {
+      token: string; teamId: string; role: string; evidenceUrl?: string | null;
+    };
   } | null;
   if (!input || typeof input.login !== "string" || !input.login.trim()
     || input.login.length > 254 || typeof input.password !== "string"
     || !input.password || input.password.length > 72) {
     return NextResponse.json({ code: "INVALID_INPUT", detail: "Informe seu e-mail ou telefone e sua senha." }, { status: 400 });
   }
-  const credentials = { login: input.login, password: input.password };
+  const credentials = {
+    login: input.login, password: input.password,
+    ...(input.coachCategoryRegistration
+      ? { coachCategoryRegistration: input.coachCategoryRegistration } : {}),
+  };
   const login = () => callBackend("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),

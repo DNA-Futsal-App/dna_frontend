@@ -120,8 +120,8 @@ export default function CoachCategoryLinksPage() {
     <header>
       <Link href="/app/admin/premio-dna/juri-tecnico" className="text-sm text-cyan">Voltar ao júri técnico</Link>
       <h1 className="display-title mt-3 text-3xl">Convites exclusivos por categoria</h1>
-      <Link className="btn-primary mt-3 w-fit" href="/app/admin/premio-dna/juri-tecnico/solicitacoes">Analisar inscrições dos treinadores</Link>
-      <p className="mt-2 text-sm text-muted">Emita e revogue convites exclusivos por categoria e acompanhe os pedidos de credenciamento.</p>
+      <Link className="btn-primary mt-3 w-fit" href="/app/admin/premio-dna/juri-tecnico/solicitacoes">Consultar técnicos credenciados</Link>
+      <p className="mt-2 text-sm text-muted">Emita e revogue convites por categoria. O acesso é liberado automaticamente após cadastro ou login, sem aprovação manual.</p>
     </header>
     {error && <p role="alert" className="rounded-xl border border-coral/25 p-4 text-sm text-[#ffb195]">{error}</p>}
     <section className="grid gap-4 rounded-3xl border border-white/8 bg-panel p-5 sm:p-6">

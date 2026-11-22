@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AwardFpfsSignature } from "@/components/awards/award-fpfs-signature";
 import { BrandLogo } from "@/components/brand-logo";
+import { SessionAccountLink } from "@/components/session-account-link";
 
 const participationSteps = [
   {
@@ -80,12 +81,10 @@ export default function PremioDnaPage() {
         <div className="flex items-center gap-2">
           <AwardFpfsSignature compact />
 
-          <Link
-            href="/entrar"
+          <SessionAccountLink
             className="btn-ghost min-h-10! px-4! py-2! text-sm"
-          >
-            Já tenho conta
-          </Link>
+            loginLabel="Já tenho conta"
+          />
         </div>
       </header>
 

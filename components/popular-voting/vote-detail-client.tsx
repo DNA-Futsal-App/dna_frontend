@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Clock3, ExternalLink, LoaderCircle, PlayCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { SessionAccountLink } from "@/components/session-account-link";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import {
   popularVotingRequest, votingContextKey, votingContextUrl, votingDate, votingParams, votingStatusLabel,
@@ -119,7 +120,10 @@ export function VoteDetailClient(props: Props) {
     <div className="mx-auto max-w-7xl space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-3"><BrandLogo size={48}/><strong className="display-title text-lg">DNA Futsal</strong></Link>
-        <Link href="/premio/votacao" className="btn-ghost"><ArrowLeft className="size-4"/> Todas as disputas</Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/premio/votacao" className="btn-ghost"><ArrowLeft className="size-4"/> Todas as disputas</Link>
+          <SessionAccountLink loginHref={loginLink} />
+        </div>
       </header>
       {error && <p role="alert" className="rounded-2xl border border-coral/30 p-4 text-sm text-coral">{error}</p>}
       {notice && <p role="status" className="rounded-2xl border border-cyan/30 p-4 text-sm text-cyan">{notice}</p>}

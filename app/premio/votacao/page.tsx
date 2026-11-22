@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, LoaderCircle, Trophy } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { SessionAccountLink } from "@/components/session-account-link";
 import { visibleVotingContexts } from "@/lib/popular-voting-visibility";
 import { popularVotingRequest, votingCategoryUrl } from "@/lib/popular-voting-types";
 import type { VotingContext, VotingEdition } from "@/lib/popular-voting-types";
@@ -55,7 +56,7 @@ export default function PopularVotingCatalogPage() {
     <div className="mx-auto max-w-7xl space-y-8">
       <header className="flex items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-3"><BrandLogo size={48}/><strong className="display-title text-xl">DNA Futsal</strong></Link>
-        <Link href="/entrar" className="btn-ghost">Entrar</Link>
+        <SessionAccountLink />
       </header>
       <section className="max-w-4xl pt-8">
         <p className="eyebrow"><Trophy className="size-4"/> Prêmio Legacy • Votação popular</p>

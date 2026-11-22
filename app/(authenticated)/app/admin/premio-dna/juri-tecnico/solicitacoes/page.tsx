@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { clientApi, formatDate } from "@/lib/client-api";
 import type { AdminAwardEdition } from "@/lib/admin-awards-types";
 import { useCoachCompetitionLabels } from "@/lib/use-coach-competition-labels";
 
-type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
+type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
 type Application = {
   id: string;
   editionId: string;
@@ -28,16 +28,14 @@ type Application = {
 export default function TechnicalJuryApplicationsPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
   const [editionId, setEditionId] = useState("");
-  const [filter, setFilter] = useState<"ALL" | ReviewStatus>("PENDING");
+  const [filter, setFilter] = useState<"ALL" | ReviewStatus>("ALL");
   const [applications, setApplications] = useState<Application[]>([]);
   const competitionLabel = useCoachCompetitionLabels(applications.map((item) => ({
     ...item,
     season: editions.find((edition) => edition.id === item.editionId)?.season ?? 0,
   })));
-  const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [reason, setReason] = useState<Record<string, string>>({});
 
   useEffect(() => {
     clientApi<AdminAwardEdition[]>("/api/admin/awards/editions")
@@ -45,15 +43,6 @@ export default function TechnicalJuryApplicationsPage() {
       .catch((e) => setError(e instanceof Error ? e.message : "Não foi possível carregar as edições."))
       .finally(() => setLoading(false));
   }, []);
-
-  const load = useCallback(async () => {
-    if (!editionId) return;
-    const query = filter === "ALL" ? "" : `?status=${filter}`;
-    const result = await clientApi<Application[]>(
-      `/api/admin/awards/editions/${editionId}/coach-category-applications${query}`,
-    );
-    setApplications(result);
-  }, [editionId, filter]);
 
   useEffect(() => {
     if (!editionId) return;
@@ -65,27 +54,11 @@ export default function TechnicalJuryApplicationsPage() {
     return () => { active = false; };
   }, [editionId, filter]);
 
-  async function review(application: Application, decision: "approve" | "reject") {
-    if (decision === "approve" && !window.confirm(`Confirma que ${application.coachName} é técnico do clube ${application.teamName}?`)) return;
-    const detail = (reason[application.id] ?? "").trim();
-    if (decision === "reject" && !detail) { setError("Informe o motivo da recusa."); return; }
-    setBusy(application.id); setError("");
-    try {
-      await clientApi(`/api/admin/awards/editions/${editionId}/coach-category-applications/${application.id}/${decision}`, {
-        method: "POST",
-        ...(decision === "reject" ? { body: JSON.stringify({ reason: detail }) } : {}),
-      });
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Não foi possível analisar a solicitação.");
-    } finally { setBusy(""); }
-  }
-
   return <main className="grid gap-6">
     <header>
       <Link className="text-sm font-bold text-cyan" href="/app/admin/premio-dna/juri-tecnico/links-por-categoria">Voltar aos convites</Link>
-      <h1 className="display-title mt-3 text-3xl">Solicitações de técnicos</h1>
-      <p className="mt-2 text-sm text-muted">Confirme o vínculo do treinador com o clube antes de aprovar. O link por categoria não concede voto automaticamente.</p>
+      <h1 className="display-title mt-3 text-3xl">Técnicos credenciados</h1>
+      <p className="mt-2 text-sm text-muted">Consulta de vínculos gerados automaticamente pelos convites. A revogação continua disponível no gerenciamento de técnicos.</p>
     </header>
     {error ? <p role="alert" className="rounded-xl border border-coral/25 p-4 text-sm text-[#ffb195]">{error}</p> : null}
     <div className="grid gap-3 sm:grid-cols-2">
@@ -96,10 +69,11 @@ export default function TechnicalJuryApplicationsPage() {
       </label>
       <label className="grid gap-2 text-sm font-bold">Situação
         <select className="field" value={filter} onChange={(e) => setFilter(e.target.value as "ALL" | ReviewStatus)}>
-          <option value="PENDING">Aguardando análise</option>
-          <option value="APPROVED">Aprovados</option>
-          <option value="REJECTED">Recusados</option>
           <option value="ALL">Todos</option>
+          <option value="APPROVED">Acesso ativo</option>
+          <option value="PENDING">Pendentes antigos</option>
+          <option value="REJECTED">Recusados antigos</option>
+          <option value="REVOKED">Revogados</option>
         </select>
       </label>
     </div>
@@ -112,22 +86,15 @@ export default function TechnicalJuryApplicationsPage() {
             <h2 className="text-lg font-bold">{a.coachName}</h2>
             <p className="text-xs text-muted">{a.email} • Solicitado em {formatDate(a.createdAt)}</p>
           </div>
-          <span className="text-xs font-black text-cyan">{a.status === "PENDING" ? "AGUARDANDO" : a.status}</span>
+          <span className="text-xs font-black text-cyan">{a.status === "APPROVED" ? "ACESSO ATIVO" : a.status}</span>
         </div>
         <div className="grid gap-1 text-sm text-muted">
           <p><strong>Equipe:</strong> {a.teamName}</p>
           <p><strong>Função informada:</strong> {a.coachRole}</p>
           <p><strong>Modalidade:</strong> {a.gender === "MALE" ? "Masculino" : "Feminino"} • {competitionLabel({ ...a, season: editions.find((edition) => edition.id === a.editionId)?.season ?? 0 })}</p>
           {a.evidenceUrl && <a className="text-cyan underline" href={a.evidenceUrl} target="_blank" rel="noopener noreferrer">Abrir comprovante apresentado</a>}
-          {a.reviewReason && <p><strong>Motivo da recusa:</strong> {a.reviewReason}</p>}
+          {a.reviewReason && <p><strong>Observação:</strong> {a.reviewReason}</p>}
         </div>
-        {a.status === "PENDING" && <div className="grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-2">
-          <button className="btn-primary" disabled={Boolean(busy)} onClick={() => void review(a, "approve")}>Aprovar vínculo</button>
-          <div className="grid gap-2">
-            <input className="field" placeholder="Motivo da recusa" maxLength={500} value={reason[a.id] ?? ""} onChange={(e) => setReason(prev => ({ ...prev, [a.id]: e.target.value }))} />
-            <button className="btn-ghost" disabled={Boolean(busy) || !(reason[a.id] ?? "").trim()} onClick={() => void review(a, "reject")}>Recusar</button>
-          </div>
-        </div>}
       </article>)}
     </div>
   </main>;

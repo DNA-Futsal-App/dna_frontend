@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, BellRing, ChartNoAxesColumnIncreasing, Newspaper, ShieldCheck } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { DemoButton } from "@/components/demo-button";
+import { hasServerSessionCookie } from "@/lib/backend";
 
-export default function HomePage() {
+export default async function HomePage() {
+  if (await hasServerSessionCookie()) {
+    redirect("/app");
+  }
+
   return (
     <main className="relative min-h-dvh overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(rgba(98,227,232,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(98,227,232,.035)_1px,transparent_1px)] bg-size-[44px_44px] mask-[linear-gradient(to_bottom,black,transparent_75%)]" />
