@@ -11,6 +11,7 @@ type Invitation = {
   linkId: string;
   editionId: string;
   season: number;
+  createdAt?: string;
   eventId: number;
   divisionId: number;
   categoryId: number;
@@ -53,7 +54,15 @@ export default function CategoryInvitationPage() {
     ])
       .then(([link, list]) => {
         if (cancelled) return;
-        setInvite(link);
+        // Older backend deployments may not expose season yet. The creation year
+        // is only a lookup candidate; eventId/categoryId must still match exactly.
+        const season = Number(link.season);
+        const createdYear = link.createdAt ? new Date(link.createdAt).getUTCFullYear() : NaN;
+        setInvite({
+          ...link,
+          season: Number.isInteger(season) && season >= 2016 && season <= 2100
+            ? season : createdYear,
+        });
         setTeams(list);
       })
       .catch((e) => { if (!cancelled) setError(e instanceof Error ? e.message : "Convite inválido."); })
