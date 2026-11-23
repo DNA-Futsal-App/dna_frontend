@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isDemoRequest, proxyAuthenticated } from "@/lib/backend";
+import { validPopularVotingOrigin } from "@/lib/popular-voting-route-guard";
 
 const backendPath = "/api/v1/admin/password-reset";
 
@@ -11,10 +12,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // Os cookies de sessão são enviados automaticamente: recuse solicitações cross-site.
-  const origin = request.headers.get("origin");
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if ((origin && origin !== request.nextUrl.origin) ||
-      (fetchSite && fetchSite !== "same-origin" && fetchSite !== "none")) {
+  // Atrás de proxy TLS, nextUrl.origin pode ser HTTP interno, não a origem pública.
+  // Reutilize a validação de Origin/Host já aplicada aos POSTs da votação popular.
+  if (!validPopularVotingOrigin(request.headers, request.nextUrl.origin, process.env.DNA_PUBLIC_ORIGIN)) {
     return NextResponse.json(
       { code: "INVALID_ORIGIN", detail: "Origem da solicitação não autorizada." },
       { status: 403 },
