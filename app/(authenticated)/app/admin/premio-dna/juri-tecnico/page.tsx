@@ -20,6 +20,7 @@ import type {
 import type { AdminAwardEdition } from "@/lib/admin-awards-types";
 import type { CatalogCategory, CatalogItem, Team } from "@/lib/types";
 import { useCoachCompetitionLabels, type CoachCompetitionContext } from "@/lib/use-coach-competition-labels";
+import { CoachBallotsPanel } from "@/components/awards/coach-ballots-panel";
 
 export default function TechnicalJuryAdminPage() {
   const [editions, setEditions] = useState<AdminAwardEdition[]>([]);
@@ -505,6 +506,8 @@ function CoachCard({
 }) {
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showVotes, setShowVotes] = useState(false);
+  const hasVotes = voter.contexts.some((context) => context.submitted);
   async function deactivateContext(id: string) {
     if (!window.confirm("Desativar este contexto?")) return;
     setBusy(true);
@@ -582,16 +585,23 @@ function CoachCard({
   return (
     <div className="rounded-2xl border border-white/7 bg-night/35 p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <strong>{voter.coachName}</strong>
-          <small className="mt-1 block text-xs text-cyan">{voter.email}</small>
-          <small className="mt-1 block text-xs text-muted">
-            Credenciado em{" "}
-            {formatDate(voter.createdAt, {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
-          </small>
+        <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            className="block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-cyan enabled:hover:text-cyan"
+            disabled={!hasVotes || busy}
+            aria-expanded={hasVotes ? showVotes : undefined}
+            aria-label={hasVotes ? `${showVotes ? "Ocultar" : "Ver"} votos de ${voter.coachName}` : undefined}
+            onClick={() => setShowVotes((previous) => !previous)}
+          >
+            <strong>{voter.coachName}</strong>
+            {hasVotes ? <small className="ml-2 text-xs font-bold text-cyan underline">{showVotes ? "Ocultar votos" : "Ver votos"}</small> : null}
+            <small className="mt-1 block text-xs text-cyan">{voter.email}</small>
+            <small className="mt-1 block text-xs text-muted">
+              Credenciado em{" "}
+              {formatDate(voter.createdAt, { dateStyle: "short", timeStyle: "short" })}
+            </small>
+          </button>
         </div>
         <div className="flex flex-wrap gap-2">
           {voter.active ? (
@@ -652,6 +662,15 @@ function CoachCard({
           </div>
         ))}
       </div>
+      {hasVotes && showVotes ? (
+        <CoachBallotsPanel
+          key={voter.contexts.filter((context) => context.submitted).map((context) => context.id).join(":")}
+          editionId={voter.editionId}
+          credentialId={voter.credentialId}
+          season={voter.season}
+          competitionLabel={competitionLabel}
+        />
+      ) : null}
       {!voter.active ? null : adding ? (
         <ContextForm
           voter={voter}
