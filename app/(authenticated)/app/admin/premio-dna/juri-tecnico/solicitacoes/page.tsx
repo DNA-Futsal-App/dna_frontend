@@ -18,7 +18,6 @@ type Application = {
   gender: "MALE" | "FEMALE";
   teamName: string;
   coachRole: string;
-  evidenceUrl: string | null;
   status: ReviewStatus;
   reviewReason: string | null;
   createdAt: string;
@@ -92,7 +91,6 @@ export default function TechnicalJuryApplicationsPage() {
           <p><strong>Equipe:</strong> {a.teamName}</p>
           <p><strong>Função informada:</strong> {a.coachRole}</p>
           <p><strong>Modalidade:</strong> {a.gender === "MALE" ? "Masculino" : "Feminino"} • {competitionLabel({ ...a, season: editions.find((edition) => edition.id === a.editionId)?.season ?? 0 })}</p>
-          {a.evidenceUrl && <a className="text-cyan underline" href={a.evidenceUrl} target="_blank" rel="noopener noreferrer">Abrir comprovante apresentado</a>}
           {a.reviewReason && <p><strong>Observação:</strong> {a.reviewReason}</p>}
         </div>
       </article>)}

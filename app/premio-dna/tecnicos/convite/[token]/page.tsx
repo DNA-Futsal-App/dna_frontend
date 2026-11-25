@@ -33,7 +33,6 @@ export default function CategoryInvitationPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState("");
   const [role, setRole] = useState("Treinador principal");
-  const [evidenceUrl, setEvidenceUrl] = useState("");
   const [mode, setMode] = useState<Mode>("connected");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,7 +92,7 @@ export default function CategoryInvitationPage() {
     if (!token || !teamId || !role.trim()) return;
     const application = await clientApi<Application>("/api/auth/coach-category-apply", {
       method: "POST",
-      body: JSON.stringify({ token, teamId, role, evidenceUrl: evidenceUrl || null }),
+      body: JSON.stringify({ token, teamId, role }),
     });
     setSubmitted(application);
     setNotice("Acesso ao júri técnico liberado! Você já pode participar da votação.");
@@ -113,9 +112,7 @@ export default function CategoryInvitationPage() {
           await clientApi("/api/auth/login", {
             method: "POST",
             body: JSON.stringify({
-              ...credentials, coachCategoryRegistration: {
-                token, teamId, role, evidenceUrl: evidenceUrl || null,
-              },
+              ...credentials, coachCategoryRegistration: { token, teamId, role },
             }),
           });
         } catch (loginError) {
@@ -153,7 +150,7 @@ export default function CategoryInvitationPage() {
         body: JSON.stringify({
           name: String(form.get("name") ?? ""), email: credentials.login,
           phone: String(form.get("phone") ?? ""), password: credentials.password,
-          coachCategoryRegistration: { token, teamId, role, evidenceUrl: evidenceUrl || null },
+          coachCategoryRegistration: { token, teamId, role },
         }),
       });
       try {
@@ -195,10 +192,7 @@ export default function CategoryInvitationPage() {
         <label className="grid gap-2 text-sm font-bold">Função no clube
           <input className="field" value={role} onChange={(e) => setRole(e.target.value)} required maxLength={80} />
         </label>
-        <label className="grid gap-2 text-sm font-bold">Link de comprovação (opcional)
-          <input className="field" type="url" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} maxLength={500} placeholder="https://..." />
-        </label>
-        <p className="rounded-xl border border-cyan/20 p-3 text-xs text-muted">O convite válido habilita seu vínculo automaticamente. Não é necessária aprovação do administrador nem confirmação de e-mail.</p>
+        <p className="rounded-xl border border-cyan/20 p-3 text-xs text-muted">Seu convite válido é suficiente para ativar o acesso como técnico. Não exigimos documentos, links de comprovação, aprovação manual nem confirmação de e-mail.</p>
         <div className="grid grid-cols-3 gap-2 text-xs sm:text-sm">
           <button type="button" className={mode === "connected" ? "btn-primary" : "btn-ghost"} onClick={() => { setMode("connected"); setError(""); }}>Já entrei</button>
           <button type="button" className={mode === "login" ? "btn-primary" : "btn-ghost"} onClick={() => { setMode("login"); setError(""); }}>Entrar</button>
