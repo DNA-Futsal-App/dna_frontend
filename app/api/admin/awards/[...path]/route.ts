@@ -51,7 +51,7 @@ async function forward(
       timeoutMs,
     },
   );
-  if (method === "GET" && (suffix.includes("/popular-voting/") || suffix.endsWith("/ballots"))) {
+  if (method === "GET" && (suffix.includes("/popular-voting/") || /\/(ballots|audit|results|partial-results)$/.test(suffix))) {
     response.headers.set("Cache-Control", "private, no-store");
   }
   return response;

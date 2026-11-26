@@ -8,12 +8,12 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState, ErrorState } from "@/components/feedback";
 import { TeamMark } from "@/components/team-mark";
-import { clientApi, formatDate } from "@/lib/client-api";
+import { ClientApiError, clientApi, formatDate } from "@/lib/client-api";
 import { useApiData } from "@/lib/use-api-data";
+import { championshipKey, championshipLabel, liveContextKey, startAwardPolling, useAwardLiveCatalog } from "@/lib/award-live-catalog";
 import {
   awardContextKey, awardResultsCsv, buildAwardRaces, type AwardRace,
 } from "@/lib/award-results-dashboard";
-import type { CatalogCategory, CatalogItem } from "@/lib/types";
 import type {
   AdminAwardAudit, AdminAwardCandidateResult, AdminAwardEdition, AdminAwardResults,
 } from "@/lib/admin-awards-types";
@@ -22,8 +22,6 @@ import { AdminPopularAuditDashboard } from "@/components/popular-voting/admin-po
 type Snapshot = {
   audit: AdminAwardAudit;
   results: AdminAwardResults | null;
-  divisions: CatalogItem[];
-  categories: Record<number, CatalogCategory[]>;
   updatedAt: string;
 };
 
@@ -47,7 +45,7 @@ export default function AwardResultsAdminPage() {
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.16em] text-cyan">
               <BarChart3 className="size-4" /> Auditoria e apuração
             </p>
-            <h1 className="display-title mt-2 text-3xl sm:text-4xl">O retrato da votação</h1>
+            <h1 className="display-title mt-2 text-3xl sm:text-4xl">Apuração em tempo real</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
               Acompanhe quem lidera, onde há empates e como os votos se distribuem.
             </p>
@@ -79,7 +77,7 @@ export default function AwardResultsAdminPage() {
       {loading ? <DashboardLoading /> : error ? <ErrorState message={error} onRetry={reload} /> : edition ? (
         subtab === "technical"
           ? <EditionDashboard key={edition.id} edition={edition} />
-          : <AdminPopularAuditDashboard key={edition.id} editionId={edition.id} />
+          : <AdminPopularAuditDashboard key={edition.id} editionId={edition.id} season={edition.season} />
       ) : <EmptyState title="Nenhuma edição encontrada" description="Os resultados aparecerão quando houver uma edição do prêmio." />}
     </div>
   );
@@ -94,51 +92,49 @@ function EditionDashboard({ edition }: { edition: AdminAwardEdition }) {
   useEffect(() => {
     const controller = new AbortController();
     const options = { signal: controller.signal, cache: "no-store" as const };
+    let pending = false;
     async function load() {
+      if (pending) return;
+      pending = true;
       try {
         const audit = await clientApi<AdminAwardAudit>(`/api/admin/awards/editions/${edition.id}/audit`, options);
-        let results: AdminAwardResults | null = null;
-        let divisions: CatalogItem[] = [];
-        let categories: Record<number, CatalogCategory[]> = {};
-        if (audit.integrityOk) {
-          const endpoint = edition.status === "CLOSED" ? "results" : "partial-results";
-          results = await clientApi<AdminAwardResults>(`/api/admin/awards/editions/${edition.id}/${endpoint}`, options);
-          const ids = [...new Set(results.contexts.map((context) => context.divisionId))];
-          const [divisionData, entries] = await Promise.all([
-            clientApi<CatalogItem[]>(`/api/catalog/divisions?season=${edition.season}`, options).catch(() => []),
-            Promise.all(ids.map(async (id) => [
-              id,
-              await clientApi<CatalogCategory[]>(`/api/catalog/categories?season=${edition.season}&divisionId=${id}`, options).catch(() => []),
-            ] as const)),
-          ]);
-          divisions = divisionData;
-          categories = Object.fromEntries(entries);
+        // Block old results immediately if the newest audit fails integrity.
+        if (!controller.signal.aborted && !audit.integrityOk) {
+          setSnapshot({ audit, results: null, updatedAt: new Date().toISOString() });
+          setError("");
+          return;
         }
+        const endpoint = audit.status === "CLOSED" ? "results" : "partial-results";
+        const results = await clientApi<AdminAwardResults>(`/api/admin/awards/editions/${edition.id}/${endpoint}`, options);
         if (!controller.signal.aborted) {
-          setSnapshot({ audit, results, divisions, categories, updatedAt: new Date().toISOString() });
+          setSnapshot({ audit, results, updatedAt: new Date().toISOString() });
+          setError("");
         }
       } catch (err) {
-        if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Não foi possível carregar a apuração.");
+        if (!controller.signal.aborted) {
+          if (err instanceof ClientApiError && [401, 403].includes(err.status)) setSnapshot(null);
+          setError(err instanceof Error ? err.message : "Não foi possível carregar a apuração.");
+        }
       } finally {
+        pending = false;
         if (!controller.signal.aborted) setLoading(false);
       }
     }
-    void load();
-    return () => controller.abort();
-  }, [edition.id, edition.season, edition.status, revision]);
+    const stop = startAwardPolling(load);
+    return () => { stop(); controller.abort(); };
+  }, [edition.id, revision]);
 
   function refresh() {
-    setError("");
-    setSnapshot(null);
-    setLoading(true);
     setRevision((value) => value + 1);
   }
 
-  if (loading) return <DashboardLoading />;
-  if (error) return <ErrorState message={error} onRetry={refresh} />;
-  if (!snapshot) return null;
+  if (!snapshot && error) return <ErrorState message={error} onRetry={refresh} />;
+  if (loading || !snapshot) return <DashboardLoading />;
 
-  return <ResultsDashboard snapshot={snapshot} edition={edition} refresh={refresh} />;
+  return <>
+    {error ? <p role="alert" className="mb-4 rounded-xl border border-coral/30 bg-coral/5 p-4 text-sm text-coral">Falha na atualização: {error} · Exibindo a última contagem recebida.</p> : null}
+    <ResultsDashboard snapshot={snapshot} edition={{ ...edition, status: snapshot.results?.status ?? snapshot.audit.status ?? edition.status }} refresh={refresh} />
+  </>;
 }
 
 function ResultsDashboard({ snapshot, edition, refresh }: {
@@ -146,15 +142,23 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
   edition: AdminAwardEdition;
   refresh: () => void;
 }) {
-  const { audit, results, divisions, categories, updatedAt } = snapshot;
+  const { audit, results, updatedAt } = snapshot;
+  const [championship, setChampionship] = useState("");
   const [divisionId, setDivisionId] = useState("");
   const [contextId, setContextId] = useState("");
   const [awardCode, setAwardCode] = useState("");
   const races = useMemo(() => buildAwardRaces(results?.contexts ?? []), [results]);
-  const contexts = [...new Map(races.map((race) => [awardContextKey(race.context), race.context])).values()];
-  const divisionIds = [...new Set(contexts.map((context) => context.divisionId))];
-  const availableContexts = contexts.filter((context) => !divisionId || String(context.divisionId) === divisionId);
-  const contextRaces = races.filter((race) =>
+  const contexts = results?.contexts ?? [];
+  const catalog = useAwardLiveCatalog(edition.season, contexts);
+  const championships = [...new Set(contexts.map((context) => championshipKey(context, catalog)))];
+  // Keep a fallback event selection usable even after its catalog label is resolved.
+  const matchesChampionship = (context: AwardRace["context"]) => !championship ||
+    championshipKey(context, catalog) === championship || championship === `event:${context.eventId}`;
+  const championshipContexts = contexts.filter(matchesChampionship);
+  const divisionIds = [...new Map(championshipContexts.map((context) => [context.divisionId,
+    catalog[liveContextKey(context)]?.division ?? `Divisão ${context.divisionId}`])).entries()];
+  const availableContexts = championshipContexts.filter((context) => !divisionId || String(context.divisionId) === divisionId);
+  const contextRaces = races.filter((race) => matchesChampionship(race.context) &&
     (!divisionId || String(race.context.divisionId) === divisionId) &&
     (!contextId || awardContextKey(race.context) === contextId),
   );
@@ -162,13 +166,14 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
   const visibleRaces = contextRaces.filter((race) => !awardCode || race.category.code === awardCode);
   const ties = races.filter((race) => race.leaders.length > 1).length;
   const visibleVotes = visibleRaces.reduce((sum, race) => sum + race.category.totalVotes, 0);
-  const hasFilters = Boolean(divisionId || contextId || awardCode);
+  const hasFilters = Boolean(championship || divisionId || contextId || awardCode);
   const validResults = audit.integrityOk && Boolean(results?.integrityOk);
 
   function contextLabel(context: AwardRace["context"]) {
-    const division = divisions.find((item) => item.id === context.divisionId)?.name ?? `Divisão ${context.divisionId}`;
-    const category = categories[context.divisionId]?.find((item) => item.id === context.categoryId)?.name ?? `Categoria ${context.categoryId}`;
-    return `${division} · ${category}`;
+    const metadata = catalog[liveContextKey(context)];
+    const division = metadata?.division ?? `Divisão ${context.divisionId}`;
+    const category = metadata?.category ?? `Categoria ${context.categoryId}`;
+    return `${championshipLabel(championshipKey(context, catalog))} · ${division} · ${category}`;
   }
 
   const distribution = availableContexts.map((context) => ({
@@ -181,6 +186,7 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
     .sort((a, b) => a.lead! - b.lead!)[0];
 
   function clearFilters() {
+    setChampionship("");
     setDivisionId("");
     setContextId("");
     setAwardCode("");
@@ -206,6 +212,7 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
             </span>
             <span className="text-xs text-muted">
               {edition.status === "CLOSED" ? "Apuração final" : "Resultados parciais · sujeitos a alteração"}
+              {" · Atualização automática a cada 10 s"}
             </span>
           </div>
           <button type="button" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-muted hover:text-cyan" onClick={refresh}>
@@ -221,7 +228,7 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
         </div>
         <div className="flex flex-wrap justify-between gap-2 border-t border-white/8 px-5 py-3 text-[11px] text-muted sm:px-6">
           <span>Totais da edição · acesso administrativo</span>
-          <span>Atualizado em {formatDate(updatedAt, { dateStyle: "short", timeStyle: "short" })}</span>
+          <span>Atualizado em {formatDate(updatedAt, { dateStyle: "short", timeStyle: "medium" })}</span>
         </div>
       </section>
 
@@ -242,11 +249,18 @@ function ResultsDashboard({ snapshot, edition, refresh }: {
               <h2 className="flex items-center gap-2 text-sm font-bold"><Filter className="size-4 text-cyan" /> Explorar resultados</h2>
               {hasFilters ? <button className="text-xs font-bold text-cyan hover:underline" type="button" onClick={clearFilters}>Limpar filtros</button> : null}
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="grid min-w-0 gap-1.5 text-xs font-bold text-muted">Campeonato
+                <select className="field text-sm text-ivory" value={championship} onChange={(event) => { setChampionship(event.target.value); setDivisionId(""); setContextId(""); setAwardCode(""); }}>
+                  <option value="">Todos os campeonatos</option>
+                  {championship && !championships.includes(championship) ? <option value={championship}>{championshipLabel(championship)}</option> : null}
+                  {championships.map((key) => <option key={key} value={key}>{championshipLabel(key)}</option>)}
+                </select>
+              </label>
               <label className="grid min-w-0 gap-1.5 text-xs font-bold text-muted">Divisão
                 <select className="field text-sm text-ivory" value={divisionId} onChange={(event) => { setDivisionId(event.target.value); setContextId(""); setAwardCode(""); }}>
                   <option value="">Todas as divisões</option>
-                  {divisionIds.map((id) => <option key={id} value={id}>{divisions.find((item) => item.id === id)?.name ?? `Divisão ${id}`}</option>)}
+                  {divisionIds.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
                 </select>
               </label>
               <label className="grid min-w-0 gap-1.5 text-xs font-bold text-muted">Categoria

@@ -21,6 +21,13 @@ const helpers = load('../lib/award-results-dashboard.ts');
 const { buildAwardRaces, awardResultsCsv } = helpers;
 const { ResultsDashboard } = load('../app/(authenticated)/app/admin/premio-dna/apuracao/page.tsx', {
   '@/lib/award-results-dashboard': helpers,
+  '@/lib/award-live-catalog': {
+    liveContextKey: helpers.awardContextKey,
+    championshipKey: (context) => `event:${context.eventId}`,
+    championshipLabel: (key) => key,
+    useAwardLiveCatalog: () => ({}),
+  },
+  '@/components/popular-voting/admin-popular-audit-dashboard': { AdminPopularAuditDashboard: () => null },
   '@/lib/client-api': { formatDate: () => '11/10/2026' },
   '@/lib/use-api-data': {},
   '@/components/team-mark': { TeamMark: () => null },

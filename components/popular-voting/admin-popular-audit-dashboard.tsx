@@ -13,7 +13,8 @@ import {
   Users,
 } from "lucide-react";
 
-import { clientApi, formatDate } from "@/lib/client-api";
+import { ClientApiError, clientApi, formatDate } from "@/lib/client-api";
+import { championshipKey, championshipLabel, startAwardPolling, useAwardLiveCatalog } from "@/lib/award-live-catalog";
 import {
   votingContextKey,
   votingDate,
@@ -28,7 +29,7 @@ import type {
   VotingStatus,
 } from "@/lib/popular-voting-types";
 
-type Props = { editionId: string };
+type Props = { editionId: string; season: number };
 type Snapshot = { key: string; board: VotingBoard; receivedAt: string };
 
 type CategoryOption = {
@@ -56,8 +57,10 @@ function percentage(votes: number, total: number): number {
   return total > 0 ? (100 * votes) / total : 0;
 }
 
-export function AdminPopularAuditDashboard({ editionId }: Props) {
+export function AdminPopularAuditDashboard({ editionId, season }: Props) {
   const [contexts, setContexts] = useState<VotingContext[]>([]);
+  const catalog = useAwardLiveCatalog(season, contexts);
+  const [championshipFilter, setChampionshipFilter] = useState("");
   const [loadingContexts, setLoadingContexts] = useState(true);
   const [contextsError, setContextsError] = useState("");
   const [contextsUpdatedAt, setContextsUpdatedAt] = useState("");
@@ -94,6 +97,10 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
         }
       } catch (error) {
         if (active) {
+          if (error instanceof ClientApiError && [401, 403].includes(error.status)) {
+            setContexts([]);
+            setSnapshot(null);
+          }
           setContextsError(error instanceof Error ? error.message : "Não foi possível consultar as disputas.");
         }
       } finally {
@@ -102,12 +109,11 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
       }
     }
 
-    void loadContexts();
-    const interval = window.setInterval(() => void loadContexts(), 30_000);
+    const stop = startAwardPolling(loadContexts, 30_000);
     return () => {
       active = false;
       controller.abort();
-      window.clearInterval(interval);
+      stop();
     };
   }, [editionId]);
 
@@ -118,29 +124,27 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
     || a.contestCategoryLabel.localeCompare(b.contestCategoryLabel, "pt-BR"),
   ), [contexts]);
 
-  const divisions = useMemo(() => [...new Map(orderedContexts.map((row) => [
+  const championships = [...new Set(orderedContexts.map((row) => championshipKey(row, catalog)))];
+  const championshipContexts = orderedContexts.filter((row) => !championshipFilter ||
+    championshipKey(row, catalog) === championshipFilter || championshipFilter === `event:${row.eventId}`);
+  const divisions = [...new Map(championshipContexts.map((row) => [
     String(row.divisionId), row.divisionName,
-  ])).entries()], [orderedContexts]);
+  ])).entries()];
 
-  const categories = useMemo<CategoryOption[]>(() => {
-    const options = new Map<string, CategoryOption>();
-    for (const row of orderedContexts) {
-      if (divisionFilter && String(row.divisionId) !== divisionFilter) continue;
-      if (genderFilter && row.gender !== genderFilter) continue;
-      const key = categoryKey(row);
-      options.set(key, {
-        key,
-        label: `${row.categoryName} · Campeonato #${row.eventId}`,
-      });
-    }
-    return [...options.values()];
-  }, [orderedContexts, divisionFilter, genderFilter]);
+  const categoryOptions = new Map<string, CategoryOption>();
+  for (const row of championshipContexts) {
+    if (divisionFilter && String(row.divisionId) !== divisionFilter) continue;
+    if (genderFilter && row.gender !== genderFilter) continue;
+    const key = categoryKey(row);
+    categoryOptions.set(key, { key, label: `${row.divisionName} · ${row.categoryName} · ${championshipLabel(championshipKey(row, catalog))}` });
+  }
+  const categories = [...categoryOptions.values()];
 
   const contests = useMemo(() => [...new Map(orderedContexts.map((row) => [
     row.contestCategory, row.contestCategoryLabel,
   ])).entries()], [orderedContexts]);
 
-  const visibleContexts = orderedContexts.filter((row) =>
+  const visibleContexts = championshipContexts.filter((row) =>
     (!divisionFilter || String(row.divisionId) === divisionFilter)
     && (!categoryFilter || categoryKey(row) === categoryFilter)
     && (!genderFilter || row.gender === genderFilter)
@@ -152,11 +156,10 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
     ?? visibleContexts[0] ?? null;
   const currentKey = selected ? votingContextKey(selected) : "";
 
-  // O backend só entrega votos aos administradores quando a disputa está encerrada.
+  const canReadResults = selected?.status === "OPEN" || selected?.status === "CLOSED";
+  // The existing admin API exposes partial results for OPEN and final counts for CLOSED.
   useEffect(() => {
-    if (!selected || selected.status !== "CLOSED") {
-      return;
-    }
+    if (!selected || !canReadResults) return;
 
     const controller = new AbortController();
     let active = true;
@@ -176,6 +179,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
         }
       } catch (error) {
         if (active) {
+          if (error instanceof ClientApiError && [401, 403, 404].includes(error.status)) setSnapshot(null);
           setResultsError({
             key: currentKey,
             message: error instanceof Error ? error.message : "Não foi possível consultar os votos.",
@@ -186,16 +190,17 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
       }
     }
 
-    void loadBoard();
+    const stop = startAwardPolling(loadBoard);
     return () => {
       active = false;
       controller.abort();
+      stop();
     };
     // O contexto é identificado pela chave e pelo status; não recriar o intervalo a cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editionId, currentKey, selected?.status, revision]);
+  }, [editionId, currentKey, selected?.status, canReadResults, revision]);
 
-  const boardData = selected?.status === "CLOSED" && snapshot?.key === currentKey ? snapshot : null;
+  const boardData = canReadResults && snapshot?.key === currentKey ? snapshot : null;
   const board = boardData?.board ?? null;
   const currentResultsError = resultsError?.key === currentKey ? resultsError.message : "";
   const totalVotes = board?.totalVotes;
@@ -220,8 +225,8 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
             <BarChart3 className="size-5 text-cyan" /> Votação popular · Prêmio Legacy
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-            Apuração exclusiva dos administradores. A contagem de votos só é disponibilizada após
-            o encerramento de cada disputa e não representa, por si só, a homologação do resultado.
+            Apuração exclusiva dos administradores, inclusive durante a votação.
+            Os resultados parciais podem mudar e não representam homologação.
           </p>
         </div>
         <div className="grid grid-cols-3 gap-px bg-white/8">
@@ -239,7 +244,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
           </div>
         </div>
         <p className="border-t border-white/8 px-5 py-3 text-xs text-muted sm:px-6">
-          Estados atualizados automaticamente a cada 30 segundos
+          Votos a cada 10 segundos · estados das disputas a cada 30 segundos
           {contextsUpdatedAt ? ` · Consulta: ${formatDate(contextsUpdatedAt, { dateStyle: "short", timeStyle: "short" })}` : ""}
         </p>
       </section>
@@ -262,8 +267,18 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
       ) : (
         <>
           <section className="surface space-y-4 rounded-3xl p-5 sm:p-6" aria-label="Filtros da votação popular">
-            <h3 className="text-base font-black">Filtrar por categoria e prêmio</h3>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <h3 className="text-base font-black">Filtrar por campeonato, categoria e prêmio</h3>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <label className="grid gap-1.5 text-xs font-bold text-muted">
+                Campeonato
+                <select className="field text-sm" value={championshipFilter} onChange={(event) => {
+                  setChampionshipFilter(event.target.value); setDivisionFilter(""); setCategoryFilter(""); setSelectedKey("");
+                }}>
+                  <option value="">Todos</option>
+                  {championshipFilter && !championships.includes(championshipFilter) ? <option value={championshipFilter}>{championshipLabel(championshipFilter)}</option> : null}
+                  {championships.map((key) => <option key={key} value={key}>{championshipLabel(key)}</option>)}
+                </select>
+              </label>
               <label className="grid gap-1.5 text-xs font-bold text-muted">
                 Divisão
                 <select className="field text-sm" value={divisionFilter} onChange={(event) => {
@@ -333,7 +348,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                         onClick={() => setSelectedKey(key)}>
                         <strong className="block text-sm">{row.divisionName} · {row.categoryName}</strong>
                         <span className="mt-1 block text-xs text-muted">
-                          {genderLabel(row.gender)} · Campeonato #{row.eventId}
+                          {genderLabel(row.gender)} · {championshipLabel(championshipKey(row, catalog))}
                         </span>
                         <span className="mt-2 block text-xs font-bold text-ivory">{row.contestCategoryLabel}</span>
                         <span className={`mt-2 inline-block text-xs font-black ${row.status === "OPEN"
@@ -357,7 +372,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                         <h3 className="mt-2 flex items-center gap-2 text-xl font-black">
                           <Trophy className="size-5 text-amber" /> {selected.contestCategoryLabel}
                         </h3>
-                        <p className="mt-2 text-xs text-muted">Campeonato #{selected.eventId}</p>
+                        <p className="mt-2 text-xs text-muted">{championshipLabel(championshipKey(selected, catalog))}</p>
                       </div>
                       <span className={`rounded-full border px-3 py-1 text-xs font-black ${currentStatus === "OPEN"
                         ? "border-cyan/35 text-cyan" : currentStatus === "CLOSED"
@@ -376,17 +391,15 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                           {typeof totalVotes === "number" ? number(totalVotes) : "—"}
                         </strong>
                       </div>
-                      <button type="button" className="btn-ghost text-xs" disabled={selected.status !== "CLOSED"}
+                      <button type="button" className="btn-ghost text-xs" disabled={!canReadResults}
                         onClick={() => setRevision((value) => value + 1)}>
                         <RefreshCw className="size-4" /> Atualizar votos
                       </button>
                     </div>
 
-                    {selected.status !== "CLOSED" ? (
+                    {!canReadResults ? (
                       <p className="rounded-xl border border-amber/20 bg-amber/5 p-4 text-sm text-muted">
-                        {selected.status === "OPEN"
-                          ? "Votação em andamento. A apuração dos votos ficará disponível aos administradores após o encerramento."
-                          : "Esta disputa ainda não começou. A apuração ficará disponível após o encerramento."}
+                        Esta disputa ainda não começou. A apuração ficará disponível na abertura.
                       </p>
                     ) : (
                       <>
@@ -404,22 +417,28 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                           <>
                             <p className="flex items-center gap-2 text-sm font-bold text-muted">
                               <ShieldCheck className="size-4 text-cyan" />
-                              Contagem encerrada · somente administradores
+                              {currentStatus === "OPEN" ? "Apuração parcial · atualização a cada 10 s" : "Contagem encerrada"} · somente administradores
                             </p>
+                            {leaderVotes > 0 && !tied ? <p className="rounded-xl border border-cyan/25 bg-cyan/5 p-3 text-sm font-bold text-cyan">
+                              {ranked[0].athleteName} {currentStatus === "OPEN" ? "lidera" : "terminou na liderança"}{ranked.length > 1 ? ` com ${number(leaderVotes - (ranked[1].votes ?? 0))} voto(s) de vantagem` : ""}.
+                            </p> : null}
+                            {leaderVotes === 0 ? <p className="text-sm text-muted">Nenhum finalista recebeu votos nesta disputa.</p> : null}
                             {tied ? (
                               <p className="rounded-xl border border-amber/25 bg-amber/5 p-3 text-sm font-bold text-amber">
                                 Empate na liderança: {ranked.filter((row) => row.votes === leaderVotes).length} atletas com {number(leaderVotes)} votos.
                               </p>
                             ) : null}
                             <ol className="grid gap-3">
-                              {ranked.map((row, index) => {
+                              {ranked.map((row) => {
                                 const count = row.votes ?? 0;
                                 const share = percentage(count, totalVotes);
+                                const leading = count > 0 && count === leaderVotes;
+                                const rank = ranked.findIndex((candidate) => (candidate.votes ?? 0) === count) + 1;
                                 return (
-                                  <li key={row.entryId} className="rounded-2xl border border-white/10 p-4">
+                                  <li key={row.entryId} className={`rounded-2xl border p-4 ${leading ? "border-amber/35 bg-amber/5" : "border-white/10"}`}>
                                     <div className="flex items-start justify-between gap-4">
                                       <div className="min-w-0">
-                                        <p className="text-xs font-bold text-muted">{index + 1}º colocado</p>
+                                        <p className={`text-xs font-bold ${leading ? "text-amber" : "text-muted"}`}>{count > 0 ? `${rank}º colocado` : "Sem votos"}{leading ? " · Líder" : ""}</p>
                                         <strong className="mt-1 block text-base font-black text-ivory">{row.athleteName}</strong>
                                         <p className="mt-1 text-xs text-muted">{row.teamName}</p>
                                       </div>
@@ -429,7 +448,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                                       </div>
                                     </div>
                                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/8" aria-hidden="true">
-                                      <div className="h-full rounded-full bg-cyan/75" style={{ width: `${share}%` }} />
+                                      <div className={`h-full rounded-full transition-[width] duration-500 ${leading ? "bg-amber" : "bg-cyan/75"}`} style={{ width: `${Math.min(100, share)}%` }} />
                                     </div>
                                   </li>
                                 );
@@ -437,7 +456,7 @@ export function AdminPopularAuditDashboard({ editionId }: Props) {
                             </ol>
                             {boardData ? (
                               <p className="text-xs text-muted">
-                                Contagem recebida em {formatDate(boardData.receivedAt, { dateStyle: "short", timeStyle: "short" })}.
+                                Contagem recebida em {formatDate(boardData.receivedAt, { dateStyle: "short", timeStyle: "medium" })}.
                                 Resultado sujeito à homologação administrativa.
                               </p>
                             ) : null}
