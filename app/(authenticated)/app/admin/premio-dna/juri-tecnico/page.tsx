@@ -637,7 +637,7 @@ function CoachCard({
               <span
                 className={`text-xs font-black ${c.submitted ? "text-cyan" : "text-amber"}`}
               >
-                {c.submitted ? "VOTOU" : c.active ? "PENDENTE" : "DESATIVADO"}
+                {!voter.active || !c.active ? "DESATIVADO" : c.submitted ? "VOTOU" : "SEM VOTO REGISTRADO"}
               </span>
               {voter.active && c.active ? (
                 <button
