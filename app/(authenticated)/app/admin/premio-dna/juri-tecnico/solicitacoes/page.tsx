@@ -38,15 +38,18 @@ export default function TechnicalJuryApplicationsPage() {
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   const [allowExpired, setAllowExpired] = useState(false);
+  const [allowRevoked, setAllowRevoked] = useState(false);
   const [results, setResults] = useState<Record<string, { status: string; detail: string }>>({});
   const pending = applications.filter(a => a.status === "PENDING");
 
   async function reconcile(items: Application[], dryRun: boolean) {
     if (!items.length || busy) return;
     const expired = allowExpired;
+    const revoked = allowRevoked;
     if (!dryRun && !window.confirm(
       `Regularizar ${items.length} vínculo(s) pendente(s)? ` +
       (expired ? "Você confirma que conferiu os vínculos com convites expirados? " : "") +
+      (revoked ? "Você confirma que conferiu os vínculos associados a convites revogados? Os links permanecerão revogados. " : "") +
       "Nenhum voto existente será apagado.")) return;
     setBusy(true);
     setError("");
@@ -56,7 +59,7 @@ export default function TechnicalJuryApplicationsPage() {
         try {
           const result = await clientApi<{ status: string; detail: string }>(
             `/api/admin/awards/editions/${a.editionId}/coach-category-applications/${a.id}/reconcile`,
-            { method: "POST", body: JSON.stringify({ dryRun, allowExpired: expired }) },
+            { method: "POST", body: JSON.stringify({ dryRun, allowExpired: expired, allowRevoked: revoked }) },
           );
           setResults(previous => ({ ...previous, [a.id]: result }));
         } catch (e) {
@@ -119,6 +122,7 @@ export default function TechnicalJuryApplicationsPage() {
           setError("");
           setResults({});
           setAllowExpired(false);
+          setAllowRevoked(false);
           setApplications([]);
           setEditionId(e.target.value);
         }}>
@@ -144,11 +148,16 @@ export default function TechnicalJuryApplicationsPage() {
     </div>
     <section className="grid gap-3 rounded-2xl border border-white/10 bg-panel p-4">
       <h2 className="font-bold">Regularização de pendências antigas</h2>
-      <p className="text-sm text-muted">{pending.length} pendente(s) na lista atual. Simule antes de executar. Contas inativas, revogações e conflitos não serão liberados.</p>
+      <p className="text-sm text-muted">{pending.length} pendente(s) na lista atual. Simule antes de executar. Contas inativas, credenciais ou contextos desativados, credenciamentos revogados e conflitos não serão liberados.</p>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={allowExpired} disabled={busy} onChange={e => { setAllowExpired(e.target.checked); setResults({}); }} />
         Permitir convites expirados após conferência administrativa (não revogados)
       </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={allowRevoked} disabled={busy} onChange={e => { setAllowRevoked(e.target.checked); setResults({}); }} />
+        Regularizar pedidos pendentes de convites revogados após conferir os vínculos (inclusive expirados)
+      </label>
+      {allowRevoked && <p className="text-xs text-amber">Esta opção não reativa o link nem credenciamentos revogados. Confira cada treinador antes de executar.</p>}
       <div className="flex flex-wrap gap-2">
         <button type="button" className="btn-ghost" disabled={busy || loading || !pending.length} onClick={() => void reconcile(pending, true)}>Simular pendentes</button>
         <button type="button" className="btn-primary" disabled={busy || loading || !pending.some(a => results[a.id]?.status === "READY")} onClick={() => void reconcile(pending.filter(a => results[a.id]?.status === "READY"), false)}>Regularizar aptos</button>
